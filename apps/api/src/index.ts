@@ -10,7 +10,11 @@ const app = new Hono();
 // 中間件
 app.use('*', logger());
 app.use('*', cors({
-  origin: ['http://localhost:3000', 'https://your-domain.vercel.app'],
+  origin: [
+    'http://localhost:3000', 
+    'https://concept-stock-screener-lt46yhff9-camilla-wus-projects.vercel.app',
+    'https://concept-stock-screener.vercel.app'
+  ],
   allowMethods: ['GET', 'POST', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
