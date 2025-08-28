@@ -4,10 +4,12 @@ import { HeatBar } from './HeatBar';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { ErrorState } from './ErrorState';
 import { EmptyState } from './EmptyState';
+import { StockAttribution } from './StockAttribution';
 
 interface StockDetailPanelProps {
   selectedStock?: Stock;
   analysis?: StockAnalysisResult;
+  currentTheme?: string;
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
@@ -17,6 +19,7 @@ interface StockDetailPanelProps {
 export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
   selectedStock,
   analysis,
+  currentTheme = '',
   loading = false,
   error,
   onRetry,
@@ -113,6 +116,15 @@ export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
               </div>
             </div>
           )}
+        </div>
+
+        {/* 個股歸因分析 */}
+        <div className="mb-6">
+          <StockAttribution
+            stockId={selectedStock.symbol}
+            stockName={selectedStock.name || selectedStock.symbol}
+            currentTheme={currentTheme}
+          />
         </div>
 
         {/* AI 分析結果 */}

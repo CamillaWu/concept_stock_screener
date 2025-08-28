@@ -1,5 +1,7 @@
 import React from 'react';
 import { HeatBar } from './HeatBar';
+import { AnomalyAlert } from './AnomalyAlert';
+import { SentimentAnalysis } from './SentimentAnalysis';
 import type { StockConcept, Stock } from '../../types';
 
 interface ThemeCardProps {
@@ -9,6 +11,8 @@ interface ThemeCardProps {
   onSelectStock?: (stock: Stock) => void;
   className?: string;
   compact?: boolean;
+  showAnomaly?: boolean;
+  showSentiment?: boolean;
 }
 
 export const ThemeCard: React.FC<ThemeCardProps> = ({
@@ -17,7 +21,9 @@ export const ThemeCard: React.FC<ThemeCardProps> = ({
   onClick,
   onSelectStock,
   className = '',
-  compact = false
+  compact = false,
+  showAnomaly = false,
+  showSentiment = false
 }) => {
   const handleCardClick = () => {
     onSelect?.(theme);
@@ -30,6 +36,29 @@ export const ThemeCard: React.FC<ThemeCardProps> = ({
     e.stopPropagation();
     onSelectStock?.(stock);
   };
+
+  // 模擬異常數據
+  const mockAnomalyEvents = showAnomaly ? [
+    {
+      type: 'price_up' as const,
+      value: 8.5,
+      threshold: 5,
+      timestamp: '2024-01-15 14:30',
+      description: 'AI 概念股集體上漲',
+      affectedStocks: ['2330', '2317', '2454']
+    }
+  ] : [];
+
+  // 模擬情緒數據
+  const mockSentimentData = showSentiment ? {
+    score: 0.7,
+    trend: 'up' as const,
+    sources: {
+      news: 65,
+      social: 35
+    },
+    recentTrend: [0.3, 0.5, 0.4, 0.6, 0.7, 0.8, 0.7]
+  } : undefined;
 
   return (
     <div
@@ -53,6 +82,20 @@ export const ThemeCard: React.FC<ThemeCardProps> = ({
           </h3>
           <HeatBar score={theme.heatScore} size="small" />
         </div>
+
+        {/* 異常警示 */}
+        {showAnomaly && mockAnomalyEvents.length > 0 && (
+          <div className="mb-3">
+            <AnomalyAlert events={mockAnomalyEvents} />
+          </div>
+        )}
+
+        {/* 情緒分析 */}
+        {showSentiment && mockSentimentData && (
+          <div className="mb-3">
+            <SentimentAnalysis data={mockSentimentData} />
+          </div>
+        )}
 
         {/* 描述 */}
         {theme.description && !compact && (
