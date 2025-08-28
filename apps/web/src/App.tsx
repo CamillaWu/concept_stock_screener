@@ -53,7 +53,16 @@ function App() {
         // 股票搜尋模式
         const stockAnalysis = data as StockAnalysisResult;
         setStockAnalysis(stockAnalysis);
-        setSelectedStock(stockAnalysis.stock);
+        // 確保 stock 物件有正確的屬性
+        const stock: Stock = {
+          symbol: stockAnalysis.stock.ticker,
+          ticker: stockAnalysis.stock.ticker,
+          name: stockAnalysis.stock.name,
+          exchange: 'TWSE' as const,
+          heatScore: 0,
+          concepts: []
+        };
+        setSelectedStock(stock);
         setSelectedTheme(undefined);
       }
     } catch (err) {
