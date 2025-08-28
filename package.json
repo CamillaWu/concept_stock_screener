@@ -1,21 +1,43 @@
 {
-  "name": "concepts-radar",
+  "name": "concept-stock-screener",
   "version": "1.0.0",
-  "description": "AI-powered Taiwan stock concept screener",
+  "description": "概念股自動化篩選系統",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "echo 'Development scripts will be added later'",
-    "build": "echo 'Build scripts will be added later'",
-    "clean": "echo 'Clean scripts will be added later'"
+    "dev": "./dev.sh",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean",
+    "api:dev": "cd apps/api && pnpm dev",
+    "web:dev": "cd apps/web && pnpm dev",
+    "api:deploy": "cd apps/api && pnpm deploy",
+    "web:build": "cd apps/web && pnpm build",
+    "test:api": "./test-api.sh"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "prettier": "^3.0.0",
-    "eslint": "^8.0.0"
+    "typescript": "^5.0.0"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "keywords": [
+    "stock",
+    "ai",
+    "taiwan",
+    "investment",
+    "concepts",
+    "screener"
+  ],
+  "author": "Concept Stock Screener Team",
+  "license": "MIT",
+  "dependencies": {
+    "zustand": "^5.0.8"
   }
 }
