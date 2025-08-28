@@ -25,10 +25,14 @@ jobs:
         version: 8
     
     - name: Install dependencies
-      run: pnpm install
+      run: |
+        cd apps/web
+        pnpm install
     
     - name: Build packages
-      run: pnpm build
+      run: |
+        cd apps/web
+        pnpm build
     
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
@@ -36,4 +40,5 @@ jobs:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: ./apps/web
         vercel-args: '--prod'
