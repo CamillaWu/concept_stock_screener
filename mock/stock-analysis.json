@@ -1,0 +1,33 @@
+{
+  "stock": {
+    "ticker": "2330",
+    "name": "台積電"
+  },
+  "themes": [
+    {
+      "theme": "AI 伺服器",
+      "description": "人工智慧伺服器相關概念股",
+      "heatScore": 85
+    },
+    {
+      "theme": "半導體設備",
+      "description": "半導體製造設備與材料供應鏈",
+      "heatScore": 68
+    },
+    {
+      "theme": "CoWoS 封裝",
+      "description": "先進封裝技術概念股",
+      "heatScore": 92
+    },
+    {
+      "theme": "5G 通訊",
+      "description": "第五代行動通訊技術相關",
+      "heatScore": 45
+    },
+    {
+      "theme": "電動車晶片",
+      "description": "電動車與自駕車晶片供應鏈",
+      "heatScore": 58
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "concepts-radar",
+  "version": "1.0.0",
+  "description": "AI-powered Taiwan stock concept screener",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Development scripts will be added later'",
+    "build": "echo 'Build scripts will be added later'",
+    "clean": "echo 'Clean scripts will be added later'"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
