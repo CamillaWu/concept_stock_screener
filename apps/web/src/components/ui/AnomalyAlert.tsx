@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExclamationTriangleIcon, TrendingUpIcon, TrendingDownIcon, ChartBarIcon } from '@heroicons/react/outline';
+import { ExclamationTriangleIcon, TrendingUpIcon, TrendingDownIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 interface AnomalyEvent {
   type: 'price_up' | 'price_down' | 'volume_up' | 'volume_down';
@@ -28,6 +28,7 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
       case 'price_down':
         return <TrendingDownIcon className="w-4 h-4 text-green-500" />;
       case 'volume_up':
+        return <ChartBarIcon className="w-4 h-4 text-blue-500" />;
       case 'volume_down':
         return <ChartBarIcon className="w-4 h-4 text-orange-500" />;
       default:
@@ -35,47 +36,33 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
     }
   };
 
-  const getAnomalyLabel = (type: string, value: number) => {
-    switch (type) {
-      case 'price_up':
-        return `▲${value}%`;
-      case 'price_down':
-        return `▼${Math.abs(value)}%`;
-      case 'volume_up':
-        return `VOL↑${value}x`;
-      case 'volume_down':
-        return `VOL↓${value}x`;
-      default:
-        return '異常';
-    }
-  };
-
   const getAnomalyColor = (type: string) => {
     switch (type) {
       case 'price_up':
-        return 'bg-red-50 border-red-200 text-red-700';
+        return 'border-red-200 bg-red-50';
       case 'price_down':
-        return 'bg-green-50 border-green-200 text-green-700';
+        return 'border-green-200 bg-green-50';
       case 'volume_up':
+        return 'border-blue-200 bg-blue-50';
       case 'volume_down':
-        return 'bg-orange-50 border-orange-200 text-orange-700';
+        return 'border-orange-200 bg-orange-50';
       default:
-        return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+        return 'border-yellow-200 bg-yellow-50';
     }
   };
 
-  const getAnomalyDescription = (type: string, value: number, threshold: number) => {
+  const getAnomalyLabel = (type: string) => {
     switch (type) {
       case 'price_up':
-        return `漲幅超過${threshold}% (實際: ${value}%)`;
+        return '價格異常上漲';
       case 'price_down':
-        return `跌幅超過${threshold}% (實際: ${Math.abs(value)}%)`;
+        return '價格異常下跌';
       case 'volume_up':
-        return `成交量放大${threshold}倍以上 (實際: ${value}x)`;
+        return '成交量異常放大';
       case 'volume_down':
-        return `成交量萎縮${threshold}倍以上 (實際: ${value}x)`;
+        return '成交量異常萎縮';
       default:
-        return '檢測到異常波動';
+        return '異常波動';
     }
   };
 
@@ -83,45 +70,55 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
     return null;
   }
 
-  // 只顯示最嚴重的一個異常
-  const primaryEvent = events[0];
-  const anomalyColor = getAnomalyColor(primaryEvent.type);
-  const anomalyLabel = getAnomalyLabel(primaryEvent.type, primaryEvent.value);
-
   return (
-    <div className={`${className}`}>
-      {/* 主要異常標籤 */}
-      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${anomalyColor}`}>
-        {getAnomalyIcon(primaryEvent.type)}
-        <span className="ml-1">{anomalyLabel}</span>
-      </div>
-
-      {/* 詳細異常列表 */}
-      {showDetails && events.length > 0 && (
-        <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">異常事件</h4>
-          <div className="space-y-2">
-            {events.map((event, index) => (
-              <div key={index} className="flex items-start space-x-2 p-2 bg-gray-50 rounded">
-                {getAnomalyIcon(event.type)}
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">
-                    {getAnomalyDescription(event.type, event.value, event.threshold)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {event.timestamp} • 影響個股: {event.affectedStocks.join(', ')}
-                  </div>
-                  {event.description && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      {event.description}
-                    </div>
-                  )}
-                </div>
+    <div className={`space-y-3 ${className}`}>
+      {events.map((event, index) => (
+        <div
+          key={index}
+          className={`border rounded-lg p-4 ${getAnomalyColor(event.type)}`}
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-1">
+              {getAnomalyIcon(event.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-gray-900">
+                  {getAnomalyLabel(event.type)}
+                </h4>
+                <span className="text-xs text-gray-500">
+                  {event.timestamp}
+                </span>
               </div>
-            ))}
+              
+              <p className="text-sm text-gray-700 mb-2">
+                {event.description}
+              </p>
+              
+              <div className="flex items-center gap-4 text-xs text-gray-600">
+                <span>漲幅: {event.value}%</span>
+                <span>閾值: {event.threshold}%</span>
+              </div>
+
+              {showDetails && event.affectedStocks.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">受影響股票:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {event.affectedStocks.map((stock, stockIndex) => (
+                      <span
+                        key={stockIndex}
+                        className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-300"
+                      >
+                        {stock}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };

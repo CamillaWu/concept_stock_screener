@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLinkIcon, DocumentTextIcon, NewspaperIcon, MegaphoneIcon } from '@heroicons/react/outline';
+import { ExternalLinkIcon, DocumentTextIcon, NewspaperIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
 
 interface AttributionSource {
   type: 'news' | 'report' | 'announcement' | 'ai';
@@ -33,58 +33,73 @@ const StockAttribution: React.FC<StockAttributionProps> = ({
         return;
       }
 
-      setLoading(true);
-      setError(null);
-
       try {
-        // 模擬 API 調用，實際應該調用真實的 API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        setLoading(true);
+        setError(null);
         
-        // 模擬數據
+        // 模擬 API 調用
         const mockAttributions: AttributionSource[] = [
           {
             type: 'news',
-            title: '台積電 CoWoS 產能滿載，AI 晶片需求強勁',
+            title: `${stockName} ${currentTheme} 相關新聞`,
             url: 'https://example.com/news/1',
             timestamp: '2024-01-15',
-            summary: '該公司為 CoWoS 核心供應商，相關新聞報導顯示其產能滿載'
+            summary: '該公司為相關產業重要供應商'
           },
           {
             type: 'report',
             title: '2024年第一季財報摘要',
             url: 'https://example.com/report/1',
             timestamp: '2024-01-10',
-            summary: '財報顯示 AI 相關業務營收佔比提升至 30%'
+            summary: '財報顯示相關業務營收佔比提升'
           },
           {
             type: 'ai',
             title: 'AI 分析結果',
             timestamp: '2024-01-15',
-            summary: '基於市場數據分析，該股在 AI 伺服器概念中具有核心地位'
+            summary: '基於市場數據分析，該股在相關概念中具有重要地位'
           }
         ];
 
         setAttributions(mockAttributions);
       } catch (err) {
-        setError('無法載入歸因資料');
+        console.error('獲取歸因分析失敗:', err);
+        setError('載入失敗');
       } finally {
         setLoading(false);
       }
     };
 
     fetchAttribution();
-  }, [stockId, currentTheme]);
+  }, [stockId, stockName, currentTheme]);
 
   const getSourceIcon = (type: string) => {
     switch (type) {
       case 'news':
-        return <NewspaperIcon className="w-4 h-4 text-blue-500" />;
+        return <NewspaperIcon className="w-4 h-4" />;
       case 'report':
-        return <DocumentTextIcon className="w-4 h-4 text-green-500" />;
+        return <DocumentTextIcon className="w-4 h-4" />;
       case 'announcement':
-        return <MegaphoneIcon className="w-4 h-4 text-purple-500" />;
+        return <MegaphoneIcon className="w-4 h-4" />;
+      case 'ai':
+        return <DocumentTextIcon className="w-4 h-4" />;
       default:
-        return <DocumentTextIcon className="w-4 h-4 text-gray-500" />;
+        return <DocumentTextIcon className="w-4 h-4" />;
+    }
+  };
+
+  const getSourceColor = (type: string) => {
+    switch (type) {
+      case 'news':
+        return 'text-blue-600 bg-blue-50';
+      case 'report':
+        return 'text-green-600 bg-green-50';
+      case 'announcement':
+        return 'text-orange-600 bg-orange-50';
+      case 'ai':
+        return 'text-purple-600 bg-purple-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
     }
   };
 
@@ -97,7 +112,7 @@ const StockAttribution: React.FC<StockAttributionProps> = ({
       case 'announcement':
         return '公告';
       case 'ai':
-        return 'AI 分析';
+        return 'AI分析';
       default:
         return '其他';
     }
@@ -105,20 +120,12 @@ const StockAttribution: React.FC<StockAttributionProps> = ({
 
   if (loading) {
     return (
-      <div className={`p-4 bg-white border border-gray-200 rounded-lg ${className}`}>
+      <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="border border-gray-200 rounded p-3">
-                <div className="flex items-center mb-2">
-                  <div className="w-4 h-4 bg-gray-200 rounded mr-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                </div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-              </div>
-            ))}
+          <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 rounded w-2/3"></div>
           </div>
         </div>
       </div>
@@ -127,76 +134,74 @@ const StockAttribution: React.FC<StockAttributionProps> = ({
 
   if (error) {
     return (
-      <div className={`p-4 bg-white border border-gray-200 rounded-lg ${className}`}>
-        <div className="text-center">
-          <div className="text-red-500 mb-2">{error}</div>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            重試
-          </button>
-        </div>
+      <div className={`p-4 bg-red-50 border border-red-200 rounded-lg ${className}`}>
+        <p className="text-red-600 text-sm">{error}</p>
       </div>
     );
   }
 
   if (attributions.length === 0) {
     return (
-      <div className={`p-4 bg-white border border-gray-200 rounded-lg ${className}`}>
-        <div className="text-center text-gray-500">
-          <div className="text-sm font-medium mb-2">入選原因</div>
-          <div className="text-xs">暫無歸因資訊</div>
-        </div>
+      <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
+        <p className="text-gray-500 text-sm">暫無歸因分析資料</p>
       </div>
     );
   }
 
   return (
-    <div className={`p-4 bg-white border border-gray-200 rounded-lg ${className}`}>
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">入選原因</h3>
+    <div className={`space-y-3 ${className}`}>
+      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+        <svg className="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        個股歸因分析
+      </h3>
       
       <div className="space-y-3">
-        {attributions.map((attribution, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center">
-                {getSourceIcon(attribution.type)}
-                <span className="ml-2 text-xs font-medium text-gray-600">
-                  {getSourceLabel(attribution.type)}
-                </span>
+        {attributions.map((source, index) => (
+          <div
+            key={index}
+            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+          >
+            <div className="flex items-start gap-3">
+              <div className={`flex-shrink-0 p-2 rounded-lg ${getSourceColor(source.type)}`}>
+                {getSourceIcon(source.type)}
               </div>
-              <span className="text-xs text-gray-400">{attribution.timestamp}</span>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">
+                      {source.title}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSourceColor(source.type)}`}>
+                      {getSourceLabel(source.type)}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {source.timestamp}
+                  </span>
+                </div>
+                
+                <p className="text-sm text-gray-700 mb-3">
+                  {source.summary}
+                </p>
+                
+                {source.url && (
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <ExternalLinkIcon className="w-3 h-3 mr-1" />
+                    查看原文
+                  </a>
+                )}
+              </div>
             </div>
-            
-            <div className="mb-2">
-              <div className="text-sm font-medium text-gray-900 mb-1">
-                {attribution.title}
-              </div>
-              <div className="text-sm text-gray-600">
-                {attribution.summary}
-              </div>
-            </div>
-            
-            {attribution.url && (
-              <a
-                href={attribution.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <ExternalLinkIcon className="w-3 h-3 mr-1" />
-                查看原文
-              </a>
-            )}
           </div>
         ))}
-      </div>
-      
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <div className="text-xs text-gray-500">
-          基於新聞、財報、公告等多源資料分析
-        </div>
       </div>
     </div>
   );
