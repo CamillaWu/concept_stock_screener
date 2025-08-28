@@ -38,7 +38,7 @@ echo "🌐 啟動開發伺服器..."
 
 # 啟動 API 服務（背景執行）
 echo "🔧 啟動 API 服務 (http://localhost:8787)..."
-cd apps/api
+cd ../apps/api
 pnpm dev &
 API_PID=$!
 cd ../..
@@ -48,7 +48,7 @@ sleep 3
 
 # 啟動前端服務
 echo "🎨 啟動前端服務 (http://localhost:3000)..."
-cd apps/web
+cd ../apps/web
 pnpm dev &
 WEB_PID=$!
 cd ../..

@@ -9,7 +9,7 @@ if ! command -v vercel &> /dev/null; then
 fi
 
 # 切換到前端目錄
-cd apps/web
+cd ../apps/web
 
 # 檢查是否已登入 Vercel
 if ! vercel whoami &> /dev/null; then

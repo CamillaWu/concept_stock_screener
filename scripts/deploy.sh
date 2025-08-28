@@ -25,7 +25,7 @@ cd packages/ui && pnpm build && cd ../..
 
 # 部署 API
 echo "🌐 部署 Cloudflare Workers API..."
-cd apps/api
+cd ../apps/api
 if [ ! -z "$CLOUDFLARE_API_TOKEN" ]; then
     pnpm deploy
 else
@@ -35,7 +35,7 @@ cd ../..
 
 # 部署前端
 echo "🎯 部署前端應用..."
-cd apps/web
+cd ../apps/web
 if [ ! -z "$VERCEL_TOKEN" ]; then
     pnpm build
     echo "✅ 前端建置完成"
