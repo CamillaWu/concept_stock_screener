@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/ui/Sidebar';
 import { DetailPanel } from './components/ui/DetailPanel';
 import { StockDetailPanel } from './components/ui/StockDetailPanel';
-import { StockConcept, Stock, SearchMode, ApiResponse } from './types';
+import { StockConcept, Stock, SearchMode, StockAnalysisResult } from './types';
+import { apiService } from './services/api';
 import './App.css';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const [trendingThemes, setTrendingThemes] = useState<StockConcept[]>([]);
   const [selectedTheme, setSelectedTheme] = useState<StockConcept | undefined>();
   const [selectedStock, setSelectedStock] = useState<Stock | undefined>();
+  const [stockAnalysis, setStockAnalysis] = useState<StockAnalysisResult | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<SearchMode>('theme');
@@ -24,13 +26,7 @@ function App() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('https://concept-stock-screener-api.sandy246836.workers.dev/trending');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.getTrendingThemes();
       setTrendingThemes(data);
     } catch (err) {
       console.error('載入熱門概念失敗:', err);
@@ -47,20 +43,18 @@ function App() {
       setError(null);
       setSearchMode(mode);
       
-      const response = await fetch(`https://concept-stock-screener-api.sandy246836.workers.dev/search?mode=${mode}&q=${encodeURIComponent(query)}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiService.search(query, mode);
       
       if (mode === 'theme') {
-        setSelectedTheme(data);
+        setSelectedTheme(data as StockConcept);
         setSelectedStock(undefined);
+        setStockAnalysis(undefined);
       } else {
-        // 股票搜尋模式 - 這裡需要實作股票分析
-        console.log('股票搜尋結果:', data);
+        // 股票搜尋模式
+        const stockAnalysis = data as StockAnalysisResult;
+        setStockAnalysis(stockAnalysis);
+        setSelectedStock(stockAnalysis.stock);
+        setSelectedTheme(undefined);
       }
     } catch (err) {
       console.error('搜尋失敗:', err);
@@ -74,11 +68,32 @@ function App() {
   const handleThemeClick = (theme: StockConcept) => {
     setSelectedTheme(theme);
     setSelectedStock(undefined);
+    setStockAnalysis(undefined);
   };
 
   // 處理股票點擊
-  const handleStockClick = (stock: Stock) => {
-    setSelectedStock(stock);
+  const handleStockClick = async (stock: Stock) => {
+    try {
+      setSelectedStock(stock);
+      
+      // 如果當前有選中的主題，獲取該股票的歸因分析
+      if (selectedTheme) {
+        // 這裡可以調用個股歸因分析 API
+        console.log('獲取股票歸因分析:', stock.symbol, selectedTheme.theme);
+      }
+    } catch (err) {
+      console.error('處理股票點擊失敗:', err);
+    }
+  };
+
+  // 處理重試
+  const handleRetry = () => {
+    if (selectedTheme) {
+      // 重新載入主題相關數據
+      console.log('重新載入主題數據');
+    } else {
+      fetchTrendingThemes();
+    }
   };
 
   return (
@@ -100,15 +115,17 @@ function App() {
           loading={loading}
           error={error}
           onStockClick={handleStockClick}
-          onRetry={fetchTrendingThemes}
+          onRetry={handleRetry}
         />
 
         {/* 股票詳細面板 */}
         {selectedStock && (
           <StockDetailPanel
             selectedStock={selectedStock}
-            loading={false}
-            onRetry={() => {}}
+            analysis={stockAnalysis}
+            currentTheme={selectedTheme?.theme || ''}
+            loading={loading}
+            onRetry={handleRetry}
           />
         )}
       </div>

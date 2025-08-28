@@ -5,6 +5,9 @@ import { StockList } from './StockList';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { ErrorState } from './ErrorState';
 import { EmptyState } from './EmptyState';
+import { ConceptStrength } from './ConceptStrength';
+import { SentimentAnalysis } from './SentimentAnalysis';
+import { AnomalyAlert } from './AnomalyAlert';
 
 interface DetailPanelProps {
   selectedTheme?: StockConcept;
@@ -25,11 +28,37 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
   onRetry,
   className = ''
 }) => {
+  // 模擬數據 - 實際應該從 API 獲取
+  const mockSentimentData = {
+    score: 0.7,
+    trend: 'up' as const,
+    sources: {
+      news: 65,
+      social: 35
+    },
+    recentTrend: [0.3, 0.5, 0.4, 0.6, 0.7, 0.8, 0.7]
+  };
+
+  const mockAnomalyEvents = [
+    {
+      type: 'price_up' as const,
+      value: 8.5,
+      threshold: 5,
+      timestamp: '2024-01-15 14:30',
+      description: 'AI 概念股集體上漲',
+      affectedStocks: ['2330', '2317', '2454']
+    }
+  ];
+
   if (loading) {
     return (
       <div className={`flex-1 bg-white ${className}`}>
         <div className="p-6">
           <LoadingSkeleton type="card" className="mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <LoadingSkeleton type="card" />
+            <LoadingSkeleton type="card" />
+          </div>
           <LoadingSkeleton type="list" />
         </div>
       </div>
@@ -84,6 +113,33 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
             theme={selectedTheme}
             onSelect={() => {}}
             compact={false}
+          />
+        </div>
+
+        {/* 異常警示 */}
+        <div className="mb-6">
+          <AnomalyAlert
+            events={mockAnomalyEvents}
+            showDetails={true}
+          />
+        </div>
+
+        {/* 分析指標區塊 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* 概念強度 */}
+          <ConceptStrength
+            strengthScore={85}
+            dimensions={{
+              marketCapRatio: 75,
+              priceContribution: 60,
+              discussionLevel: 85
+            }}
+          />
+
+          {/* 情緒分析 */}
+          <SentimentAnalysis
+            data={mockSentimentData}
+            showDetails={true}
           />
         </div>
 

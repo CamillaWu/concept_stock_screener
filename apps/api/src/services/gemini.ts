@@ -228,5 +228,231 @@ export const geminiService = {
         ]
       };
     }
+  },
+
+  // 新增：概念強度分析
+  async analyzeConceptStrength(theme: string): Promise<{
+    strengthScore: number;
+    dimensions: {
+      marketCapRatio: number;
+      priceContribution: number;
+      discussionLevel: number;
+    };
+  }> {
+    if (!genAI) {
+      console.log('使用模擬概念強度分析資料');
+      return {
+        strengthScore: 85,
+        dimensions: {
+          marketCapRatio: 75,
+          priceContribution: 60,
+          discussionLevel: 85
+        }
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const aiPrompt = `請分析投資主題「${theme}」的概念強度，基於以下三個維度進行評估：
+
+1. 市值佔比：該主題相關股票在整體市場的市值佔比
+2. 漲幅貢獻：該主題股票對市場漲幅的貢獻度
+3. 討論熱度：新聞和社群對該主題的討論程度
+
+請以 JSON 格式回傳：
+{
+  "strengthScore": 0-100的綜合強度分數,
+  "dimensions": {
+    "marketCapRatio": 0-100的市值佔比分數,
+    "priceContribution": 0-100的漲幅貢獻分數,
+    "discussionLevel": 0-100的討論熱度分數
+  }
+}`;
+
+      const result = await model.generateContent(aiPrompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini API 錯誤:', error);
+      return {
+        strengthScore: 85,
+        dimensions: {
+          marketCapRatio: 75,
+          priceContribution: 60,
+          discussionLevel: 85
+        }
+      };
+    }
+  },
+
+  // 新增：情緒分析
+  async analyzeSentiment(theme: string): Promise<{
+    score: number;
+    trend: 'up' | 'down' | 'stable';
+    sources: {
+      news: number;
+      social: number;
+    };
+    recentTrend: number[];
+  }> {
+    if (!genAI) {
+      console.log('使用模擬情緒分析資料');
+      return {
+        score: 0.7,
+        trend: 'up',
+        sources: {
+          news: 65,
+          social: 35
+        },
+        recentTrend: [0.3, 0.5, 0.4, 0.6, 0.7, 0.8, 0.7]
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const aiPrompt = `請分析投資主題「${theme}」的市場情緒，基於新聞和社群討論進行評估。
+
+請以 JSON 格式回傳：
+{
+  "score": -1.0到+1.0的情緒分數（負值為悲觀，正值為樂觀）,
+  "trend": "up"或"down"或"stable"的趨勢方向,
+  "sources": {
+    "news": 0-100的新聞來源佔比,
+    "social": 0-100的社群來源佔比
+  },
+  "recentTrend": [最近7天的情緒分數陣列]
+}`;
+
+      const result = await model.generateContent(aiPrompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini API 錯誤:', error);
+      return {
+        score: 0.7,
+        trend: 'up',
+        sources: {
+          news: 65,
+          social: 35
+        },
+        recentTrend: [0.3, 0.5, 0.4, 0.6, 0.7, 0.8, 0.7]
+      };
+    }
+  },
+
+  // 新增：個股歸因分析
+  async analyzeStockAttribution(stockId: string, theme: string): Promise<{
+    sources: Array<{
+      type: 'news' | 'report' | 'announcement' | 'ai';
+      title: string;
+      url?: string;
+      timestamp: string;
+      summary: string;
+    }>;
+  }> {
+    if (!genAI) {
+      console.log('使用模擬個股歸因分析資料');
+      return {
+        sources: [
+          {
+            type: 'news',
+            title: `${stockId} ${theme} 相關新聞`,
+            url: 'https://example.com/news/1',
+            timestamp: '2024-01-15',
+            summary: '該公司為相關產業重要供應商'
+          },
+          {
+            type: 'report',
+            title: '2024年第一季財報摘要',
+            url: 'https://example.com/report/1',
+            timestamp: '2024-01-10',
+            summary: '財報顯示相關業務營收佔比提升'
+          },
+          {
+            type: 'ai',
+            title: 'AI 分析結果',
+            timestamp: '2024-01-15',
+            summary: '基於市場數據分析，該股在相關概念中具有重要地位'
+          }
+        ]
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const aiPrompt = `請分析股票「${stockId}」在「${theme}」主題中的歸因，找出支持其入選的具體依據。
+
+請以 JSON 格式回傳：
+{
+  "sources": [
+    {
+      "type": "news"或"report"或"announcement"或"ai",
+      "title": "來源標題",
+      "url": "來源連結（可選）",
+      "timestamp": "時間戳",
+      "summary": "簡短摘要說明"
+    }
+  ]
+}
+
+注意：
+- 提供具體的新聞、財報或公告依據
+- 說明該股票與主題的具體關聯性
+- 包含時間戳和來源資訊`;
+
+      const result = await model.generateContent(aiPrompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini API 錯誤:', error);
+      return {
+        sources: [
+          {
+            type: 'news',
+            title: `${stockId} ${theme} 相關新聞`,
+            url: 'https://example.com/news/1',
+            timestamp: '2024-01-15',
+            summary: '該公司為相關產業重要供應商'
+          },
+          {
+            type: 'report',
+            title: '2024年第一季財報摘要',
+            url: 'https://example.com/report/1',
+            timestamp: '2024-01-10',
+            summary: '財報顯示相關業務營收佔比提升'
+          },
+          {
+            type: 'ai',
+            title: 'AI 分析結果',
+            timestamp: '2024-01-15',
+            summary: '基於市場數據分析，該股在相關概念中具有重要地位'
+          }
+        ]
+      };
+    }
   }
 };
