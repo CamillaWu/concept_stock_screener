@@ -25,10 +25,10 @@ const ConceptStrength: React.FC<ConceptStrengthProps> = ({
   const score = strengthScore || Math.round((dims.marketCapRatio + dims.priceContribution + dims.discussionLevel) / 3);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-green-600 bg-green-100';
+    if (score >= 60) return 'text-yellow-600 bg-yellow-100';
+    if (score >= 40) return 'text-orange-600 bg-orange-100';
+    return 'text-red-600 bg-red-100';
   };
 
   const getScoreLabel = (score: number) => {
@@ -38,74 +38,80 @@ const ConceptStrength: React.FC<ConceptStrengthProps> = ({
     return '弱';
   };
 
-  if (!strengthScore && !dimensions) {
-    return (
-      <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
-        <div className="text-center text-gray-500">
-          <div className="text-sm font-medium mb-2">概念強度分析</div>
-          <div className="text-xs">暫無資料</div>
-        </div>
-      </div>
-    );
-  }
+  const getDimensionColor = (value: number) => {
+    if (value >= 80) return 'text-green-600';
+    if (value >= 60) return 'text-blue-600';
+    if (value >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
   return (
-    <div className={`p-4 bg-white border border-gray-200 rounded-lg ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">概念強度</h3>
-        <div className="text-right">
-          <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
-            {score}
-          </div>
-          <div className="text-xs text-gray-500">{getScoreLabel(score)}</div>
+    <div className={`space-y-4 ${className}`}>
+      {/* 綜合強度分數 */}
+      <div className="text-center">
+        <div className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold ${getScoreColor(score)}`}>
+          <span className="text-2xl mr-2">{score}</span>
+          <span>{getScoreLabel(score)}</span>
         </div>
+        <p className="text-sm text-gray-600 mt-2">綜合強度分數</p>
       </div>
 
+      {/* 三個維度 */}
       <div className="space-y-3">
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">市值佔比</span>
-            <span className="font-medium">{dims.marketCapRatio}%</span>
+        {/* 市值佔比 */}
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">市值佔比</span>
+            <span className={`text-lg font-bold ${getDimensionColor(dims.marketCapRatio)}`}>
+              {dims.marketCapRatio}%
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${dims.marketCapRatio}%` }}
             />
           </div>
         </div>
 
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">漲幅貢獻</span>
-            <span className="font-medium">{dims.priceContribution}%</span>
+        {/* 漲幅貢獻度 */}
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">漲幅貢獻度</span>
+            <span className={`text-lg font-bold ${getDimensionColor(dims.priceContribution)}`}>
+              {dims.priceContribution}%
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-green-500 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${dims.priceContribution}%` }}
             />
           </div>
         </div>
 
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">討論熱度</span>
-            <span className="font-medium">{dims.discussionLevel}%</span>
+        {/* 討論度 */}
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">討論熱度</span>
+            <span className={`text-lg font-bold ${getDimensionColor(dims.discussionLevel)}`}>
+              {dims.discussionLevel}%
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-purple-400 to-purple-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${dims.discussionLevel}%` }}
             />
           </div>
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-gray-100">
-        <div className="text-xs text-gray-500">
-          基於市值佔比、漲幅貢獻、討論熱度三維度綜合評估
-        </div>
+      {/* 說明 */}
+      <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+        <p className="mb-1"><strong>市值佔比：</strong>該概念相關股票在整體市場的市值佔比</p>
+        <p className="mb-1"><strong>漲幅貢獻度：</strong>該概念股票對市場漲幅的貢獻程度</p>
+        <p><strong>討論熱度：</strong>新聞和社群對該概念的討論程度</p>
       </div>
     </div>
   );
