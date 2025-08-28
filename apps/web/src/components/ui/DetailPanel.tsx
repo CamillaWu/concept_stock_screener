@@ -5,9 +5,9 @@ import { StockList } from './StockList';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { ErrorState } from './ErrorState';
 import { EmptyState } from './EmptyState';
-import { ConceptStrength } from './ConceptStrength';
-import { SentimentAnalysis } from './SentimentAnalysis';
-import { AnomalyAlert } from './AnomalyAlert';
+import ConceptStrength from './ConceptStrength';
+import SentimentAnalysis from './SentimentAnalysis';
+import AnomalyAlert from './AnomalyAlert';
 import { apiService } from '../../services/api';
 
 interface DetailPanelProps {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { HeatBar } from './HeatBar';
-import { AnomalyAlert } from './AnomalyAlert';
-import { SentimentAnalysis } from './SentimentAnalysis';
+import AnomalyAlert from './AnomalyAlert';
+import SentimentAnalysis from './SentimentAnalysis';
 import type { StockConcept, Stock } from '../../types';
 
 interface ThemeCardProps {

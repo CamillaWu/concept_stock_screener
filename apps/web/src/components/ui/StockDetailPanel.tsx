@@ -4,7 +4,7 @@ import { HeatBar } from './HeatBar';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { ErrorState } from './ErrorState';
 import { EmptyState } from './EmptyState';
-import { StockAttribution } from './StockAttribution';
+import StockAttribution from './StockAttribution';
 
 interface StockDetailPanelProps {
   selectedStock?: Stock;
