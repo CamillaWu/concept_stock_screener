@@ -40,13 +40,16 @@ pnpm web:build
 ## 🔗 相關文檔
 - [部署指南](./docs/deployment/)
 - [使用指南](./docs/guides/)
+- [環境設定](./docs/guides/ENVIRONMENT_SETUP.md)
+- [域名設定](./docs/deployment/DOMAIN_SETUP_GUIDE.md)
 - [故障排除](./docs/guides/TROUBLESHOOTING_GUIDE.md)
 
 ## 🛠️ 技術棧
 - **後端**: Cloudflare Workers + Hono + Gemini 2.5 Pro
 - **前端**: Next.js 14 + React 18 + TypeScript + Tailwind CSS
 - **包管理**: pnpm + Workspaces
-- **部署**: Cloudflare Workers + Vercel
+- **部署**: Cloudflare Workers + Vercel + GitHub Actions
+- **CI/CD**: 自動化部署流程
 
 ## 📄 授權
 MIT License
