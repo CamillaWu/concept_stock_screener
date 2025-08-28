@@ -1,0 +1,15 @@
+{
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "env": {
+    "API_BASE_URL": "https://concept-stock-screener-api.sandy246836.workers.dev"
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://concept-stock-screener-api.sandy246836.workers.dev/:path*"
+    }
+  ]
+}

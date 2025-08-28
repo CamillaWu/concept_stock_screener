@@ -1,116 +1,92 @@
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8787';
+import type { StockConcept, Stock, StockAnalysisResult, ApiResponse, SearchMode } from '../types';
 
-// 錯誤碼類型
-export interface ApiError {
-  code: 'invalid_mode' | 'no_results' | 'rate_limited' | 'internal_error';
-  message: string;
-  trace_id?: string;
-}
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://concept-stock-screener-api.sandy246836.workers.dev';
 
-// 通用 HTTP 請求函數
-async function httpRequest<T>(path: string, options?: RequestInit): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超時
+class ApiService {
+  private async request<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
+    try {
+      const url = `${API_BASE}${endpoint}`;
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        ...options,
+      });
 
-  try {
-    const response = await fetch(`${BASE_URL}${path}`, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorData: ApiError = await response.json().catch(() => ({
-        code: 'internal_error',
-        message: `HTTP ${response.status}`,
-      }));
-      throw errorData;
-    }
-
-    return await response.json();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        throw {
-          code: 'internal_error',
-          message: '請求超時',
-        } as ApiError;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API 請求失敗:', error);
+      throw error;
     }
-    
-    throw error;
+  }
+
+  // 獲取熱門概念
+  async getTrendingThemes(): Promise<StockConcept[]> {
+    try {
+      const url = `${API_BASE}/trending`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API 請求失敗:', error);
+      throw error;
+    }
+  }
+
+  // 搜尋概念
+  async searchThemes(query: string): Promise<StockConcept> {
+    try {
+      const url = `${API_BASE}/search?mode=theme&q=${encodeURIComponent(query)}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API 請求失敗:', error);
+      throw error;
+    }
+  }
+
+  // 搜尋股票
+  async searchStocks(query: string): Promise<Stock[]> {
+    const response = await this.request<Stock[]>(`/search?mode=stock&q=${encodeURIComponent(query)}`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.error || '搜尋股票失敗');
+  }
+
+  // 獲取股票分析
+  async getStockAnalysis(symbol: string): Promise<StockAnalysisResult> {
+    const response = await this.request<StockAnalysisResult>(`/stock/${symbol}/analysis`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.error || '獲取股票分析失敗');
+  }
+
+  // 通用搜尋方法
+  async search(query: string, mode: SearchMode): Promise<StockConcept | Stock[]> {
+    if (mode === 'theme') {
+      return await this.searchThemes(query);
+    } else {
+      return await this.searchStocks(query);
+    }
   }
 }
 
-// API 服務類
-export const Api = {
-  // 獲取熱門主題清單
-  async getTrending(): Promise<any[]> {
-    return httpRequest<any[]>('/trending');
-  },
-
-  // 搜尋主題
-  async searchTheme(query: string): Promise<any> {
-    return httpRequest<any>(`/search?mode=theme&q=${encodeURIComponent(query)}`);
-  },
-
-  // 搜尋個股
-  async searchStock(query: string): Promise<any> {
-    return httpRequest<any>(`/search?mode=stock&q=${encodeURIComponent(query)}`);
-  },
-
-  // 通用搜尋（根據模式）
-  async search(mode: 'theme' | 'stock', query: string): Promise<any> {
-    if (!['theme', 'stock'].includes(mode)) {
-      throw {
-        code: 'invalid_mode',
-        message: 'mode must be theme or stock',
-      } as ApiError;
-    }
-
-    if (!query.trim()) {
-      throw {
-        code: 'no_results',
-        message: 'q required',
-      } as ApiError;
-    }
-
-    return httpRequest<any>(`/search?mode=${mode}&q=${encodeURIComponent(query.trim())}`);
-  },
-};
-
-// 錯誤處理工具
-export const ErrorHandler = {
-  // 判斷是否為可重試的錯誤
-  isRetryable(error: ApiError): boolean {
-    return error.code === 'rate_limited' || error.code === 'internal_error';
-  },
-
-  // 判斷是否為空結果錯誤
-  isEmptyResult(error: ApiError): boolean {
-    return error.code === 'no_results';
-  },
-
-  // 獲取用戶友好的錯誤訊息
-  getFriendlyMessage(error: ApiError): string {
-    switch (error.code) {
-      case 'invalid_mode':
-        return '搜尋模式錯誤';
-      case 'no_results':
-        return '找不到相關結果';
-      case 'rate_limited':
-        return '請求過於頻繁，請稍後再試';
-      case 'internal_error':
-        return '服務暫時無法使用，請稍後再試';
-      default:
-        return error.message || '發生未知錯誤';
-    }
-  },
-};
+export const apiService = new ApiService();

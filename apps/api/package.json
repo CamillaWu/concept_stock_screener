@@ -1,29 +1,20 @@
 {
-  "name": "api",
+  "name": "@concepts-radar/api",
   "version": "1.0.0",
-  "description": "Cloudflare Workers API for Concepts Radar",
-  "main": "src/index.ts",
+  "private": true,
   "scripts": {
     "dev": "wrangler dev",
-    "build": "wrangler build",
     "deploy": "wrangler deploy",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tail": "wrangler tail"
   },
-  "keywords": [
-    "cloudflare",
-    "workers",
-    "hono",
-    "api"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
-    "hono": "^4.0.0"
+    "@concepts-radar/types": "workspace:*",
+    "@google/generative-ai": "^0.2.1",
+    "hono": "^3.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
     "typescript": "^5.0.0",
-    "wrangler": "^4.33.0"
+    "wrangler": "^3.0.0"
   }
 }
