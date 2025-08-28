@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "./dev.sh",
+    "dev": "./scripts/dev.sh",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
@@ -17,7 +17,9 @@
     "web:dev": "cd apps/web && pnpm dev",
     "api:deploy": "cd apps/api && pnpm deploy",
     "web:build": "cd apps/web && pnpm build",
-    "test:api": "./test-api.sh"
+    "test:api": "./scripts/test-api.sh",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:vercel": "./scripts/deploy-vercel.sh"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
