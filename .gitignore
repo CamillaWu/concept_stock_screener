@@ -104,3 +104,4 @@ wrangler.toml
 
 # Vercel
 .vercel
+.env*.local

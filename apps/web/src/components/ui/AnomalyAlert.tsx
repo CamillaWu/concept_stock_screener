@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExclamationTriangleIcon, TrendingUpIcon, TrendingDownIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 interface AnomalyEvent {
   type: 'price_up' | 'price_down' | 'volume_up' | 'volume_down';
@@ -24,9 +24,9 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
   const getAnomalyIcon = (type: string) => {
     switch (type) {
       case 'price_up':
-        return <TrendingUpIcon className="w-4 h-4 text-red-500" />;
+        return <ArrowTrendingUpIcon className="w-4 h-4 text-red-500" />;
       case 'price_down':
-        return <TrendingDownIcon className="w-4 h-4 text-green-500" />;
+        return <ArrowTrendingDownIcon className="w-4 h-4 text-green-500" />;
       case 'volume_up':
         return <ChartBarIcon className="w-4 h-4 text-blue-500" />;
       case 'volume_down':

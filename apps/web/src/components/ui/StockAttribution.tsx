@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLinkIcon, DocumentTextIcon, NewspaperIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
+import { ArrowTopRightOnSquareIcon, DocumentTextIcon, MegaphoneIcon, NewspaperIcon } from '@heroicons/react/24/outline';
 
 interface AttributionSource {
   type: 'news' | 'report' | 'announcement' | 'ai';
@@ -194,7 +194,7 @@ const StockAttribution: React.FC<StockAttributionProps> = ({
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
                   >
-                    <ExternalLinkIcon className="w-3 h-3 mr-1" />
+                    <ArrowTopRightOnSquareIcon className="w-3 h-3 mr-1" />
                     查看原文
                   </a>
                 )}
