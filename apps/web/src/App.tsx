@@ -15,6 +15,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState<SearchMode>('theme');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // 載入熱門概念
   useEffect(() => {
@@ -106,38 +107,57 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
       {/* 側邊欄 */}
-      <Sidebar
-        trendingThemes={trendingThemes}
-        onSearch={handleSearch}
-        onThemeClick={handleThemeClick}
-        onStockClick={handleStockClick}
-        loading={loading}
-      />
+      <div className={`transition-all duration-300 ease-in-out ${
+        sidebarCollapsed ? 'w-16' : 'w-80'
+      }`}>
+        <Sidebar
+          trendingThemes={trendingThemes}
+          onSearch={handleSearch}
+          onThemeClick={handleThemeClick}
+          onStockClick={handleStockClick}
+          loading={loading}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+      </div>
 
       {/* 主要內容區域 */}
-      <div className="flex-1 flex">
-        <DetailPanel
-          selectedTheme={selectedTheme}
-          relatedStocks={selectedTheme?.stocks || []}
-          loading={loading}
-          error={error}
-          onStockClick={handleStockClick}
-          onRetry={handleRetry}
-        />
-
-        {/* 股票詳細面板 */}
-        {selectedStock && (
-          <StockDetailPanel
-            selectedStock={selectedStock}
-            analysis={stockAnalysis}
-            currentTheme={selectedTheme?.theme || ''}
+      <div className="flex-1 flex flex-col lg:flex-row min-w-0">
+        {/* 中間面板 */}
+        <div className="flex-1 min-w-0">
+          <DetailPanel
+            selectedTheme={selectedTheme}
+            relatedStocks={selectedTheme?.stocks || []}
             loading={loading}
+            error={error}
+            onStockClick={handleStockClick}
             onRetry={handleRetry}
           />
+        </div>
+
+        {/* 股票詳細面板 - 響應式設計 */}
+        {selectedStock && (
+          <div className="w-full lg:w-96 border-l border-gray-200 bg-white">
+            <StockDetailPanel
+              selectedStock={selectedStock}
+              analysis={stockAnalysis}
+              currentTheme={selectedTheme?.theme || ''}
+              loading={loading}
+              onRetry={handleRetry}
+            />
+          </div>
         )}
       </div>
+
+      {/* 移動端側邊欄遮罩 */}
+      {sidebarCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarCollapsed(false)}
+        />
+      )}
     </div>
   );
 }
