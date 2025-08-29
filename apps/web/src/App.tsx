@@ -14,7 +14,6 @@ function App() {
   const [stockAnalysis, setStockAnalysis] = useState<StockAnalysisResult | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchMode, setSearchMode] = useState<SearchMode>('theme');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // 載入熱門概念
@@ -42,7 +41,6 @@ function App() {
     try {
       setLoading(true);
       setError(null);
-      setSearchMode(mode);
       
       const data = await apiService.search(query, mode);
       

@@ -1,13 +1,13 @@
 import React from 'react';
 import { SearchBar } from './SearchBar';
 import { TrendingList } from './TrendingList';
-import { StockConcept, SearchMode } from '../../types';
+import { StockConcept, SearchMode, Stock } from '../../types';
 
 interface SidebarProps {
   trendingThemes: StockConcept[];
   onSearch: (query: string, mode?: SearchMode) => void;
   onThemeClick: (theme: StockConcept) => void;
-  onStockClick: (stock: any) => void;
+  onStockClick?: (stock: Stock) => void;
   loading?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -18,7 +18,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   trendingThemes,
   onSearch,
   onThemeClick,
-  onStockClick,
   loading = false,
   collapsed = false,
   onToggleCollapse,
@@ -94,7 +93,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <TrendingList
               themes={trendingThemes}
               onThemeClick={onThemeClick}
-              onStockClick={onStockClick}
               loading={loading}
             />
           </div>

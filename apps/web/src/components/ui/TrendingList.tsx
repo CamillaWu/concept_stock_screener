@@ -5,7 +5,6 @@ import { ThemeCard } from './ThemeCard';
 interface TrendingListProps {
   themes: StockConcept[];
   onThemeClick?: (theme: StockConcept) => void;
-  onStockClick?: (stock: any) => void;
   className?: string;
   loading?: boolean;
 }
@@ -13,7 +12,6 @@ interface TrendingListProps {
 export const TrendingList: React.FC<TrendingListProps> = ({
   themes,
   onThemeClick,
-  onStockClick,
   className = '',
   loading = false
 }) => {
@@ -44,13 +42,13 @@ export const TrendingList: React.FC<TrendingListProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-              {themes.map((theme) => (
-          <ThemeCard
-            key={theme.id}
-            theme={theme}
-            onSelect={() => onThemeClick?.(theme)}
-          />
-        ))}
+      {themes.map((theme) => (
+        <ThemeCard
+          key={theme.id}
+          theme={theme}
+          onSelect={() => onThemeClick?.(theme)}
+        />
+      ))}
     </div>
   );
 };
