@@ -10,25 +10,27 @@ if (!GEMINI_API_KEY) {
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 // 模擬資料（當 Gemini API 不可用時使用）
-const mockTrendingThemes = [
+const mockTrendingThemes: StockConcept[] = [
   {
-    id: 'ai-servers',
+    id: '1',
     theme: 'AI 伺服器',
-    description: '人工智慧伺服器相關概念股，包含伺服器製造、晶片供應鏈等',
+    name: 'AI 伺服器',
+    description: 'AI 伺服器相關概念股，包括伺服器製造、晶片供應商等',
     heatScore: 85,
     stocks: [
-      { ticker: '2330', name: '台積電', exchange: 'TWSE' as const, reason: 'AI 晶片主要代工廠' },
-      { ticker: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: 'AI 伺服器組裝大廠' }
+      { ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const, reason: '相關產業龍頭' },
+      { ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: '供應鏈重要廠商' }
     ]
   },
   {
-    id: 'optical-communication',
-    theme: '光通訊',
-    description: '高速傳輸與資料中心光模組相關概念股',
-    heatScore: 81,
+    id: '2',
+    theme: '電動車',
+    name: '電動車',
+    description: '電動車產業鏈，包括電池、馬達、充電樁等相關概念',
+    heatScore: 78,
     stocks: [
-      { ticker: '4977', name: '眾達', exchange: 'TWSE' as const, reason: '光通訊模組供應商' },
-      { ticker: '4979', name: '華星光', exchange: 'TWSE' as const, reason: '光纖通訊設備' }
+      { ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const, reason: '相關產業龍頭' },
+      { ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: '供應鏈重要廠商' }
     ]
   }
 ];
@@ -101,11 +103,12 @@ export const geminiService = {
       return {
         id: 'mock-theme',
         theme: prompt,
+        name: prompt,
         description: `關於 ${prompt} 的投資主題分析`,
         heatScore: Math.floor(Math.random() * 100),
         stocks: [
-          { ticker: '2330', name: '台積電', exchange: 'TWSE' as const, reason: '相關產業龍頭' },
-          { ticker: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: '供應鏈重要廠商' }
+          { ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const, reason: '相關產業龍頭' },
+          { ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: '供應鏈重要廠商' }
         ]
       };
     }
@@ -154,11 +157,12 @@ export const geminiService = {
       return {
         id: 'mock-theme',
         theme: prompt,
+        name: prompt,
         description: `關於 ${prompt} 的投資主題分析`,
         heatScore: Math.floor(Math.random() * 100),
         stocks: [
-          { ticker: '2330', name: '台積電', exchange: 'TWSE' as const, reason: '相關產業龍頭' },
-          { ticker: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: '供應鏈重要廠商' }
+          { ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const, reason: '相關產業龍頭' },
+          { ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const, reason: '供應鏈重要廠商' }
         ]
       };
     }
@@ -170,11 +174,11 @@ export const geminiService = {
       return {
         stock: { ticker: stockIdentifier, name: '測試股票' },
         themes: [
-          { theme: 'AI 伺服器', description: '主要供應商', heatScore: 85 },
-          { theme: '半導體', description: '產業龍頭', heatScore: 78 },
-          { theme: '5G 通訊', description: '技術領先', heatScore: 72 },
-          { theme: '電動車', description: '新興市場', heatScore: 65 },
-          { theme: '物聯網', description: '應用廣泛', heatScore: 58 }
+          { theme: 'AI 伺服器', name: 'AI 伺服器', description: '主要供應商', heatScore: 85, relevanceScore: 85 },
+          { theme: '半導體', name: '半導體', description: '產業龍頭', heatScore: 78, relevanceScore: 78 },
+          { theme: '5G 通訊', name: '5G 通訊', description: '技術領先', heatScore: 72, relevanceScore: 72 },
+          { theme: '電動車', name: '電動車', description: '新興市場', heatScore: 65, relevanceScore: 65 },
+          { theme: '物聯網', name: '物聯網', description: '應用廣泛', heatScore: 58, relevanceScore: 58 }
         ]
       };
     }
@@ -220,11 +224,11 @@ export const geminiService = {
       return {
         stock: { ticker: stockIdentifier, name: '測試股票' },
         themes: [
-          { theme: 'AI 伺服器', description: '主要供應商', heatScore: 85 },
-          { theme: '半導體', description: '產業龍頭', heatScore: 78 },
-          { theme: '5G 通訊', description: '技術領先', heatScore: 72 },
-          { theme: '電動車', description: '新興市場', heatScore: 65 },
-          { theme: '物聯網', description: '應用廣泛', heatScore: 58 }
+          { theme: 'AI 伺服器', name: 'AI 伺服器', description: '主要供應商', heatScore: 85, relevanceScore: 85 },
+          { theme: '半導體', name: '半導體', description: '產業龍頭', heatScore: 78, relevanceScore: 78 },
+          { theme: '5G 通訊', name: '5G 通訊', description: '技術領先', heatScore: 72, relevanceScore: 72 },
+          { theme: '電動車', name: '電動車', description: '新興市場', heatScore: 65, relevanceScore: 65 },
+          { theme: '物聯網', name: '物聯網', description: '應用廣泛', heatScore: 58, relevanceScore: 58 }
         ]
       };
     }

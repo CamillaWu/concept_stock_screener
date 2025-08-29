@@ -1,31 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { StockConcept, Stock } from '../../types';
+import type { StockConcept } from '@concepts-radar/types';
 import { StockList } from './StockList';
-import { LoadingSkeleton } from './LoadingSkeleton';
-import { ErrorState } from './ErrorState';
-import { EmptyState } from './EmptyState';
-import ConceptStrength from './ConceptStrength';
-import SentimentAnalysis from './SentimentAnalysis';
-import AnomalyAlert from './AnomalyAlert';
+import { ConceptStrength } from './ConceptStrength';
+import { SentimentAnalysis } from './SentimentAnalysis';
+import { AnomalyAlert } from './AnomalyAlert';
 import { apiService } from '../../services/api';
 
 interface DetailPanelProps {
-  selectedTheme?: StockConcept;
-  relatedStocks?: Stock[];
-  loading?: boolean;
-  error?: string;
-  onStockClick?: (stock: Stock) => void;
-  onRetry?: () => void;
+  theme: StockConcept;
+  onStockClick: (stock: StockConcept['stocks'][0]) => void;
+  useRealData?: boolean;
   className?: string;
 }
 
 export const DetailPanel: React.FC<DetailPanelProps> = ({
-  selectedTheme,
-  relatedStocks = [],
-  loading = false,
-  error,
+  theme,
   onStockClick,
-  onRetry,
   className = ''
 }) => {
   const [conceptStrength, setConceptStrength] = useState<{
@@ -57,15 +47,15 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
 
   // 當選中主題時，載入分析數據
   useEffect(() => {
-    if (selectedTheme?.theme) {
-      loadThemeAnalysis(selectedTheme.theme);
+    if (theme?.theme) {
+      loadThemeAnalysis(theme.theme);
     } else {
       // 重置狀態
       setConceptStrength(null);
       setSentiment(null);
       setAnomalyEvents([]);
     }
-  }, [selectedTheme]);
+  }, [theme]);
 
   const loadThemeAnalysis = async (theme: string) => {
     try {
@@ -123,27 +113,15 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
     }
   };
 
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
-  if (error) {
-    return <ErrorState message={error} onRetry={onRetry} />;
-  }
-
-  if (!selectedTheme) {
-    return <EmptyState />;
-  }
-
   return (
     <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
       {/* 主題標題 */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {selectedTheme.theme}
+          {theme.theme}
         </h1>
-        {selectedTheme.description && (
-          <p className="text-gray-600">{selectedTheme.description}</p>
+        {theme.description && (
+          <p className="text-gray-600">{theme.description}</p>
         )}
       </div>
 
@@ -174,10 +152,10 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
       {/* 相關股票列表 */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          相關股票 ({relatedStocks.length})
+          相關股票 ({theme.stocks.length})
         </h2>
         <StockList
-          stocks={relatedStocks}
+          stocks={theme.stocks}
           onStockClick={onStockClick}
         />
       </div>

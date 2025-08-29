@@ -1,5 +1,5 @@
 import React from 'react';
-import { StockConcept } from '../../types';
+import type { StockConcept } from '@concepts-radar/types';
 import { ThemeCard } from './ThemeCard';
 
 interface TrendingListProps {
@@ -7,13 +7,17 @@ interface TrendingListProps {
   onThemeClick?: (theme: StockConcept) => void;
   className?: string;
   loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 export const TrendingList: React.FC<TrendingListProps> = ({
   themes,
   onThemeClick,
   className = '',
-  loading = false
+  loading = false,
+  error = null,
+  onRetry
 }) => {
   if (loading) {
     return (
@@ -28,6 +32,22 @@ export const TrendingList: React.FC<TrendingListProps> = ({
             <div className="h-4 bg-gray-200 rounded w-2/3"></div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`text-center py-8 text-gray-500 ${className}`}>
+        <div className="mb-4">載入失敗</div>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            重試
+          </button>
+        )}
       </div>
     );
   }

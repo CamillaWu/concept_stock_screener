@@ -129,4 +129,4 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({
   );
 };
 
-export default SentimentAnalysis;
+export { SentimentAnalysis };

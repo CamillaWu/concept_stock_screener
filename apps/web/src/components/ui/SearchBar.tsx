@@ -1,134 +1,151 @@
 import React, { useState } from 'react';
-import type { SearchMode } from '../../types';
 
 interface SearchBarProps {
-  mode: SearchMode;
-  onModeChange: (mode: SearchMode) => void;
-  onSearch: (query: string, mode?: SearchMode) => void;
-  placeholder?: string;
+  onSearch: (query: string, mode: 'theme' | 'stock', useRealData: boolean) => void;
+  mode: 'theme' | 'stock';
+  onModeChange: (mode: 'theme' | 'stock') => void;
   loading?: boolean;
-  className?: string;
+  useRealData: boolean;
+  onUseRealDataChange: (useRealData: boolean) => void;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
+  onSearch,
   mode,
   onModeChange,
-  onSearch,
-  placeholder,
   loading = false,
-  className = ''
+  useRealData,
+  onUseRealDataChange
 }) => {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim() && !loading) {
-      onSearch(query.trim(), mode);
+    if (query.trim()) {
+      onSearch(query.trim(), mode, useRealData);
     }
   };
 
-  const getPlaceholder = () => {
-    if (placeholder) return placeholder;
-    return mode === 'theme' 
-      ? '搜尋主題，如：AI 伺服器、光通訊' 
-      : '輸入股號/名稱，如：2330 或 台積電';
-  };
+  const quickSuggestions = mode === 'theme' 
+    ? ['AI', '電動車', '綠能', '生技', '金融']
+    : ['2330', '2317', '2454', '2412', '1301'];
 
   return (
-    <div className={`w-full ${className}`}>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* 模式切換 */}
-        <div className="flex bg-gray-100 rounded-xl p-1 shadow-inner">
-          <button
-            type="button"
-            onClick={() => onModeChange('theme')}
-            className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-              mode === 'theme'
-                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-blue-200'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-            aria-label="主題搜尋模式"
-          >
-            <svg className="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-            </svg>
-            主題
-          </button>
-          <button
-            type="button"
-            onClick={() => onModeChange('stock')}
-            className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-              mode === 'stock'
-                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-blue-200'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-            aria-label="個股搜尋模式"
-          >
-            <svg className="w-4 h-4 mr-2 inline" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-              <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-            </svg>
-            個股
-          </button>
+    <div className="w-full max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit} className="relative">
+        <div className="flex items-center space-x-2 mb-4">
+          {/* 模式切換 */}
+          <div className="flex bg-white rounded-lg shadow-sm border border-gray-200">
+            <button
+              type="button"
+              onClick={() => onModeChange('theme')}
+              className={`px-4 py-2 rounded-l-lg text-sm font-medium transition-colors ${
+                mode === 'theme'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              主題搜尋
+            </button>
+            <button
+              type="button"
+              onClick={() => onModeChange('stock')}
+              className={`px-4 py-2 rounded-r-lg text-sm font-medium transition-colors ${
+                mode === 'stock'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              股票搜尋
+            </button>
+          </div>
+
+          {/* 真實資料切換 */}
+          <div className="flex items-center space-x-2">
+            <label className="flex items-center space-x-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={useRealData}
+                onChange={(e) => onUseRealDataChange(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <span>真實資料</span>
+            </label>
+          </div>
         </div>
 
         {/* 搜尋輸入框 */}
         <div className="relative">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={mode === 'theme' ? '搜尋投資主題...' : '輸入股票代號...'}
+            className="w-full px-4 py-3 pl-12 pr-20 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            disabled={loading}
+          />
+          
+          {/* 搜尋圖示 */}
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <input
-            type="text"
-            id="search-input"
-            name="search-query"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={getPlaceholder()}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
-            disabled={loading}
-            aria-label={`搜尋${mode === 'theme' ? '主題' : '個股'}`}
-          />
-        </div>
 
-        {/* 搜尋按鈕 */}
-        <button
-          type="submit"
-          disabled={loading || !query.trim()}
-          className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
-          aria-label="執行搜尋"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              搜尋中...
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* 搜尋按鈕 */}
+          <button
+            type="submit"
+            disabled={loading || !query.trim()}
+            className="absolute inset-y-0 right-0 px-4 py-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? (
+              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              搜尋
-            </div>
-          )}
-        </button>
+            )}
+          </button>
+        </div>
       </form>
 
       {/* 快速搜尋建議 */}
-      {mode === 'theme' && (
-        <div className="mt-3">
-          <div className="text-xs text-gray-500 mb-2">熱門搜尋：</div>
-          <div className="flex flex-wrap gap-2">
-            {['AI 伺服器', '光通訊', '電動車', '半導體'].map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => onSearch(suggestion, mode)}
-                className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
-              >
-                {suggestion}
-              </button>
-            ))}
+      <div className="mt-3">
+        <div className="text-sm text-gray-500 mb-2">快速搜尋：</div>
+        <div className="flex flex-wrap gap-2">
+          {quickSuggestions.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => {
+                setQuery(suggestion);
+                onSearch(suggestion, mode, useRealData);
+              }}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 資料來源提示 */}
+      {useRealData && (
+        <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center text-sm text-green-700">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            使用真實台股資料（台灣證券交易所 + Yahoo Finance）
           </div>
         </div>
       )}
