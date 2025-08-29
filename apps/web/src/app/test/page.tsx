@@ -2,8 +2,22 @@
 
 import { useState, useEffect } from 'react';
 
+interface ApiResponse {
+  themes?: Array<{
+    id: string;
+    theme: string;
+    description: string;
+    heatScore: number;
+    stocks: Array<{
+      ticker: string;
+      name: string;
+      reason: string;
+    }>;
+  }>;
+}
+
 export default function TestPage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
