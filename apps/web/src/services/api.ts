@@ -1,6 +1,9 @@
 import type { StockConcept, Stock, StockAnalysisResult, ApiResponse, SearchMode } from '../types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://concept-stock-screener-api.sandy246836.workers.dev';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 
+  (process.env.NODE_ENV === 'production' 
+    ? 'https://concept-stock-screener-api.sandy246836.workers.dev' 
+    : 'http://localhost:8787');
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -158,3 +161,94 @@ class ApiService {
 }
 
 export const apiService = new ApiService();
+
+// RAG 相關 API
+export const ragApi = {
+  // 檢查 RAG 狀態
+  async checkStatus() {
+    const response = await fetch(`${API_BASE}/rag/status`);
+    if (!response.ok) {
+      throw new Error('Failed to check RAG status');
+    }
+    return response.json();
+  },
+
+  // 向量化 RAG 資料
+  async vectorize() {
+    const response = await fetch(`${API_BASE}/rag/vectorize`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to vectorize RAG data');
+    }
+    return response.json();
+  },
+
+  // 向量搜尋
+  async search(query: string, options: {
+    type?: 'theme_overview' | 'theme_to_stock';
+    theme?: string;
+    topK?: number;
+  } = {}) {
+    const params = new URLSearchParams({
+      q: query,
+      ...(options.type && { type: options.type }),
+      ...(options.theme && { theme: options.theme }),
+      ...(options.topK && { topK: options.topK.toString() }),
+    });
+    
+    const response = await fetch(`${API_BASE}/rag/search?${params}`);
+    if (!response.ok) {
+      throw new Error('Failed to search RAG data');
+    }
+    return response.json();
+  },
+
+  // 搜尋主題相關股票
+  async getStocksByTheme(theme: string, topK: number = 10) {
+    const params = new URLSearchParams({
+      theme,
+      topK: topK.toString(),
+    });
+    
+    const response = await fetch(`${API_BASE}/rag/stocks-by-theme?${params}`);
+    if (!response.ok) {
+      throw new Error('Failed to get stocks by theme');
+    }
+    return response.json();
+  },
+
+  // 搜尋股票相關主題
+  async getThemesByStock(stock: string, topK: number = 10) {
+    const params = new URLSearchParams({
+      stock,
+      topK: topK.toString(),
+    });
+    
+    const response = await fetch(`${API_BASE}/rag/themes-by-stock?${params}`);
+    if (!response.ok) {
+      throw new Error('Failed to get themes by stock');
+    }
+    return response.json();
+  },
+
+  // 取得所有主題
+  async getAllThemes() {
+    const response = await fetch(`${API_BASE}/rag/themes`);
+    if (!response.ok) {
+      throw new Error('Failed to get all themes');
+    }
+    return response.json();
+  },
+
+  // 清除向量資料
+  async clearVectors() {
+    const response = await fetch(`${API_BASE}/rag/vectors`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to clear vectors');
+    }
+    return response.json();
+  },
+};

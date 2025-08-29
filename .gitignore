@@ -105,3 +105,9 @@ wrangler.toml
 # Vercel
 .vercel
 .env*.local
+
+# Data files (but keep RAG files)
+data/*
+!data/rag/
+!data/rag/*.jsonl
+!data/rag/*.md

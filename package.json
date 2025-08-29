@@ -40,6 +40,8 @@
   "author": "Concept Stock Screener Team",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "zustand": "^5.0.8"
   }
 }
