@@ -123,4 +123,4 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
   );
 };
 
-export default AnomalyAlert;
+export { AnomalyAlert };

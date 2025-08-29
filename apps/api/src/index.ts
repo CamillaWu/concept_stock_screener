@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { geminiService } from './services/gemini';
+import { realStockDataService } from './services/real-stock-data';
 import { cacheService } from './services/cache';
 import { vectorService } from './services/vector';
 import { ragLoaderService } from './services/rag-loader';
@@ -9,25 +10,15 @@ import type { StockConcept, StockAnalysisResult, ApiResponse } from '@concepts-r
 
 const app = new Hono();
 
-// 中間件
-app.use('*', logger());
+// CORS 設定
 app.use('*', cors({
   origin: (origin) => {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'https://concept-stock-screener.vercel.app',
-      'https://concept-stock-screener-eyydzobsi-camilla-wus-projects.vercel.app'
-    ];
-    
-    // 允許所有 Vercel 預覽域名
-    if (origin && origin.includes('vercel.app')) {
-      return origin;
-    }
-    
-    return allowedOrigins.includes(origin || '') ? origin : false;
+    // 允許所有來源，或者你可以設定特定的域名
+    return origin || '*';
   },
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 
 // 健康檢查
@@ -35,20 +26,37 @@ app.get('/', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 趨勢主題 API
+// 趨勢主題 API - 整合真實資料
 app.get('/trending', async (c) => {
   try {
     const sortBy = c.req.query('sort') as 'popular' | 'latest' || 'popular';
+    const useRealData = c.req.query('real') === 'true';
     
     // 先檢查快取
-    const cacheKey = `trending:${sortBy}`;
+    const cacheKey = `trending:${sortBy}:${useRealData}`;
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       return c.json(cached);
     }
 
-    // 呼叫 Gemini API
-    const themes = await geminiService.fetchTrendingThemes(sortBy);
+    let themes: StockConcept[];
+
+    if (useRealData) {
+      // 使用真實台股資料
+      console.log('使用真實台股資料');
+      themes = await realStockDataService.getRealTrendingThemes();
+      
+      // 如果真實資料不足，補充 AI 生成的資料
+      if (themes.length < 10) {
+        console.log('真實資料不足，補充 AI 資料');
+        const aiThemes = await geminiService.fetchTrendingThemes(sortBy);
+        themes = [...themes, ...aiThemes.slice(0, 15 - themes.length)];
+      }
+    } else {
+      // 使用 AI 生成的資料
+      console.log('使用 AI 生成資料');
+      themes = await geminiService.fetchTrendingThemes(sortBy);
+    }
     
     // 儲存到快取
     await cacheService.set(cacheKey, themes, 300); // 5分鐘快取
@@ -64,11 +72,12 @@ app.get('/trending', async (c) => {
   }
 });
 
-// 搜尋 API
+// 搜尋 API - 整合真實資料
 app.get('/search', async (c) => {
   try {
     const mode = c.req.query('mode') as 'theme' | 'stock';
     const query = c.req.query('q');
+    const useRealData = c.req.query('real') === 'true';
     
     if (!mode || !query) {
       return c.json({
@@ -87,7 +96,7 @@ app.get('/search', async (c) => {
     }
 
     // 檢查快取
-    const cacheKey = `search:${mode}:${query}`;
+    const cacheKey = `search:${mode}:${query}:${useRealData}`;
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       return c.json(cached);
@@ -96,9 +105,36 @@ app.get('/search', async (c) => {
     let result: StockConcept | StockAnalysisResult;
 
     if (mode === 'theme') {
-      result = await geminiService.fetchStockConcepts(query);
+      if (useRealData) {
+        // 使用真實資料搜尋主題
+        const stocks = await realStockDataService.getStocksByIndustry(query);
+        if (stocks.length > 0) {
+          result = {
+            id: `real-${query}`,
+            theme: query,
+            name: query,
+            description: `與 ${query} 相關的台股概念股`,
+            heatScore: Math.floor(Math.random() * 30) + 70,
+            stocks: stocks
+          };
+        } else {
+          // 如果真實資料沒有找到，使用 AI
+          result = await geminiService.fetchStockConcepts(query);
+        }
+      } else {
+        result = await geminiService.fetchStockConcepts(query);
+      }
     } else {
-      result = await geminiService.fetchConceptsForStock(query);
+      if (useRealData) {
+        // 使用真實資料搜尋股票
+        result = await realStockDataService.getStockConceptAnalysis(query);
+        if (!result) {
+          // 如果真實資料沒有找到，使用 AI
+          result = await geminiService.fetchConceptsForStock(query);
+        }
+      } else {
+        result = await geminiService.fetchConceptsForStock(query);
+      }
     }
 
     // 儲存到快取
@@ -115,7 +151,127 @@ app.get('/search', async (c) => {
   }
 });
 
-// 新增：概念強度分析 API
+// 新增：股票即時價格 API
+app.get('/stock-price/:ticker', async (c) => {
+  try {
+    const ticker = c.req.param('ticker');
+    
+    if (!ticker) {
+      return c.json({
+        success: false,
+        error: 'Missing ticker parameter',
+        code: 'invalid_ticker'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `stock-price:${ticker}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const priceData = await realStockDataService.getStockPrice(ticker);
+    
+    if (!priceData) {
+      return c.json({
+        success: false,
+        error: 'Stock not found',
+        code: 'no_results'
+      }, 404);
+    }
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, priceData, 60); // 1分鐘快取
+    
+    return c.json(priceData);
+  } catch (error) {
+    console.error('Stock price API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch stock price',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 新增：市場概況 API
+app.get('/market-overview', async (c) => {
+  try {
+    // 檢查快取
+    const cacheKey = 'market-overview';
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const marketData = await realStockDataService.getMarketOverview();
+    
+    if (!marketData) {
+      return c.json({
+        success: false,
+        error: 'Market data not available',
+        code: 'no_results'
+      }, 404);
+    }
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, marketData, 300); // 5分鐘快取
+    
+    return c.json(marketData);
+  } catch (error) {
+    console.error('Market overview API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch market overview',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 新增：股票列表 API
+app.get('/stocks', async (c) => {
+  try {
+    const industry = c.req.query('industry');
+    
+    // 檢查快取
+    const cacheKey = `stocks:${industry || 'all'}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    let stocks;
+    if (industry) {
+      stocks = await realStockDataService.getStocksByIndustry(industry);
+    } else {
+      const stockList = await realStockDataService.getStockList();
+      stocks = stockList.slice(0, 100).map(stock => ({
+        ticker: stock.code,
+        symbol: stock.code,
+        name: stock.name,
+        exchange: stock.market as 'TWSE' | 'TPEx',
+        reason: `屬於${stock.industry}產業`,
+        heatScore: Math.floor(Math.random() * 40) + 60,
+        concepts: [stock.industry]
+      }));
+    }
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, stocks, 1800); // 30分鐘快取
+    
+    return c.json(stocks);
+  } catch (error) {
+    console.error('Stocks API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to fetch stocks',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 概念強度分析 API
 app.get('/concept-strength', async (c) => {
   try {
     const theme = c.req.query('theme');
@@ -152,7 +308,7 @@ app.get('/concept-strength', async (c) => {
   }
 });
 
-// 新增：情緒分析 API
+// 情緒分析 API
 app.get('/sentiment', async (c) => {
   try {
     const theme = c.req.query('theme');
@@ -189,7 +345,7 @@ app.get('/sentiment', async (c) => {
   }
 });
 
-// 新增：個股歸因分析 API
+// 個股歸因分析 API
 app.get('/stock-attribution', async (c) => {
   try {
     const stockId = c.req.query('stockId');
@@ -198,7 +354,7 @@ app.get('/stock-attribution', async (c) => {
     if (!stockId || !theme) {
       return c.json({
         success: false,
-        error: 'Missing stockId or theme parameter',
+        error: 'Missing required parameters',
         code: 'invalid_parameters'
       }, 400);
     }
@@ -221,13 +377,13 @@ app.get('/stock-attribution', async (c) => {
     console.error('Stock attribution API error:', error);
     return c.json({
       success: false,
-      error: 'Failed to analyze stock attribution',
+      error: 'Failed to get stock attribution',
       code: 'internal_error'
     }, 500);
   }
 });
 
-// 新增：綜合分析 API（一次性獲取主題的所有分析數據）
+// 綜合主題分析 API
 app.get('/theme-analysis', async (c) => {
   try {
     const theme = c.req.query('theme');
@@ -247,18 +403,8 @@ app.get('/theme-analysis', async (c) => {
       return c.json(cached);
     }
 
-    // 並行呼叫多個 Gemini API
-    const [strength, sentiment] = await Promise.all([
-      geminiService.analyzeConceptStrength(theme),
-      geminiService.analyzeSentiment(theme)
-    ]);
-
-    const analysis = {
-      theme,
-      strength,
-      sentiment,
-      timestamp: new Date().toISOString()
-    };
+    // 呼叫 Gemini API
+    const analysis = await geminiService.analyzeConceptStrength(theme);
     
     // 儲存到快取
     await cacheService.set(cacheKey, analysis, 1800); // 30分鐘快取
@@ -274,27 +420,21 @@ app.get('/theme-analysis', async (c) => {
   }
 });
 
-// ===== RAG 相關 API =====
-
-// 靜態檔案服務 - 提供RAG檔案
+// RAG 相關 API
 app.get('/rag/manifest.json', async (c) => {
   try {
-    // 檢查是否在 Cloudflare Workers 環境中
     const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
     
     let manifestUrl: string;
     if (isCloudflareWorkers) {
-      // 在雲端環境中，使用公開的 RAG 檔案 URL
       manifestUrl = 'https://concept-stock-screener.vercel.app/rag/manifest.json';
     } else {
-      // 在本地開發環境中，使用本地檔案服務
       manifestUrl = 'http://localhost:3001/rag/manifest.json';
     }
     
     const response = await fetch(manifestUrl);
     
     if (!response.ok) {
-      // 如果無法讀取，返回預設的manifest
       return c.json({
         theme_overview: 15,
         theme_to_stock: 75,
@@ -308,7 +448,6 @@ app.get('/rag/manifest.json', async (c) => {
     return c.json(manifest);
   } catch (error) {
     console.error('Failed to serve manifest:', error);
-    // 返回預設的manifest
     return c.json({
       theme_overview: 15,
       theme_to_stock: 75,
@@ -321,88 +460,34 @@ app.get('/rag/manifest.json', async (c) => {
 
 app.get('/rag/docs.jsonl', async (c) => {
   try {
-    // 檢查是否在 Cloudflare Workers 環境中
     const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
     
     let docsUrl: string;
     if (isCloudflareWorkers) {
-      // 在雲端環境中，使用公開的 RAG 檔案 URL
       docsUrl = 'https://concept-stock-screener.vercel.app/rag/docs.jsonl';
     } else {
-      // 在本地開發環境中，使用本地檔案服務
       docsUrl = 'http://localhost:3001/rag/docs.jsonl';
     }
     
     const response = await fetch(docsUrl);
     
     if (!response.ok) {
-      return c.json({
-        success: false,
-        error: 'Documents file not found'
-      }, 404);
+      return c.json({ error: 'Failed to load RAG documents' }, 500);
     }
     
     const text = await response.text();
-    return new Response(text, {
-      headers: {
-        'Content-Type': 'application/jsonl',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    return c.text(text);
   } catch (error) {
-    console.error('Failed to serve documents:', error);
-    return c.json({
-      success: false,
-      error: 'Failed to load documents'
-    }, 500);
+    console.error('Failed to serve RAG documents:', error);
+    return c.json({ error: 'Failed to serve RAG documents' }, 500);
   }
 });
 
-// RAG 狀態檢查
-app.get('/rag/status', async (c) => {
-  try {
-    const validation = await ragLoaderService.validateRAGData();
-    return c.json({
-      success: true,
-      data: validation
-    });
-  } catch (error) {
-    console.error('RAG status check failed:', error);
-    return c.json({
-      success: false,
-      error: 'Failed to check RAG status',
-      code: 'internal_error'
-    }, 500);
-  }
-});
-
-// 向量化 RAG 資料
-app.post('/rag/vectorize', async (c) => {
-  try {
-    const documents = await ragLoaderService.loadDocuments();
-    const result = await vectorService.upsertDocuments(documents);
-    
-    return c.json({
-      success: true,
-      data: result
-    });
-  } catch (error) {
-    console.error('RAG vectorization failed:', error);
-    return c.json({
-      success: false,
-      error: 'Failed to vectorize RAG data',
-      code: 'internal_error'
-    }, 500);
-  }
-});
-
-// 向量搜尋
-app.get('/rag/search', async (c) => {
+// 向量搜尋 API
+app.get('/vector-search', async (c) => {
   try {
     const query = c.req.query('q');
-    const type = c.req.query('type') as 'theme_overview' | 'theme_to_stock';
-    const themeName = c.req.query('theme');
-    const topK = parseInt(c.req.query('topK') || '10');
+    const limit = parseInt(c.req.query('limit') || '5');
     
     if (!query) {
       return c.json({
@@ -412,37 +497,13 @@ app.get('/rag/search', async (c) => {
       }, 400);
     }
 
-    // 檢查快取
-    const cacheKey = `rag-search:${query}:${type}:${themeName}:${topK}`;
-    const cached = await cacheService.get(cacheKey);
-    if (cached) {
-      return c.json(cached);
-    }
-
-    const results = await vectorService.search(query, {
-      type,
-      theme_name: themeName,
-      topK
-    });
-
-    const response = {
-      success: true,
-      data: {
-        query,
-        results,
-        count: results.length
-      }
-    };
-
-    // 儲存到快取
-    await cacheService.set(cacheKey, response, 1800); // 30分鐘快取
-    
-    return c.json(response);
+    const results = await vectorService.search(query, { topK: limit });
+    return c.json(results);
   } catch (error) {
-    console.error('RAG search failed:', error);
+    console.error('Vector search API error:', error);
     return c.json({
       success: false,
-      error: 'Failed to search RAG data',
+      error: 'Vector search failed',
       code: 'internal_error'
     }, 500);
   }

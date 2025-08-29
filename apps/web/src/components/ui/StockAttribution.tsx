@@ -207,4 +207,4 @@ const StockAttribution: React.FC<StockAttributionProps> = ({
   );
 };
 
-export default StockAttribution;
+export { StockAttribution };

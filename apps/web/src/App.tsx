@@ -1,161 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from './components/ui/Sidebar';
+import { SearchBar } from './components/ui/SearchBar';
 import { DetailPanel } from './components/ui/DetailPanel';
 import { StockDetailPanel } from './components/ui/StockDetailPanel';
-import { StockConcept, Stock, SearchMode, StockAnalysisResult } from './types';
 import { apiService } from './services/api';
-import './App.css';
+import type { StockConcept, StockAnalysisResult, Stock } from '@concepts-radar/types';
 
 function App() {
-  // 狀態管理
-  const [trendingThemes, setTrendingThemes] = useState<StockConcept[]>([]);
-  const [selectedTheme, setSelectedTheme] = useState<StockConcept | undefined>();
-  const [selectedStock, setSelectedStock] = useState<Stock | undefined>();
-  const [stockAnalysis, setStockAnalysis] = useState<StockAnalysisResult | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<StockConcept | null>(null);
+  const [selectedStock, setSelectedStock] = useState<StockAnalysisResult | null>(null);
+  const [searchMode, setSearchMode] = useState<'theme' | 'stock'>('theme');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // 載入熱門概念
-  useEffect(() => {
-    fetchTrendingThemes();
-  }, []);
-
-  const fetchTrendingThemes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await apiService.getTrendingThemes();
-      setTrendingThemes(data);
-    } catch (err) {
-      console.error('載入熱門概念失敗:', err);
-      setError(err instanceof Error ? err.message : '載入失敗');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(false);
+  const [useRealData, setUseRealData] = useState(false);
 
   // 處理搜尋
-  const handleSearch = async (query: string, mode: SearchMode) => {
+  const handleSearch = async (query: string, mode: 'theme' | 'stock', useRealData: boolean) => {
+    setLoading(true);
+    setUseRealData(useRealData);
+    
     try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await apiService.search(query, mode);
-      
       if (mode === 'theme') {
-        setSelectedTheme(data as StockConcept);
-        setSelectedStock(undefined);
-        setStockAnalysis(undefined);
+        const result = await apiService.searchThemes(query, useRealData);
+        setSelectedTheme(result);
+        setSelectedStock(null);
       } else {
-        // 股票搜尋模式
-        const stockAnalysis = data as StockAnalysisResult;
-        setStockAnalysis(stockAnalysis);
-        // 確保 stock 物件有正確的屬性
-        const stock: Stock = {
-          symbol: stockAnalysis.stock.ticker,
-          ticker: stockAnalysis.stock.ticker,
-          name: stockAnalysis.stock.name,
-          exchange: 'TWSE' as const,
-          heatScore: 0,
-          concepts: []
-        };
-        setSelectedStock(stock);
-        setSelectedTheme(undefined);
+        const result = await apiService.searchStocks(query, useRealData);
+        setSelectedStock(result);
+        setSelectedTheme(null);
       }
-    } catch (err) {
-      console.error('搜尋失敗:', err);
-      setError(err instanceof Error ? err.message : '搜尋失敗');
+    } catch (error) {
+      console.error('搜尋失敗:', error);
+      // 這裡可以添加錯誤處理 UI
     } finally {
       setLoading(false);
     }
   };
 
-  // 處理概念點擊
+  // 處理主題點擊
   const handleThemeClick = (theme: StockConcept) => {
     setSelectedTheme(theme);
-    setSelectedStock(undefined);
-    setStockAnalysis(undefined);
+    setSelectedStock(null);
   };
 
   // 處理股票點擊
-  const handleStockClick = async (stock: Stock) => {
-    try {
-      setSelectedStock(stock);
-      
-      // 如果當前有選中的主題，獲取該股票的歸因分析
-      if (selectedTheme) {
-        // 這裡可以調用個股歸因分析 API
-        console.log('獲取股票歸因分析:', stock.symbol, selectedTheme.theme);
-      }
-    } catch (err) {
-      console.error('處理股票點擊失敗:', err);
-    }
-  };
-
-  // 處理重試
-  const handleRetry = () => {
-    if (selectedTheme) {
-      // 重新載入主題相關數據
-      console.log('重新載入主題數據');
-    } else {
-      fetchTrendingThemes();
-    }
+  const handleStockClick = (stock: Stock) => {
+    // 將 Stock 轉換為 StockAnalysisResult 格式
+    const stockAnalysis: StockAnalysisResult = {
+      stock: {
+        ticker: stock.ticker,
+        name: stock.name
+      },
+      themes: [
+        {
+          theme: selectedTheme?.theme || '相關概念',
+          name: selectedTheme?.theme || '相關概念',
+          description: selectedTheme?.description || '',
+          heatScore: stock.heatScore || 0,
+          relevanceScore: stock.heatScore || 0
+        }
+      ]
+    };
+    setSelectedStock(stockAnalysis);
+    setSelectedTheme(null);
   };
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
       {/* 側邊欄 */}
-      <div className={`transition-all duration-300 ease-in-out ${
+      <div className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out ${
         sidebarCollapsed ? 'w-16' : 'w-80'
       }`}>
         <Sidebar
-          trendingThemes={trendingThemes}
-          onSearch={handleSearch}
-          onThemeClick={handleThemeClick}
-          onStockClick={handleStockClick}
-          loading={loading}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onThemeClick={handleThemeClick}
+          useRealData={useRealData}
+          onUseRealDataChange={setUseRealData}
         />
       </div>
 
       {/* 主要內容區域 */}
-      <div className="flex-1 flex flex-col lg:flex-row min-w-0">
-        {/* 中間面板 */}
-        <div className="flex-1 min-w-0">
-          <DetailPanel
-            selectedTheme={selectedTheme}
-            relatedStocks={selectedTheme?.stocks || []}
+      <div className="flex-1 flex flex-col">
+        {/* 搜尋區域 */}
+        <div className="p-6 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+          <SearchBar
+            mode={searchMode}
+            onModeChange={setSearchMode}
+            onSearch={handleSearch}
             loading={loading}
-            error={error}
-            onStockClick={handleStockClick}
-            onRetry={handleRetry}
+            useRealData={useRealData}
+            onUseRealDataChange={setUseRealData}
           />
         </div>
 
-        {/* 股票詳細面板 - 響應式設計 */}
-        {selectedStock && (
-          <div className="w-full lg:w-96 border-l border-gray-200 bg-white">
-            <StockDetailPanel
-              selectedStock={selectedStock}
-              analysis={stockAnalysis}
-              currentTheme={selectedTheme?.theme || ''}
-              loading={loading}
-              onRetry={handleRetry}
-            />
-          </div>
-        )}
-      </div>
+        {/* 內容區域 */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* 左側：主題詳情 */}
+          {selectedTheme && (
+            <div className="flex-1 p-6 overflow-y-auto">
+              <DetailPanel
+                theme={selectedTheme}
+                onStockClick={handleStockClick}
+                useRealData={useRealData}
+              />
+            </div>
+          )}
 
-      {/* 移動端側邊欄遮罩 */}
-      {sidebarCollapsed && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarCollapsed(false)}
-        />
-      )}
+          {/* 右側：股票詳情 */}
+          {selectedStock && (
+            <div className="w-96 p-6 bg-white/90 backdrop-blur-sm border-l border-gray-200 overflow-y-auto">
+              <StockDetailPanel
+                stock={selectedStock}
+                useRealData={useRealData}
+              />
+            </div>
+          )}
+
+          {/* 空狀態 */}
+          {!selectedTheme && !selectedStock && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <h3 className="text-lg font-medium mb-2">開始搜尋</h3>
+                <p className="text-sm">
+                  {searchMode === 'theme' 
+                    ? '搜尋投資主題來查看相關概念股' 
+                    : '搜尋股票代號來查看相關概念分析'
+                  }
+                </p>
+                {useRealData && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center text-sm text-green-700">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      已啟用真實台股資料
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

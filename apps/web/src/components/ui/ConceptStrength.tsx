@@ -117,4 +117,4 @@ const ConceptStrength: React.FC<ConceptStrengthProps> = ({
   );
 };
 
-export default ConceptStrength;
+export { ConceptStrength };

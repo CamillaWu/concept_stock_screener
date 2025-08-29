@@ -1,102 +1,77 @@
-import type { StockConcept, StockAnalysisResult, SearchMode } from '../types';
+import type { StockConcept, StockAnalysisResult, Stock } from '@concepts-radar/types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 
-  (process.env.NODE_ENV === 'production' 
-    ? 'https://concept-stock-screener-api.sandy246836.workers.dev' 
-    : 'http://localhost:8787');
+interface StockPriceData {
+  ticker: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  timestamp: string;
+}
+
+interface MarketData {
+  totalStocks: number;
+  upStocks: number;
+  downStocks: number;
+  unchangedStocks: number;
+  totalVolume: number;
+  timestamp: string;
+}
+
+interface AttributionSource {
+  type: 'news' | 'report' | 'announcement' | 'ai';
+  title: string;
+  url?: string;
+  timestamp: string;
+  summary: string;
+}
+
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://concept-stock-screener-api.camilla-wu.workers.dev'
+  : 'http://localhost:8787';
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    try {
-      const url = `${API_BASE}${endpoint}`;
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        ...options,
-      });
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      ...options,
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API 請求失敗:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
+
+    return response.json();
   }
 
-  // 獲取熱門概念
-  async getTrendingThemes(sortBy: 'popular' | 'latest' = 'popular'): Promise<StockConcept[]> {
-    try {
-      const url = `${API_BASE}/trending?sort=${sortBy}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API 請求失敗:', error);
-      throw error;
-    }
+  async getTrendingThemes(sortBy: 'popular' | 'latest' = 'popular', useRealData: boolean = false): Promise<StockConcept[]> {
+    return this.request<StockConcept[]>(`/trending?sort=${sortBy}&real=${useRealData}`);
   }
 
-  // 搜尋主題
-  async searchThemes(query: string): Promise<StockConcept> {
-    try {
-      const url = `${API_BASE}/search?mode=theme&q=${encodeURIComponent(query)}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API 請求失敗:', error);
-      throw error;
-    }
+  async searchThemes(query: string, useRealData: boolean = false): Promise<StockConcept> {
+    return this.request<StockConcept>(`/search?mode=theme&q=${encodeURIComponent(query)}&real=${useRealData}`);
   }
 
-  // 搜尋股票
-  async searchStocks(query: string): Promise<StockAnalysisResult> {
-    try {
-      const url = `${API_BASE}/search?mode=stock&q=${encodeURIComponent(query)}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API 請求失敗:', error);
-      throw error;
-    }
+  async searchStocks(query: string, useRealData: boolean = false): Promise<StockAnalysisResult> {
+    return this.request<StockAnalysisResult>(`/search?mode=stock&q=${encodeURIComponent(query)}&real=${useRealData}`);
   }
 
-  // 獲取股票分析
-  async getStockAnalysis(symbol: string): Promise<StockAnalysisResult> {
-    return this.searchStocks(symbol);
+  async getStockPrice(ticker: string): Promise<StockPriceData> {
+    return this.request<StockPriceData>(`/stock-price/${ticker}`);
   }
 
-  // 通用搜尋方法
-  async search(query: string, mode: SearchMode): Promise<StockConcept | StockAnalysisResult> {
-    if (mode === 'theme') {
-      return this.searchThemes(query);
-    } else {
-      return this.searchStocks(query);
-    }
+  async getMarketOverview(): Promise<MarketData> {
+    return this.request<MarketData>('/market-overview');
   }
 
-  // 獲取概念強度分析
+  async getStocks(industry?: string): Promise<Stock[]> {
+    const endpoint = industry ? `/stocks?industry=${encodeURIComponent(industry)}` : '/stocks';
+    return this.request<Stock[]>(endpoint);
+  }
+
   async getConceptStrength(theme: string): Promise<{
     strengthScore: number;
     dimensions: {
@@ -105,23 +80,16 @@ class ApiService {
       discussionLevel: number;
     };
   }> {
-    try {
-      const url = `${API_BASE}/concept-strength?theme=${encodeURIComponent(theme)}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('概念強度分析失敗:', error);
-      throw error;
-    }
+    return this.request<{
+      strengthScore: number;
+      dimensions: {
+        marketCapRatio: number;
+        priceContribution: number;
+        discussionLevel: number;
+      };
+    }>(`/concept-strength?theme=${encodeURIComponent(theme)}`);
   }
 
-  // 獲取情緒分析
   async getSentiment(theme: string): Promise<{
     score: number;
     trend: 'up' | 'down' | 'stable';
@@ -131,20 +99,31 @@ class ApiService {
     };
     recentTrend: number[];
   }> {
-    try {
-      const url = `${API_BASE}/sentiment?theme=${encodeURIComponent(theme)}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('情緒分析失敗:', error);
-      throw error;
-    }
+    return this.request<{
+      score: number;
+      trend: 'up' | 'down' | 'stable';
+      sources: {
+        news: number;
+        social: number;
+      };
+      recentTrend: number[];
+    }>(`/sentiment?theme=${encodeURIComponent(theme)}`);
+  }
+
+  async getStockAttribution(stockId: string, theme: string): Promise<AttributionSource[]> {
+    return this.request<AttributionSource[]>(`/stock-attribution?stockId=${stockId}&theme=${encodeURIComponent(theme)}`);
+  }
+
+  async getThemeAnalysis(theme: string): Promise<{
+    analysis: string;
+    recommendations: string[];
+    risks: string[];
+  }> {
+    return this.request<{
+      analysis: string;
+      recommendations: string[];
+      risks: string[];
+    }>(`/theme-analysis?theme=${encodeURIComponent(theme)}`);
   }
 }
 
@@ -154,7 +133,7 @@ export const apiService = new ApiService();
 export const ragApi = {
   // 檢查 RAG 狀態
   async checkStatus() {
-    const response = await fetch(`${API_BASE}/rag/status`);
+    const response = await fetch(`${API_BASE_URL}/rag/status`);
     if (!response.ok) {
       throw new Error('Failed to check RAG status');
     }
@@ -163,7 +142,7 @@ export const ragApi = {
 
   // 向量化 RAG 資料
   async vectorize() {
-    const response = await fetch(`${API_BASE}/rag/vectorize`, {
+    const response = await fetch(`${API_BASE_URL}/rag/vectorize`, {
       method: 'POST',
     });
     if (!response.ok) {
@@ -185,7 +164,7 @@ export const ragApi = {
       ...(options.topK && { topK: options.topK.toString() }),
     });
     
-    const response = await fetch(`${API_BASE}/rag/search?${params}`);
+    const response = await fetch(`${API_BASE_URL}/rag/search?${params}`);
     if (!response.ok) {
       throw new Error('Failed to search RAG data');
     }
@@ -199,7 +178,7 @@ export const ragApi = {
       topK: topK.toString(),
     });
     
-    const response = await fetch(`${API_BASE}/rag/stocks-by-theme?${params}`);
+    const response = await fetch(`${API_BASE_URL}/rag/stocks-by-theme?${params}`);
     if (!response.ok) {
       throw new Error('Failed to get stocks by theme');
     }
@@ -213,7 +192,7 @@ export const ragApi = {
       topK: topK.toString(),
     });
     
-    const response = await fetch(`${API_BASE}/rag/themes-by-stock?${params}`);
+    const response = await fetch(`${API_BASE_URL}/rag/themes-by-stock?${params}`);
     if (!response.ok) {
       throw new Error('Failed to get themes by stock');
     }
@@ -222,7 +201,7 @@ export const ragApi = {
 
   // 取得所有主題
   async getAllThemes() {
-    const response = await fetch(`${API_BASE}/rag/themes`);
+    const response = await fetch(`${API_BASE_URL}/rag/themes`);
     if (!response.ok) {
       throw new Error('Failed to get all themes');
     }
@@ -231,7 +210,7 @@ export const ragApi = {
 
   // 清除向量資料
   async clearVectors() {
-    const response = await fetch(`${API_BASE}/rag/vectors`, {
+    const response = await fetch(`${API_BASE_URL}/rag/vectors`, {
       method: 'DELETE',
     });
     if (!response.ok) {
