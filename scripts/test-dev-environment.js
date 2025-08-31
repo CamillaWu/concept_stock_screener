@@ -3,7 +3,7 @@
 const http = require("http");
 
 const LOCAL_API_URL = "http://localhost:8787";
-const LOCAL_WEB_URL = "http://localhost:3002"; // 更新為正確的端口
+const LOCAL_WEB_URL = "http://localhost:3000"; // Next.js 默認端口
 
 console.log("Testing development environment...");
 

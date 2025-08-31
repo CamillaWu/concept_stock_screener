@@ -44,8 +44,7 @@ async function runTests() {
   const tests = [
     { url: `${PRODUCTION_API_URL}/`, description: "API Root Endpoint" },
     { url: `${PRODUCTION_API_URL}/trending`, description: "Trending API" },
-    { url: `${PRODUCTION_API_URL}/rag/manifest.json`, description: "RAG Manifest API" },
-    { url: `${PRODUCTION_API_URL}/rag/docs.jsonl`, description: "RAG Docs API" }
+    { url: `${PRODUCTION_API_URL}/rag/manifest.json`, description: "RAG Manifest API" }
   ];
   
   const results = [];

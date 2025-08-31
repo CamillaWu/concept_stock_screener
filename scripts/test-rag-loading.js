@@ -10,6 +10,7 @@ const http = require('http');
 
 const PRODUCTION_WEB_URL = 'https://concept-stock-screener.vercel.app';
 const LOCAL_WEB_URL = 'http://localhost:3000';
+const PRODUCTION_API_URL = 'https://concept-stock-screener-api.sandy246836.workers.dev';
 
 console.log('📚 開始測試 RAG 檔案載入功能...\n');
 
@@ -115,7 +116,8 @@ function validateDocs(data) {
 
 async function runTests() {
   const environments = [
-    { name: '生產環境', baseUrl: PRODUCTION_WEB_URL },
+    { name: '生產環境 API', baseUrl: PRODUCTION_API_URL },
+    { name: '生產環境前端', baseUrl: PRODUCTION_WEB_URL },
     { name: '本地環境', baseUrl: LOCAL_WEB_URL }
   ];
   
