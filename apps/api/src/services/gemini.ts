@@ -1,13 +1,28 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { StockConcept, StockAnalysisResult } from '@concepts-radar/types';
 
-const GEMINI_API_KEY = (globalThis as any).GEMINI_API_KEY;
+let genAI: GoogleGenerativeAI | null = null;
 
-if (!GEMINI_API_KEY) {
-  console.warn('GEMINI_API_KEY 未設定，將使用模擬資料');
+// 延遲初始化 Gemini
+function initializeGemini() {
+  if (genAI) return genAI;
+  
+  const GEMINI_API_KEY = (globalThis as any).GEMINI_API_KEY;
+  
+  if (!GEMINI_API_KEY) {
+    console.warn('GEMINI_API_KEY 未設定，將使用模擬資料');
+    return null;
+  }
+  
+  try {
+    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    console.log('Gemini service initialized successfully');
+    return genAI;
+  } catch (error) {
+    console.error('Failed to initialize Gemini:', error);
+    return null;
+  }
 }
-
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 // 模擬資料（當 Gemini API 不可用時使用）
 const mockTrendingThemes: StockConcept[] = [
@@ -46,13 +61,14 @@ const mockStockAnalysis = {
 
 export const geminiService = {
   async fetchTrendingThemes(sortBy: 'popular' | 'latest' = 'popular'): Promise<StockConcept[]> {
-    if (!genAI) {
+    const ai = initializeGemini();
+    if (!ai) {
       console.log('使用模擬趨勢主題資料');
       return mockTrendingThemes;
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      const model = ai.getGenerativeModel({ model: 'gemini-2.5-pro' });
       
       const prompt = `請分析台灣股市當前最熱門的投資主題，${sortBy === 'popular' ? '根據市場熱度' : '根據最新發展'}列出前15個主題。
 

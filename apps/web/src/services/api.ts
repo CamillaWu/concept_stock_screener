@@ -26,9 +26,10 @@ interface AttributionSource {
   summary: string;
 }
 
+// 統一 API 端點配置
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://concept-stock-screener-api.camilla-wu.workers.dev'
-  : 'http://localhost:8787';
+  ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://concept-stock-screener-api.sandy246836.workers.dev')
+  : (process.env.NEXT_PUBLIC_API_BASE_URL_DEV || 'http://localhost:8787');
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {

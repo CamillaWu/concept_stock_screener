@@ -17,13 +17,15 @@ class RAGLoaderService {
       // 檢查是否在 Cloudflare Workers 環境中
       const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
       
+      console.log('Environment check:', { isCloudflareWorkers });
+      
       let manifestUrl: string;
       if (isCloudflareWorkers) {
         // 在雲端環境中，使用公開的 RAG 檔案 URL
-        manifestUrl = 'https://concept-stock-screener.vercel.app/rag/manifest.json';
+        manifestUrl = process.env.RAG_MANIFEST_URL || 'https://concept-stock-screener.vercel.app/rag/manifest.json';
       } else {
         // 在本地開發環境中，使用本地檔案
-        manifestUrl = 'http://localhost:8787/rag/manifest.json';
+        manifestUrl = process.env.RAG_MANIFEST_URL_DEV || 'http://localhost:8787/rag/manifest.json';
       }
       
       const response = await fetch(manifestUrl);
@@ -90,8 +92,10 @@ class RAGLoaderService {
         }
       }
       
-      // 在本地開發環境中，強制使用本地 URL
-      const docsUrl = 'http://localhost:3000/rag/docs.jsonl';
+      // 使用環境變數配置的 URL
+      const docsUrl = isCloudflareWorkers
+        ? (process.env.RAG_DOCS_URL || 'https://concept-stock-screener.vercel.app/rag/docs.jsonl')
+        : (process.env.RAG_DOCS_URL_DEV || 'http://localhost:3000/rag/docs.jsonl');
       
       console.log(`Loading RAG documents from: ${docsUrl}`);
       const response = await fetch(docsUrl);

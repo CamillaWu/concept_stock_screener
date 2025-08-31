@@ -468,8 +468,27 @@ app.get('/rag/docs.jsonl', async (c) => {
     
     console.log('RAG docs endpoint - Environment check:', { isCloudflareWorkers });
     
-    // 在本地開發環境中，強制使用本地 URL
-    const docsUrl = 'http://localhost:3000/rag/docs.jsonl';
+    // 在生產環境中，直接從本地檔案系統載入 RAG 文件
+    let docsUrl: string;
+    
+    if (isCloudflareWorkers) {
+      // 在 Cloudflare Workers 中，使用模擬的 RAG 資料
+      console.log('Using mock RAG data in Cloudflare Workers');
+      const mockDocs = [
+        {
+          doc_id: "theme.ai_server.overview",
+          type: "theme_overview",
+          title: "AI 伺服器",
+          text: "主題：AI 伺服器\n說明：本卡用於 Trending Top 15 的主題層檢索與說明。",
+          theme_id: "theme.ai_server",
+          theme_name: "AI 伺服器"
+        }
+      ];
+      return c.json(mockDocs);
+    } else {
+      // 在本地開發環境中，使用本地檔案
+      docsUrl = 'http://localhost:3002/rag/docs.jsonl';
+    }
     
     console.log('Loading RAG docs from:', docsUrl);
     const response = await fetch(docsUrl);

@@ -38,6 +38,13 @@ pnpm web:build
 ```
 
 ## 🔗 相關文檔
+
+### 🚀 開發指南
+- [快速接手指南](./docs/QUICK_HANDOVER_GUIDE.md)
+- [任務進度與交接](./docs/TASK_PROGRESS_AND_HANDOVER.md)
+- [技術債務追蹤](./docs/TECHNICAL_DEBT_TRACKER.md)
+
+### 📋 專案文件
 - [部署指南](./docs/deployment/)
 - [使用指南](./docs/guides/)
 - [環境設定](./docs/guides/ENVIRONMENT_SETUP.md)
