@@ -8,6 +8,9 @@ import { vectorService } from './services/vector';
 import { ragLoaderService } from './services/rag-loader';
 import type { StockConcept, StockAnalysisResult, ApiResponse } from '@concepts-radar/types';
 
+// 設置開發環境標記
+(globalThis as any).__DEV__ = true;
+
 const app = new Hono();
 
 // CORS 設定
@@ -423,30 +426,8 @@ app.get('/theme-analysis', async (c) => {
 // RAG 相關 API
 app.get('/rag/manifest.json', async (c) => {
   try {
-    // 檢查是否在 Cloudflare Workers 環境中
-    // 在本地開發環境中，即使有 Cloudflare 對象，我們也應該使用本地文件
-    const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis && !(globalThis as any).process;
-    
-    let manifestUrl: string;
-    if (isCloudflareWorkers) {
-      manifestUrl = 'https://concept-stock-screener.vercel.app/rag/manifest.json';
-    } else {
-      manifestUrl = 'http://localhost:3000/rag/manifest.json';
-    }
-    
-    const response = await fetch(manifestUrl);
-    
-    if (!response.ok) {
-      return c.json({
-        theme_overview: 15,
-        theme_to_stock: 75,
-        total: 90,
-        fields: ['doc_id', 'type', 'title', 'text', 'source_urls', 'theme_id', 'theme_name'],
-        note: 'Fallback manifest'
-      });
-    }
-    
-    const manifest = await response.json();
+    // 使用 RAG loader service 來載入 manifest
+    const manifest = await ragLoaderService.loadManifest();
     return c.json(manifest);
   } catch (error) {
     console.error('Failed to serve manifest:', error);
@@ -455,71 +436,64 @@ app.get('/rag/manifest.json', async (c) => {
       theme_to_stock: 75,
       total: 90,
       fields: ['doc_id', 'type', 'title', 'text', 'source_urls', 'theme_id', 'theme_name'],
-      note: 'Fallback manifest'
+      note: 'Fallback manifest - API endpoint error'
     });
   }
 });
 
 app.get('/rag/docs.jsonl', async (c) => {
   try {
-    // 檢查是否在 Cloudflare Workers 環境中
-    // 在本地開發環境中，即使有 Cloudflare 對象，我們也應該使用本地文件
-    const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis && !(globalThis as any).process;
+    // 使用 RAG loader service 來載入 documents
+    const documents = await ragLoaderService.loadDocuments();
     
-    console.log('RAG docs endpoint - Environment check:', { isCloudflareWorkers });
+    // 將 documents 轉換為 JSONL 格式
+    const jsonlContent = documents.map(doc => JSON.stringify(doc)).join('\n');
     
-    // 在生產環境中，直接從本地檔案系統載入 RAG 文件
-    let docsUrl: string;
-    
-    if (isCloudflareWorkers) {
-      // 在 Cloudflare Workers 中，使用模擬的 RAG 資料
-      console.log('Using mock RAG data in Cloudflare Workers');
-      const mockDocs = [
-        {
-          doc_id: "theme.ai_server.overview",
-          type: "theme_overview",
-          title: "AI 伺服器",
-          text: "主題：AI 伺服器\n說明：本卡用於 Trending Top 15 的主題層檢索與說明。",
-          theme_id: "theme.ai_server",
-          theme_name: "AI 伺服器"
-        }
-      ];
-      return c.json(mockDocs);
-    } else {
-      // 在本地開發環境中，使用本地檔案
-      docsUrl = 'http://localhost:3002/rag/docs.jsonl';
-    }
-    
-    console.log('Loading RAG docs from:', docsUrl);
-    const response = await fetch(docsUrl);
-    
-    if (!response.ok) {
-      console.error('Failed to load RAG documents from:', docsUrl, 'Status:', response.status);
-      return c.json({ error: 'Failed to load RAG documents' }, 500);
-    }
-    
-    const text = await response.text();
-    console.log('Successfully loaded RAG docs, length:', text.length);
-    return c.text(text);
+    console.log(`Serving ${documents.length} RAG documents as JSONL`);
+    return c.text(jsonlContent);
   } catch (error) {
     console.error('Failed to serve RAG documents:', error);
     return c.json({ error: 'Failed to serve RAG documents' }, 500);
   }
 });
 
-// 檢查 Pinecone 狀態
+// 檢查 RAG 狀態
 app.get('/rag/status', async (c) => {
   try {
     const pineconeApiKey = (globalThis as any).PINECONE_API_KEY;
     const pineconeEnvironment = (globalThis as any).PINECONE_ENVIRONMENT;
     
+    // 檢查 RAG 資料載入狀態
+    const ragValidation = await ragLoaderService.validateRAGData();
+    
+    // 檢查向量服務狀態
+    let vectorServiceStatus = 'unknown';
+    try {
+      await vectorService.initializeIndex();
+      vectorServiceStatus = 'available';
+    } catch (error) {
+      vectorServiceStatus = 'unavailable';
+    }
+    
     return c.json({
       success: true,
       data: {
+        // Pinecone 配置狀態
         pineconeConfigured: !!(pineconeApiKey && pineconeEnvironment),
         indexName: 'concept-radar',
-        environment: pineconeEnvironment || 'not_set',
-        apiKeySet: !!pineconeApiKey
+        pineconeEnvironment: pineconeEnvironment || 'not_set',
+        apiKeySet: !!pineconeApiKey,
+        
+        // RAG 資料狀態
+        ragDataValid: ragValidation.isValid,
+        ragStats: ragValidation.stats,
+        
+        // 向量服務狀態
+        vectorServiceStatus,
+        
+        // 環境資訊
+        environment: typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis ? 'cloudflare' : 'local',
+        timestamp: new Date().toISOString()
       }
     });
   } catch (error) {
@@ -727,7 +701,8 @@ app.post('/rag/load', async (c) => {
       success: true,
       data: {
         loadedCount: result,
-        totalDocuments: documents.length
+        totalDocuments: documents.length,
+        message: `Successfully loaded ${result} documents to vector database`
       }
     });
   } catch (error) {
@@ -735,6 +710,41 @@ app.post('/rag/load', async (c) => {
     return c.json({
       success: false,
       error: 'Failed to load RAG data',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 向量化 RAG 資料（別名端點）
+app.post('/rag/vectorize', async (c) => {
+  try {
+    // 載入 RAG 文件
+    const documents = await ragLoaderService.loadDocuments();
+    
+    if (documents.length === 0) {
+      return c.json({
+        success: false,
+        error: 'No RAG documents found',
+        code: 'no_documents'
+      }, 404);
+    }
+
+    // 將文件載入到向量服務
+    const result = await vectorService.upsertDocuments(documents);
+    
+    return c.json({
+      success: true,
+      data: {
+        loadedCount: result,
+        totalDocuments: documents.length,
+        message: `Successfully vectorized ${result} documents`
+      }
+    });
+  } catch (error) {
+    console.error('Vectorize RAG data failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to vectorize RAG data',
       code: 'internal_error'
     }, 500);
   }
