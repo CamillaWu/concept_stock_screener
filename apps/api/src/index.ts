@@ -423,13 +423,15 @@ app.get('/theme-analysis', async (c) => {
 // RAG 相關 API
 app.get('/rag/manifest.json', async (c) => {
   try {
-    const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
+    // 檢查是否在 Cloudflare Workers 環境中
+    // 在本地開發環境中，即使有 Cloudflare 對象，我們也應該使用本地文件
+    const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis && !(globalThis as any).process;
     
     let manifestUrl: string;
     if (isCloudflareWorkers) {
       manifestUrl = 'https://concept-stock-screener.vercel.app/rag/manifest.json';
     } else {
-      manifestUrl = 'http://localhost:3001/rag/manifest.json';
+      manifestUrl = 'http://localhost:3000/rag/manifest.json';
     }
     
     const response = await fetch(manifestUrl);
@@ -460,26 +462,54 @@ app.get('/rag/manifest.json', async (c) => {
 
 app.get('/rag/docs.jsonl', async (c) => {
   try {
-    const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
+    // 檢查是否在 Cloudflare Workers 環境中
+    // 在本地開發環境中，即使有 Cloudflare 對象，我們也應該使用本地文件
+    const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis && !(globalThis as any).process;
     
-    let docsUrl: string;
-    if (isCloudflareWorkers) {
-      docsUrl = 'https://concept-stock-screener.vercel.app/rag/docs.jsonl';
-    } else {
-      docsUrl = 'http://localhost:3001/rag/docs.jsonl';
-    }
+    console.log('RAG docs endpoint - Environment check:', { isCloudflareWorkers });
     
+    // 在本地開發環境中，強制使用本地 URL
+    const docsUrl = 'http://localhost:3000/rag/docs.jsonl';
+    
+    console.log('Loading RAG docs from:', docsUrl);
     const response = await fetch(docsUrl);
     
     if (!response.ok) {
+      console.error('Failed to load RAG documents from:', docsUrl, 'Status:', response.status);
       return c.json({ error: 'Failed to load RAG documents' }, 500);
     }
     
     const text = await response.text();
+    console.log('Successfully loaded RAG docs, length:', text.length);
     return c.text(text);
   } catch (error) {
     console.error('Failed to serve RAG documents:', error);
     return c.json({ error: 'Failed to serve RAG documents' }, 500);
+  }
+});
+
+// 檢查 Pinecone 狀態
+app.get('/rag/status', async (c) => {
+  try {
+    const pineconeApiKey = (globalThis as any).PINECONE_API_KEY;
+    const pineconeEnvironment = (globalThis as any).PINECONE_ENVIRONMENT;
+    
+    return c.json({
+      success: true,
+      data: {
+        pineconeConfigured: !!(pineconeApiKey && pineconeEnvironment),
+        indexName: 'concept-radar',
+        environment: pineconeEnvironment || 'not_set',
+        apiKeySet: !!pineconeApiKey
+      }
+    });
+  } catch (error) {
+    console.error('RAG status check failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to check RAG status',
+      code: 'internal_error'
+    }, 500);
   }
 });
 
@@ -652,6 +682,40 @@ app.get('/rag/themes', async (c) => {
     return c.json({
       success: false,
       error: 'Failed to fetch themes',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 載入 RAG 資料到向量資料庫
+app.post('/rag/load', async (c) => {
+  try {
+    // 載入 RAG 文件
+    const documents = await ragLoaderService.loadDocuments();
+    
+    if (documents.length === 0) {
+      return c.json({
+        success: false,
+        error: 'No RAG documents found',
+        code: 'no_documents'
+      }, 404);
+    }
+
+    // 將文件載入到向量服務
+    const result = await vectorService.upsertDocuments(documents);
+    
+    return c.json({
+      success: true,
+      data: {
+        loadedCount: result,
+        totalDocuments: documents.length
+      }
+    });
+  } catch (error) {
+    console.error('Load RAG data failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to load RAG data',
       code: 'internal_error'
     }, 500);
   }

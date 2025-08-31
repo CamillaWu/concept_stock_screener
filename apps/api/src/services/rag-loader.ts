@@ -22,8 +22,8 @@ class RAGLoaderService {
         // 在雲端環境中，使用公開的 RAG 檔案 URL
         manifestUrl = 'https://concept-stock-screener.vercel.app/rag/manifest.json';
       } else {
-        // 在本地開發環境中，使用本地檔案服務
-        manifestUrl = 'http://localhost:3001/rag/manifest.json';
+        // 在本地開發環境中，使用本地檔案
+        manifestUrl = 'http://localhost:8787/rag/manifest.json';
       }
       
       const response = await fetch(manifestUrl);
@@ -54,23 +54,59 @@ class RAGLoaderService {
       // 檢查是否在 Cloudflare Workers 環境中
       const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
       
-      let docsUrl: string;
-      if (isCloudflareWorkers) {
-        // 在雲端環境中，使用公開的 RAG 檔案 URL
-        docsUrl = 'https://concept-stock-screener.vercel.app/rag/docs.jsonl';
-      } else {
-        // 在本地開發環境中，使用本地檔案服務
-        docsUrl = 'http://localhost:3001/rag/docs.jsonl';
+      console.log('Environment check:', { isCloudflareWorkers });
+      
+      // 在本地開發環境中，優先嘗試從檔案系統讀取
+      if (!isCloudflareWorkers) {
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
+          const docsPath = path.join((globalThis as any).process?.cwd?.() || '.', 'public/rag/docs.jsonl');
+          
+          console.log('Trying to load from file system:', docsPath);
+          
+          if (fs.existsSync(docsPath)) {
+            const content = fs.readFileSync(docsPath, 'utf8');
+            const lines = content.trim().split('\n');
+            
+            const documents: RAGDocument[] = [];
+            
+            for (const line of lines) {
+              try {
+                const doc = JSON.parse(line) as RAGDocument;
+                documents.push(doc);
+              } catch (parseError) {
+                console.warn('Failed to parse document line:', line.substring(0, 100));
+              }
+            }
+            
+            console.log(`Loaded ${documents.length} RAG documents from file system`);
+            return documents;
+          } else {
+            console.log('RAG documents file not found at:', docsPath);
+          }
+        } catch (fsError) {
+          console.error('File system error:', fsError);
+        }
       }
       
+      // 在本地開發環境中，強制使用本地 URL
+      const docsUrl = 'http://localhost:3000/rag/docs.jsonl';
+      
+      console.log(`Loading RAG documents from: ${docsUrl}`);
       const response = await fetch(docsUrl);
+      
+      console.log(`Response status: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
         throw new Error(`Failed to load documents: ${response.statusText}`);
       }
       
       const text = await response.text();
+      console.log(`Response text length: ${text.length}`);
+      
       const lines = text.trim().split('\n');
+      console.log(`Parsed ${lines.length} lines`);
       
       const documents: RAGDocument[] = [];
       
@@ -79,7 +115,7 @@ class RAGLoaderService {
           const doc = JSON.parse(line) as RAGDocument;
           documents.push(doc);
         } catch (parseError) {
-          console.warn('Failed to parse document line:', line);
+          console.warn('Failed to parse document line:', line.substring(0, 100));
         }
       }
       

@@ -35,7 +35,7 @@ export interface VectorSearchResult {
 class VectorService {
   private pinecone: Pinecone | null = null;
   private embeddings: GoogleGenerativeAIEmbeddings | null = null;
-  private indexName = 'concept-stock-rag';
+  private indexName = 'concept-radar';
   private isInitialized = false;
   // 本地開發用的記憶體儲存
   private localVectors: RAGDocument[] = [];
@@ -59,8 +59,15 @@ class VectorService {
    * 檢查是否有必要的API金鑰
    */
   private checkApiKeys() {
-    // 在Cloudflare Workers中，我們將在實際使用時檢查
-    // 這裡返回true以允許繼續執行
+    // 檢查 Pinecone 環境變數
+    const pineconeApiKey = (globalThis as any).PINECONE_API_KEY;
+    const pineconeEnvironment = (globalThis as any).PINECONE_ENVIRONMENT;
+    
+    if (!pineconeApiKey || !pineconeEnvironment) {
+      console.log('Pinecone API keys not found, using local memory mode');
+      return false;
+    }
+    
     return true;
   }
 
@@ -71,8 +78,10 @@ class VectorService {
     try {
       await this.initialize();
       
+      // 檢查是否有 Pinecone 配置
       if (!this.checkApiKeys()) {
-        throw new Error('Missing API configuration');
+        console.log('No Pinecone configuration found, using local memory mode');
+        return null; // 返回 null 表示使用本地模式
       }
 
       // 檢查是否在 Cloudflare Workers 環境中
@@ -132,12 +141,19 @@ class VectorService {
   }
 
   /**
-   * 將RAG文件向量化並儲存到Pinecone
+   * 將RAG文件向量化並儲存到Pinecone或本地記憶體
    */
   async upsertDocuments(documents: RAGDocument[]) {
     try {
       const index = await this.initializeIndex();
       
+      // 如果沒有 Pinecone 配置，直接使用本地記憶體模式
+      if (!index) {
+        this.localVectors = documents;
+        console.log(`Successfully stored ${documents.length} documents in local memory`);
+        return documents.length;
+      }
+
       // 將文件分割成較小的chunks
       const textSplitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,
@@ -171,10 +187,18 @@ class VectorService {
         });
       }
 
-      // 在本地開發環境中，將資料儲存到記憶體
-      this.localVectors = documents;
-      console.log(`Successfully stored ${documents.length} documents in local memory`);
-      return documents.length;
+      // 如果有 Pinecone 配置，嘗試使用 Pinecone
+      try {
+        await index.upsert(vectors);
+        console.log(`Successfully upserted ${vectors.length} vectors to Pinecone`);
+        return vectors.length;
+      } catch (pineconeError) {
+        console.warn('Failed to upsert to Pinecone, falling back to local memory:', pineconeError);
+        // 回退到本地記憶體
+        this.localVectors = documents;
+        console.log(`Successfully stored ${documents.length} documents in local memory`);
+        return documents.length;
+      }
     } catch (error) {
       console.error('Failed to upsert documents:', error);
       throw error;
