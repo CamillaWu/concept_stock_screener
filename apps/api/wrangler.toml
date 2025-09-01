@@ -6,20 +6,26 @@ account_id = "99cf07b95d45a17d7518ef8d87a9e831"
 [env.production]
 name = "concept-stock-screener-api"
 
-[env.staging]
-name = "concept-stock-screener-api-staging"
+[env.development]
+name = "concept-stock-screener-api-development"
 
-# KV Namespace
+# 正式環境設定
+[env.production.vars]
+ENVIRONMENT = "production"
+PINECONE_ENVIRONMENT = "aped-4627-b74a"
+PINECONE_INDEX_NAME = "concept-radar"
+
+# 開發環境設定
+[env.development.vars]
+ENVIRONMENT = "development"
+PINECONE_ENVIRONMENT = "aped-4627-b74a"
+PINECONE_INDEX_NAME = "concept-radar"
+
+# KV Namespace (共用)
 [[kv_namespaces]]
 binding = "CONCEPTS_CACHE"
 id = "a843b8c636194d0ab4ec21e91e6c63b2"
 preview_id = "fccebf8318624229b84f8ae249cbe111"
-
-# 環境變數
-[vars]
-ENVIRONMENT = "development"
-PINECONE_ENVIRONMENT = "aped-4627-b74a"
-PINECONE_INDEX_NAME = "concept-radar"
 
 # 秘密變數（需要在 Cloudflare Dashboard 或 wrangler secret 設定）
 # GEMINI_API_KEY

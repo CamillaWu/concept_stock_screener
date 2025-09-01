@@ -4,10 +4,10 @@ import type { StockConcept, StockAnalysisResult } from '@concepts-radar/types';
 let genAI: GoogleGenerativeAI | null = null;
 
 // 延遲初始化 Gemini
-function initializeGemini() {
+function initializeGemini(env?: any) {
   if (genAI) return genAI;
   
-  const GEMINI_API_KEY = (globalThis as any).GEMINI_API_KEY;
+  const GEMINI_API_KEY = env?.GEMINI_API_KEY || (globalThis as any).GEMINI_API_KEY;
   
   if (!GEMINI_API_KEY) {
     console.warn('GEMINI_API_KEY 未設定，將使用模擬資料');
@@ -60,8 +60,8 @@ const mockStockAnalysis = {
 };
 
 export const geminiService = {
-  async fetchTrendingThemes(sortBy: 'popular' | 'latest' = 'popular'): Promise<StockConcept[]> {
-    const ai = initializeGemini();
+  async fetchTrendingThemes(sortBy: 'popular' | 'latest' = 'popular', env?: any): Promise<StockConcept[]> {
+    const ai = initializeGemini(env);
     if (!ai) {
       console.log('使用模擬趨勢主題資料');
       return mockTrendingThemes;

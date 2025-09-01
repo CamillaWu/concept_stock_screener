@@ -58,7 +58,7 @@ app.get('/trending', async (c) => {
     } else {
       // 使用 AI 生成的資料
       console.log('使用 AI 生成資料');
-      themes = await geminiService.fetchTrendingThemes(sortBy);
+      themes = await geminiService.fetchTrendingThemes(sortBy, c.env);
     }
     
     // 儲存到快取
