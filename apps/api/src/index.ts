@@ -460,8 +460,8 @@ app.get('/rag/docs.jsonl', async (c) => {
 // 檢查 RAG 狀態
 app.get('/rag/status', async (c) => {
   try {
-    const pineconeApiKey = (globalThis as any).PINECONE_API_KEY;
-    const pineconeEnvironment = (globalThis as any).PINECONE_ENVIRONMENT;
+    const pineconeApiKey = c.env?.PINECONE_API_KEY || (globalThis as any).PINECONE_API_KEY;
+    const pineconeEnvironment = c.env?.PINECONE_ENVIRONMENT || (globalThis as any).PINECONE_ENVIRONMENT;
     
     // 檢查 RAG 資料載入狀態
     const ragValidation = await ragLoaderService.validateRAGData();
@@ -469,7 +469,7 @@ app.get('/rag/status', async (c) => {
     // 檢查向量服務狀態
     let vectorServiceStatus = 'unknown';
     try {
-      await vectorService.initializeIndex();
+      await vectorService.initializeIndex(c.env);
       vectorServiceStatus = 'available';
     } catch (error) {
       vectorServiceStatus = 'unavailable';
@@ -520,13 +520,97 @@ app.get('/vector-search', async (c) => {
       }, 400);
     }
 
-    const results = await vectorService.search(query, { topK: limit });
+    const results = await vectorService.search(query, { topK: limit }, c.env);
     return c.json(results);
   } catch (error) {
     console.error('Vector search API error:', error);
     return c.json({
       success: false,
       error: 'Vector search failed',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🎯 整合 RAG + AI 的智能搜尋 API
+app.get('/smart-search', async (c) => {
+  try {
+    const query = c.req.query('q');
+    const mode = c.req.query('mode') as 'theme' | 'stock' | 'general';
+    const useAI = c.req.query('ai') !== 'false'; // 預設使用 AI
+    
+    if (!query) {
+      return c.json({
+        success: false,
+        error: 'Missing query parameter',
+        code: 'invalid_query'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `smart-search:${mode}:${query}:${useAI}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    // 1. 先從 RAG 資料庫搜尋相關資料
+    const ragResults = await vectorService.search(query, { topK: 10 }, c.env);
+    
+    // 2. 如果啟用 AI，使用 Gemini 生成豐富內容
+    let aiContent = null;
+    if (useAI) {
+      try {
+        if (mode === 'theme') {
+          aiContent = await geminiService.fetchStockConcepts(query);
+        } else if (mode === 'stock') {
+          aiContent = await geminiService.fetchConceptsForStock(query);
+        } else {
+          // 通用模式：結合 RAG 資料生成分析
+          const ragContext = ragResults.map(r => r.content).join('\n\n');
+          aiContent = await geminiService.generateAnalysisWithRAG(query, ragContext);
+        }
+      } catch (aiError) {
+        console.warn('AI generation failed, using RAG only:', aiError);
+      }
+    }
+
+    // 3. 整合結果
+    const response = {
+      success: true,
+      data: {
+        query,
+        mode,
+        ragResults: {
+          count: ragResults.length,
+          documents: ragResults.map(r => ({
+            doc_id: r.doc_id,
+            title: r.metadata.title,
+            theme_name: r.metadata.theme_name,
+            stock_name: r.metadata.stock_name,
+            ticker: r.metadata.ticker,
+            score: r.score,
+            content: r.content
+          }))
+        },
+        aiContent,
+        summary: {
+          totalResults: ragResults.length,
+          hasAIAnalysis: !!aiContent,
+          timestamp: new Date().toISOString()
+        }
+      }
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 1800); // 30分鐘快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('Smart search API error:', error);
+    return c.json({
+      success: false,
+      error: 'Smart search failed',
       code: 'internal_error'
     }, 500);
   }
@@ -553,7 +637,7 @@ app.get('/rag/stocks-by-theme', async (c) => {
       return c.json(cached);
     }
 
-    const results = await vectorService.searchStocksByTheme(themeName, topK);
+    const results = await vectorService.searchStocksByTheme(themeName, topK, c.env);
 
     const response = {
       success: true,
@@ -604,7 +688,7 @@ app.get('/rag/themes-by-stock', async (c) => {
       return c.json(cached);
     }
 
-    const results = await vectorService.searchThemesByStock(stockName, topK);
+    const results = await vectorService.searchThemesByStock(stockName, topK, c.env);
 
     const response = {
       success: true,
@@ -648,7 +732,7 @@ app.get('/rag/themes', async (c) => {
 
     // 取得每個主題的概覽
     for (const themeName of themeNames) {
-      const overview = await vectorService.searchThemeOverview(themeName);
+      const overview = await vectorService.searchThemeOverview(themeName, c.env);
       if (overview.length > 0) {
         themes.push({
           name: themeName,
@@ -695,7 +779,7 @@ app.post('/rag/load', async (c) => {
     }
 
     // 將文件載入到向量服務
-    const result = await vectorService.upsertDocuments(documents);
+    const result = await vectorService.upsertDocuments(documents, c.env);
     
     return c.json({
       success: true,
@@ -730,7 +814,7 @@ app.post('/rag/vectorize', async (c) => {
     }
 
     // 將文件載入到向量服務
-    const result = await vectorService.upsertDocuments(documents);
+    const result = await vectorService.upsertDocuments(documents, c.env);
     
     return c.json({
       success: true,

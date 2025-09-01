@@ -1,4 +1,5 @@
 import { RAGDocument } from './vector';
+import { FULL_RAG_DOCUMENTS, FULL_RAG_MANIFEST } from './full-rag-data';
 
 export interface RAGManifest {
   theme_overview: number;
@@ -13,13 +14,57 @@ class RAGLoaderService {
    * 統一環境檢測邏輯
    */
   private isCloudflareWorkers(): boolean {
-    // 在本地開發環境中，即使有 Cloudflare 對象，我們也應該使用本地文件
+    // 檢查是否在 Cloudflare Workers 環境中
     const hasCloudflare = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
     const hasProcess = typeof (globalThis as any).process !== 'undefined';
+    const hasNodeModules = typeof (globalThis as any).require !== 'undefined';
     const isDev = (globalThis as any).__DEV__ === true;
     
-    // 如果有開發標記，或者有 process 對象，則認為是本地環境
-    return hasCloudflare && !hasProcess && !isDev;
+    // 如果有 Cloudflare 對象，且沒有 Node.js 相關對象，則認為是 Cloudflare Workers
+    const result = hasCloudflare && !hasProcess && !hasNodeModules && !isDev;
+    console.log('Environment detection:', { hasCloudflare, hasProcess, hasNodeModules, isDev, result });
+    return result;
+  }
+
+  /**
+   * 從 Markdown 格式解析 manifest
+   */
+  private parseManifestFromMarkdown(content: string): RAGManifest {
+    // 簡單的 markdown 解析邏輯
+    const lines = content.split('\n');
+    let themeOverview = 15;
+    let themeToStock = 75;
+    let total = 90;
+    
+    for (const line of lines) {
+      if (line.includes('theme_overview')) {
+        const match = line.match(/(\d+)/);
+        if (match) themeOverview = parseInt(match[1]);
+      } else if (line.includes('theme_to_stock')) {
+        const match = line.match(/(\d+)/);
+        if (match) themeToStock = parseInt(match[1]);
+      } else if (line.includes('total')) {
+        const match = line.match(/(\d+)/);
+        if (match) total = parseInt(match[1]);
+      }
+    }
+    
+    return {
+      theme_overview: themeOverview,
+      theme_to_stock: themeToStock,
+      total,
+      fields: ['doc_id', 'type', 'title', 'text', 'source_urls', 'theme_id', 'theme_name'],
+      note: 'Parsed from markdown manifest'
+    };
+  }
+
+  /**
+   * 獲取內建的 RAG 資料（用於 Cloudflare Workers）
+   */
+  private getBuiltinRAGDocuments(): RAGDocument[] {
+    // 使用完整的 90 筆 RAG 資料
+    console.log(`使用完整的 RAG 資料: ${FULL_RAG_DOCUMENTS.length} 筆`);
+    return FULL_RAG_DOCUMENTS;
   }
 
   /**
@@ -30,16 +75,35 @@ class RAGLoaderService {
       const isCloudflareWorkers = this.isCloudflareWorkers();
       console.log('Loading manifest - Environment check:', { isCloudflareWorkers });
       
-      let manifestUrl: string;
-      if (isCloudflareWorkers) {
-        // 在雲端環境中，使用公開的 RAG 檔案 URL
-        manifestUrl = (globalThis as any).RAG_MANIFEST_URL || 'https://concept-stock-screener.vercel.app/rag/manifest.json';
-      } else {
-        // 在本地開發環境中，使用本地檔案
-        manifestUrl = (globalThis as any).RAG_MANIFEST_URL_DEV || 'http://localhost:3000/rag/manifest.json';
+                           if (isCloudflareWorkers) {
+          // 在 Cloudflare Workers 中，使用完整的 manifest
+          console.log('Using full RAG manifest for Cloudflare Workers');
+          return FULL_RAG_MANIFEST;
+        }
+      
+      // 在本地開發環境中，嘗試從檔案系統讀取
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        const manifestPath = path.join((globalThis as any).process?.cwd?.() || '.', 'data/rag/manifest.md');
+        
+        if (fs.existsSync(manifestPath)) {
+          const content = fs.readFileSync(manifestPath, 'utf8');
+          // 解析 markdown 格式的 manifest
+          const manifest = this.parseManifestFromMarkdown(content);
+          console.log('Successfully loaded manifest from file system');
+          return manifest;
+        }
+      } catch (fsError) {
+        console.error('File system error:', fsError);
       }
       
-      console.log('Loading manifest from:', manifestUrl);
+      // 如果檔案系統讀取失敗，嘗試從 URL 載入
+      let manifestUrl: string;
+      manifestUrl = (globalThis as any).RAG_MANIFEST_URL_DEV || 'http://localhost:3000/rag/manifest.json';
+      
+      console.log('Loading manifest from URL:', manifestUrl);
       const response = await fetch(manifestUrl);
       
       console.log('Manifest response status:', response.status, response.statusText);
@@ -49,7 +113,7 @@ class RAGLoaderService {
       }
       
       const manifest = await response.json();
-      console.log('Successfully loaded manifest:', manifest);
+      console.log('Successfully loaded manifest from URL');
       return manifest;
     } catch (error) {
       console.error('Failed to load RAG manifest:', error);
@@ -74,63 +138,72 @@ class RAGLoaderService {
       const isCloudflareWorkers = this.isCloudflareWorkers();
       console.log('Loading documents - Environment check:', { isCloudflareWorkers });
       
-      // 在本地開發環境中，優先嘗試從檔案系統讀取
-      if (!isCloudflareWorkers) {
-        try {
-          const fs = await import('fs');
-          const path = await import('path');
-          
-          // 嘗試多個可能的檔案路徑
-          const possiblePaths = [
-            path.join((globalThis as any).process?.cwd?.() || '.', 'public/rag/docs.jsonl'),
-            path.join((globalThis as any).process?.cwd?.() || '.', 'apps/web/public/rag/docs.jsonl'),
-            path.join((globalThis as any).process?.cwd?.() || '.', 'data/rag/docs.jsonl'),
-          ];
-          
-          for (const docsPath of possiblePaths) {
-            console.log('Trying to load from file system:', docsPath);
-            
-            if (fs.existsSync(docsPath)) {
-              const content = fs.readFileSync(docsPath, 'utf8');
-              const lines = content.trim().split('\n');
-              
-              const documents: RAGDocument[] = [];
-              
-              for (const line of lines) {
-                try {
-                  const doc = JSON.parse(line) as RAGDocument;
-                  documents.push(doc);
-                } catch (parseError) {
-                  console.warn('Failed to parse document line:', line.substring(0, 100));
-                }
-              }
-              
-              console.log(`Loaded ${documents.length} RAG documents from file system: ${docsPath}`);
-              return documents;
-            }
-          }
-          
-          console.log('RAG documents file not found in any of the expected paths');
-        } catch (fsError) {
-          console.error('File system error:', fsError);
-        }
+      // 在 Cloudflare Workers 中，直接使用內建的完整 RAG 資料
+      if (isCloudflareWorkers) {
+        const builtinDocuments = this.getBuiltinRAGDocuments();
+        console.log(`Using built-in RAG documents: ${builtinDocuments.length} documents`);
+        return builtinDocuments;
       }
       
-      // 在本地開發環境中，嘗試從多個可能的 URL 載入
-      let docsUrl: string;
-      if (isCloudflareWorkers) {
-        docsUrl = (globalThis as any).RAG_DOCS_URL || 'https://concept-stock-screener.vercel.app/rag/docs.jsonl';
-      } else {
-        // 嘗試多個可能的本地 URL
-        const possibleUrls = [
-          (globalThis as any).RAG_DOCS_URL_DEV,
-          'http://localhost:3000/rag/docs.jsonl',
-          'http://localhost:3001/rag/docs.jsonl',
-          'http://localhost:3002/rag/docs.jsonl'
-        ].filter(Boolean);
-        
-        docsUrl = possibleUrls[0] || 'http://localhost:3000/rag/docs.jsonl';
+      // 如果環境檢測失敗，但我們在 Cloudflare Workers 中，也使用內建資料
+      const hasCloudflare = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
+      if (hasCloudflare) {
+        console.log('Fallback: Using built-in RAG documents in Cloudflare environment');
+        const builtinDocuments = this.getBuiltinRAGDocuments();
+        console.log(`Using built-in RAG documents: ${builtinDocuments.length} documents`);
+        return builtinDocuments;
       }
+      
+      // 在本地開發環境中，優先嘗試從檔案系統讀取
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        // 嘗試多個可能的檔案路徑
+        const possiblePaths = [
+          path.join((globalThis as any).process?.cwd?.() || '.', 'public/rag/docs.jsonl'),
+          path.join((globalThis as any).process?.cwd?.() || '.', 'apps/web/public/rag/docs.jsonl'),
+          path.join((globalThis as any).process?.cwd?.() || '.', 'data/rag/docs.jsonl'),
+        ];
+        
+        for (const docsPath of possiblePaths) {
+          console.log('Trying to load from file system:', docsPath);
+          
+          if (fs.existsSync(docsPath)) {
+            const content = fs.readFileSync(docsPath, 'utf8');
+            const lines = content.trim().split('\n');
+            
+            const documents: RAGDocument[] = [];
+            
+            for (const line of lines) {
+              try {
+                const doc = JSON.parse(line) as RAGDocument;
+                documents.push(doc);
+              } catch (parseError) {
+                console.warn('Failed to parse document line:', line.substring(0, 100));
+              }
+            }
+            
+            console.log(`Loaded ${documents.length} RAG documents from file system: ${docsPath}`);
+            return documents;
+          }
+        }
+        
+        console.log('RAG documents file not found in any of the expected paths');
+      } catch (fsError) {
+        console.error('File system error:', fsError);
+      }
+      
+      // 如果檔案系統讀取失敗，嘗試從 URL 載入
+      // 嘗試多個可能的本地 URL
+      const possibleUrls = [
+        (globalThis as any).RAG_DOCS_URL_DEV,
+        'http://localhost:3000/rag/docs.jsonl',
+        'http://localhost:3001/rag/docs.jsonl',
+        'http://localhost:3002/rag/docs.jsonl'
+      ].filter(Boolean);
+      
+      const docsUrl = possibleUrls[0] || 'http://localhost:3000/rag/docs.jsonl';
       
       console.log(`Loading RAG documents from URL: ${docsUrl}`);
       const response = await fetch(docsUrl);

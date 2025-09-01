@@ -202,7 +202,7 @@ export const geminiService = {
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
       
-      const aiPrompt = `請分析股票「${stockIdentifier}」，找出它可能屬於的投資主題，並說明關聯性。
+      const aiPrompt = `請分析股票「${stockIdentifier}」，找出相關的投資主題，並說明關聯性。
 
 請以 JSON 格式回傳：
 {
@@ -213,16 +213,20 @@ export const geminiService = {
   "themes": [
     {
       "theme": "主題名稱",
-      "description": "該股在此主題中的角色與重要性說明",
-      "heatScore": 0-100的熱度分數
+      "name": "主題名稱",
+      "description": "與該股票的關聯性描述",
+      "heatScore": 0-100的熱度分數,
+      "relevanceScore": 0-100的關聯性分數
     }
   ]
 }
 
 注意：
-- 至少找出5個相關主題
-- 每個主題都要說明該股票在其中的具體角色
-- 熱度分數反映該主題的市場關注度`;
+- 只包含台灣股市相關的投資主題
+- 最多包含5個相關主題
+- 關聯性描述要具體說明與該股票的業務關聯
+- 熱度分數反映市場關注度
+- 關聯性分數反映與該股票的業務相關程度`;
 
       const result = await model.generateContent(aiPrompt);
       const response = await result.response;
@@ -245,6 +249,93 @@ export const geminiService = {
           { theme: '5G 通訊', name: '5G 通訊', description: '技術領先', heatScore: 72, relevanceScore: 72 },
           { theme: '電動車', name: '電動車', description: '新興市場', heatScore: 65, relevanceScore: 65 },
           { theme: '物聯網', name: '物聯網', description: '應用廣泛', heatScore: 58, relevanceScore: 58 }
+        ]
+      };
+    }
+  },
+
+  // 🎯 新增：結合 RAG 資料的 AI 分析
+  async generateAnalysisWithRAG(query: string, ragContext: string): Promise<any> {
+    if (!genAI) {
+      console.log('使用模擬 RAG + AI 分析資料');
+      return {
+        query,
+        analysis: `基於 RAG 資料對「${query}」的分析`,
+        insights: [
+          '這是基於 RAG 資料庫的 AI 分析',
+          '結合了結構化資料和 AI 生成內容',
+          '提供更準確和豐富的投資建議'
+        ],
+        recommendations: [
+          '建議關注相關概念股',
+          '注意產業發展趨勢',
+          '評估投資風險'
+        ]
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const aiPrompt = `請基於以下 RAG 資料庫的內容，對查詢「${query}」進行深入分析：
+
+RAG 資料庫內容：
+${ragContext}
+
+請提供：
+1. 詳細的產業分析
+2. 相關概念股分析
+3. 投資機會和風險評估
+4. 市場趨勢預測
+
+請以 JSON 格式回傳：
+{
+  "query": "${query}",
+  "analysis": "詳細的產業和市場分析",
+  "insights": ["關鍵洞察1", "關鍵洞察2", "關鍵洞察3"],
+  "recommendations": ["投資建議1", "投資建議2", "投資建議3"],
+  "relatedStocks": [
+    {
+      "ticker": "股票代號",
+      "name": "公司名稱",
+      "reason": "推薦理由"
+    }
+  ],
+  "riskFactors": ["風險因素1", "風險因素2"],
+  "marketTrend": "市場趨勢分析"
+}
+
+注意：
+- 分析要基於提供的 RAG 資料
+- 提供具體的投資建議
+- 包含風險評估
+- 股票資訊要準確`;
+
+      const result = await model.generateContent(aiPrompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // 嘗試解析 JSON
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini RAG Analysis API 錯誤:', error);
+      return {
+        query,
+        analysis: `基於 RAG 資料對「${query}」的分析`,
+        insights: [
+          '這是基於 RAG 資料庫的 AI 分析',
+          '結合了結構化資料和 AI 生成內容',
+          '提供更準確和豐富的投資建議'
+        ],
+        recommendations: [
+          '建議關注相關概念股',
+          '注意產業發展趨勢',
+          '評估投資風險'
         ]
       };
     }

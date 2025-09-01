@@ -58,10 +58,10 @@ class VectorService {
   /**
    * 檢查是否有必要的API金鑰
    */
-  private checkApiKeys() {
+  private checkApiKeys(env?: any) {
     // 檢查 Pinecone 環境變數
-    const pineconeApiKey = (globalThis as any).PINECONE_API_KEY;
-    const pineconeEnvironment = (globalThis as any).PINECONE_ENVIRONMENT;
+    const pineconeApiKey = env?.PINECONE_API_KEY || (globalThis as any).PINECONE_API_KEY;
+    const pineconeEnvironment = env?.PINECONE_ENVIRONMENT || (globalThis as any).PINECONE_ENVIRONMENT;
     
     if (!pineconeApiKey || !pineconeEnvironment) {
       console.log('Pinecone API keys not found, using local memory mode');
@@ -74,12 +74,12 @@ class VectorService {
   /**
    * 初始化向量資料庫
    */
-  async initializeIndex() {
+  async initializeIndex(env?: any) {
     try {
       await this.initialize();
       
       // 檢查是否有 Pinecone 配置
-      if (!this.checkApiKeys()) {
+      if (!this.checkApiKeys(env)) {
         console.log('No Pinecone configuration found, using local memory mode');
         return null; // 返回 null 表示使用本地模式
       }
@@ -143,9 +143,9 @@ class VectorService {
   /**
    * 將RAG文件向量化並儲存到Pinecone或本地記憶體
    */
-  async upsertDocuments(documents: RAGDocument[]) {
+  async upsertDocuments(documents: RAGDocument[], env?: any) {
     try {
-      const index = await this.initializeIndex();
+      const index = await this.initializeIndex(env);
       
       // 如果沒有 Pinecone 配置，直接使用本地記憶體模式
       if (!index) {
@@ -212,19 +212,36 @@ class VectorService {
     topK?: number;
     filter?: any;
     namespace?: string;
-  } = {}) {
+  } = {}, env?: any) {
     try {
-      // 在本地開發環境中，從記憶體搜尋
-      if (this.localVectors.length === 0) {
-        return [];
+      // 確保初始化
+      await this.initializeIndex(env);
+      
+      // 檢查是否在 Cloudflare Workers 環境中
+      const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
+      
+      let searchDocuments: RAGDocument[] = [];
+      
+      if (isCloudflareWorkers) {
+        // 在 Cloudflare Workers 中，使用內建的 RAG 資料
+        const { ragLoaderService } = await import('./rag-loader');
+        searchDocuments = await ragLoaderService.loadDocuments();
+        console.log(`Searching in Cloudflare Workers with ${searchDocuments.length} documents`);
+      } else {
+        // 在本地開發環境中，從記憶體搜尋
+        if (this.localVectors.length === 0) {
+          return [];
+        }
+        searchDocuments = this.localVectors;
       }
 
-      const results = this.localVectors
+      const results = searchDocuments
         .filter(doc => {
           // 如果有過濾條件，應用過濾
           if (options.filter) {
             if (options.filter.type && doc.type !== options.filter.type) return false;
             if (options.filter.theme_name && doc.theme_name !== options.filter.theme_name) return false;
+            if (options.filter.stock_name && doc.stock_name !== options.filter.stock_name) return false;
           }
           return true;
         })
@@ -234,7 +251,8 @@ class VectorService {
           const titleMatch = doc.title.toLowerCase().includes(queryLower) ? 0.8 : 0;
           const textMatch = doc.text.toLowerCase().includes(queryLower) ? 0.6 : 0;
           const themeMatch = doc.theme_name.toLowerCase().includes(queryLower) ? 0.9 : 0;
-          const score = Math.max(titleMatch, textMatch, themeMatch) + Math.random() * 0.1;
+          const stockMatch = doc.stock_name && doc.stock_name.toLowerCase().includes(queryLower) ? 0.9 : 0;
+          const score = Math.max(titleMatch, textMatch, themeMatch, stockMatch) + Math.random() * 0.1;
 
           return {
             doc_id: doc.doc_id,
@@ -253,6 +271,7 @@ class VectorService {
         .sort((a, b) => b.score - a.score)
         .slice(0, options.topK || 10);
 
+      console.log(`Search results: ${results.length} matches for query "${query}"`);
       return results;
     } catch (error) {
       console.error('Failed to search vectors:', error);
@@ -263,40 +282,38 @@ class VectorService {
   /**
    * 根據主題搜尋相關股票
    */
-  async searchStocksByTheme(themeName: string, topK: number = 10) {
+  async searchStocksByTheme(themeName: string, topK: number = 10, env?: any) {
     return this.search(themeName, {
       topK,
       filter: {
         type: 'theme_to_stock',
-        theme_name: themeName,
       },
-    });
+    }, env);
   }
 
   /**
    * 根據股票搜尋相關主題
    */
-  async searchThemesByStock(stockName: string, topK: number = 10) {
+  async searchThemesByStock(stockName: string, topK: number = 10, env?: any) {
     return this.search(stockName, {
       topK,
       filter: {
         type: 'theme_to_stock',
-        stock_name: stockName,
       },
-    });
+    }, env);
   }
 
   /**
    * 搜尋主題概覽
    */
-  async searchThemeOverview(themeName: string) {
+  async searchThemeOverview(themeName: string, env?: any) {
     return this.search(themeName, {
       topK: 1,
       filter: {
         type: 'theme_overview',
         theme_name: themeName,
       },
-    });
+    }, env);
   }
 
   /**
