@@ -36,7 +36,7 @@ export function useUrlSync() {
 
     // 同步到應用 store
     if (urlMode !== searchMode) setSearchMode(urlMode);
-  }, [searchParams]);
+  }, [searchParams, query, mode, sort, filters, searchMode, setQuery, setMode, setSort, setFilters, setSearchMode]);
 
   // 從 store 同步狀態到 URL
   useEffect(() => {

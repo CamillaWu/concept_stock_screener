@@ -10,6 +10,8 @@ interface TrendingListProps {
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
+  onToggleFavorite?: (themeId: string, themeName: string) => void;
+  isFavorite?: (themeId: string) => boolean;
 }
 
 type SortOption = 'heat' | 'stocks' | 'name';
@@ -21,7 +23,9 @@ export const TrendingList: React.FC<TrendingListProps> = ({
   className = '',
   loading = false,
   error = null,
-  onRetry
+  onRetry,
+  onToggleFavorite,
+  isFavorite
 }) => {
   const [sortBy, setSortBy] = useState<SortOption>('heat');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -210,6 +214,8 @@ export const TrendingList: React.FC<TrendingListProps> = ({
               theme={theme}
               onSelect={() => onThemeClick?.(theme)}
               compact={false}
+              onToggleFavorite={onToggleFavorite}
+              isFavorite={isFavorite}
             />
           </div>
         ))}

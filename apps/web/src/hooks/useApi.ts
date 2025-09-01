@@ -252,12 +252,12 @@ export function useApi<T>(
             });
 
             clearTimeout(timeoutId);
-
-            if (!response.ok) {
+        
+        if (!response.ok) {
               throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const result = await response.json();
+        }
+        
+        const result = await response.json();
             
             // 檢查 API 回應格式
             if (result && typeof result === 'object' && 'success' in result) {

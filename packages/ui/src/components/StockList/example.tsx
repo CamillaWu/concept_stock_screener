@@ -1,11 +1,12 @@
 import React from 'react';
-import { StockList, StockListErrorBoundary } from '@concepts-radar/ui';
+import { StockList, StockListErrorBoundary } from './index';
 import { Stock } from '@concepts-radar/types';
 
 // 範例股票數據
 const sampleStocks: Stock[] = [
   {
     ticker: '2330',
+    symbol: '2330',
     name: '台積電',
     exchange: 'TWSE',
     reason: '全球最大晶圓代工廠，AI 晶片核心供應商',
@@ -14,6 +15,7 @@ const sampleStocks: Stock[] = [
   },
   {
     ticker: '2454',
+    symbol: '2454',
     name: '聯發科',
     exchange: 'TWSE',
     reason: '手機晶片龍頭，積極布局 AI 邊緣運算',
@@ -22,6 +24,7 @@ const sampleStocks: Stock[] = [
   },
   {
     ticker: '3034',
+    symbol: '3034',
     name: '聯詠',
     exchange: 'TWSE',
     reason: '顯示驅動 IC 領導廠商，車用晶片成長強勁',
@@ -30,6 +33,7 @@ const sampleStocks: Stock[] = [
   },
   {
     ticker: '2379',
+    symbol: '2379',
     name: '瑞昱',
     exchange: 'TWSE',
     reason: '網通晶片大廠，WiFi 7 技術領先',
@@ -38,6 +42,7 @@ const sampleStocks: Stock[] = [
   },
   {
     ticker: '2308',
+    symbol: '2308',
     name: '台達電',
     exchange: 'TWSE',
     reason: '電源管理龍頭，電動車充電樁布局完整',
