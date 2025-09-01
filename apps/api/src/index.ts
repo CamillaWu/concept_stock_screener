@@ -844,19 +844,20 @@ app.get('/rag/stocks-by-theme', async (c) => {
       return c.json(cached);
     }
 
-    const results = await vectorService.searchStocksByTheme(themeName, topK, c.env);
+    const stocks = await ragLoaderService.getStocksByTheme(themeName);
+    const limitedStocks = stocks.slice(0, topK);
 
     const response = {
       success: true,
       data: {
         theme: themeName,
-        stocks: results.map(r => ({
-          ticker: r.metadata.ticker,
-          stock_name: r.metadata.stock_name,
-          score: r.score,
-          content: r.content
+        stocks: limitedStocks.map(stock => ({
+          ticker: stock.ticker,
+          stock_name: stock.stock_name,
+          score: 1.0, // 預設分數
+          content: stock.text
         })),
-        count: results.length
+        count: limitedStocks.length
       }
     };
 
@@ -895,18 +896,19 @@ app.get('/rag/themes-by-stock', async (c) => {
       return c.json(cached);
     }
 
-    const results = await vectorService.searchThemesByStock(stockName, topK, c.env);
+    const themes = await ragLoaderService.getThemesByStock(stockName);
+    const limitedThemes = themes.slice(0, topK);
 
     const response = {
       success: true,
       data: {
         stock: stockName,
-        themes: results.map(r => ({
-          theme_name: r.metadata.theme_name,
-          score: r.score,
-          content: r.content
+        themes: limitedThemes.map(theme => ({
+          theme_name: theme.theme_name,
+          score: 1.0, // 預設分數
+          content: theme.text
         })),
-        count: results.length
+        count: limitedThemes.length
       }
     };
 
@@ -937,17 +939,18 @@ app.get('/rag/themes', async (c) => {
     const themeNames = await ragLoaderService.getAllThemeNames();
     const themes = [];
 
-    // 取得每個主題的概覽
-    for (const themeName of themeNames) {
-      const overview = await vectorService.searchThemeOverview(themeName, c.env);
-      if (overview.length > 0) {
-        themes.push({
-          name: themeName,
-          overview: overview[0].content,
-          score: overview[0].score
-        });
+          // 取得每個主題的概覽
+      for (const themeName of themeNames) {
+        const overviews = await ragLoaderService.getThemeOverviews();
+        const themeOverview = overviews.find(overview => overview.theme_name === themeName);
+        if (themeOverview) {
+          themes.push({
+            name: themeName,
+            overview: themeOverview.text,
+            score: 1.0 // 預設分數
+          });
+        }
       }
-    }
 
     const response = {
       success: true,
@@ -1370,6 +1373,175 @@ app.get('/ai/stock-attribution', async (c) => {
     return c.json({
       success: false,
       error: 'Failed to analyze stock attribution',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🎯 新增：RAG + AI 混合分析端點
+app.get('/ai/rag-analysis', async (c) => {
+  try {
+    const query = c.req.query('q');
+    const useAI = c.req.query('ai') !== 'false'; // 預設啟用 AI
+    const maxContextLength = parseInt(c.req.query('maxLength') || '4000');
+    
+    if (!query) {
+      return c.json({
+        success: false,
+        error: 'Missing query parameter',
+        code: 'missing_query'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-rag-analysis:${query}:${useAI}:${maxContextLength}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    // 1. 從 RAG 資料庫搜尋相關資料
+    const ragDocuments = await ragLoaderService.searchDocuments(query);
+    
+    // 2. 生成 RAG 上下文
+    const ragContext = await ragLoaderService.generateRAGContext(query, maxContextLength);
+    
+    // 3. 生成 RAG 摘要
+    const ragSummary = await ragLoaderService.generateRAGSummary(query);
+    
+    // 4. 如果啟用 AI，使用 Gemini 生成豐富分析
+    let aiAnalysis = null;
+    if (useAI && ragDocuments.length > 0) {
+      try {
+        aiAnalysis = await geminiService.generateAnalysisWithRAG(query, ragContext);
+      } catch (aiError) {
+        console.warn('AI analysis failed, using RAG only:', aiError);
+      }
+    }
+
+    // 5. 整合結果
+    const response = {
+      success: true,
+      data: {
+        query,
+        timestamp: new Date().toISOString(),
+        ragData: {
+          context: ragContext,
+          summary: ragSummary,
+          documents: ragDocuments.map(doc => ({
+            doc_id: doc.doc_id,
+            type: doc.type,
+            title: doc.title,
+            theme_name: doc.theme_name,
+            stock_name: doc.stock_name,
+            ticker: doc.ticker,
+            content: doc.text.substring(0, 200) + '...'
+          }))
+        },
+        aiAnalysis,
+        analysis: {
+          hasRAGData: ragDocuments.length > 0,
+          hasAIAnalysis: !!aiAnalysis,
+          totalDocuments: ragDocuments.length,
+          confidence: aiAnalysis?.confidence || 0.5
+        }
+      }
+    };
+
+    // 儲存到快取（較短時間，因為 AI 分析可能變化）
+    await cacheService.set(cacheKey, response, 900); // 15分鐘快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('RAG + AI Analysis API error:', error);
+    return c.json({
+      success: false,
+      error: 'Analysis failed',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🎯 新增：智能概念股搜尋（結合 RAG + AI）
+app.get('/ai/smart-stock-search', async (c) => {
+  try {
+    const query = c.req.query('q');
+    const theme = c.req.query('theme');
+    const useAI = c.req.query('ai') !== 'false';
+    
+    if (!query && !theme) {
+      return c.json({
+        success: false,
+        error: 'Missing query or theme parameter',
+        code: 'missing_params'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `smart-stock-search:${query || ''}:${theme || ''}:${useAI}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    let stocks = [];
+    let analysis = null;
+
+    if (theme) {
+      // 根據主題搜尋股票
+      stocks = await ragLoaderService.getStocksByTheme(theme);
+    } else {
+      // 根據查詢搜尋股票
+      const documents = await ragLoaderService.searchDocuments(query);
+      stocks = documents.filter(doc => doc.type === 'theme_to_stock');
+    }
+
+    // 如果啟用 AI，生成股票分析
+    if (useAI && stocks.length > 0) {
+      try {
+        const stockContext = stocks.map(stock => 
+          `${stock.stock_name} (${stock.ticker}): ${stock.text}`
+        ).join('\n\n');
+        
+        analysis = await geminiService.generateAnalysisWithRAG(
+          query || theme, 
+          `相關股票資料：\n${stockContext}`
+        );
+      } catch (aiError) {
+        console.warn('AI stock analysis failed:', aiError);
+      }
+    }
+
+    const response = {
+      success: true,
+      data: {
+        query: query || theme,
+        searchType: theme ? 'theme' : 'query',
+        stocks: stocks.map(stock => ({
+          ticker: stock.ticker,
+          name: stock.stock_name,
+          theme: stock.theme_name,
+          description: stock.text,
+          type: stock.type
+        })),
+        aiAnalysis: analysis,
+        summary: {
+          totalStocks: stocks.length,
+          hasAIAnalysis: !!analysis,
+          confidence: analysis?.confidence || 0.5
+        }
+      }
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 1800); // 30分鐘快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('Smart stock search API error:', error);
+    return c.json({
+      success: false,
+      error: 'Smart search failed',
       code: 'internal_error'
     }, 500);
   }
