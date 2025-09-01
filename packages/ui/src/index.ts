@@ -5,6 +5,12 @@ export { ThemeCard } from './components/ThemeCard';
 export { StockList } from './components/StockList';
 export { TrendingList } from './components/TrendingList';
 
+// StockList 子組件
+export { StockItem } from './components/StockList/StockItem';
+export { StockFilters } from './components/StockList/StockFilters';
+export { StockPagination } from './components/StockList/StockPagination';
+export { StockListErrorBoundary } from './components/StockList/ErrorBoundary';
+
 // 佈局組件
 export { Sidebar } from './components/Sidebar';
 export { DetailPanel } from './components/DetailPanel';
