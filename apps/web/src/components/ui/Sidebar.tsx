@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { StockConcept } from '@concepts-radar/types';
 import { apiService } from '../../services/api';
 import { Sidebar as UISidebar } from '@concepts-radar/ui';
+import { useFavoritesStore } from '../../store';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -22,6 +23,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // 使用收藏狀態
+  const { toggleFavorite, isFavorite } = useFavoritesStore();
 
   const fetchTrendingThemes = useCallback(async () => {
     try {
@@ -65,6 +69,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       useRealData={useRealData}
       onUseRealDataChange={onUseRealDataChange}
       lastUpdated={lastUpdated}
+      onToggleFavorite={toggleFavorite}
+      isFavorite={isFavorite}
     />
   );
 };
