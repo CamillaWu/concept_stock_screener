@@ -61,7 +61,7 @@ const initialState: AppState = {
 // 創建應用狀態 store
 export const useAppStore = create<AppState & AppActions>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
       
       setSelectedTheme: (theme) => {

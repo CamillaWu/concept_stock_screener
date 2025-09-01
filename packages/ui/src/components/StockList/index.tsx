@@ -3,6 +3,7 @@ import { Stock } from '@concepts-radar/types';
 import { StockItem } from './StockItem';
 import { StockFilters } from './StockFilters';
 import { StockPagination } from './StockPagination';
+import { StockListErrorBoundary } from './ErrorBoundary';
 
 interface StockListProps {
   stocks: Stock[];
@@ -168,3 +169,6 @@ export const StockList: React.FC<StockListProps> = React.memo(({
 });
 
 StockList.displayName = 'StockList';
+
+// 導出 ErrorBoundary
+export { StockListErrorBoundary };

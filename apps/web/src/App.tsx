@@ -1,25 +1,59 @@
-import React, { useState } from 'react';
+import React, { Suspense } from 'react';
 import { Sidebar } from './components/ui/Sidebar';
 import { SearchBar } from '@concepts-radar/ui';
 import { DetailPanel } from './components/ui/DetailPanel';
 import { StockDetailPanel } from './components/ui/StockDetailPanel';
 import { KeyboardShortcuts } from './components/ui/KeyboardShortcuts';
 import { apiService } from './services/api';
+import { useAppStore, useUIStore, useSearchStore } from './store';
+import { useUrlSync } from './store/useUrlSync';
 import type { StockConcept, StockAnalysisResult, Stock } from '@concepts-radar/types';
 
+// URL 同步組件
+function UrlSyncWrapper() {
+  useUrlSync();
+  return null;
+}
+
 function App() {
-  const [selectedTheme, setSelectedTheme] = useState<StockConcept | null>(null);
-  const [selectedStock, setSelectedStock] = useState<StockAnalysisResult | null>(null);
-  const [searchMode, setSearchMode] = useState<'theme' | 'stock'>('theme');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [useRealData, setUseRealData] = useState(false);
-  const [showShortcuts, setShowShortcuts] = useState(false);
+  // 使用 Zustand 狀態管理
+  const {
+    selectedTheme,
+    selectedStock,
+    searchMode,
+    useRealData,
+    loading,
+    error,
+    setSelectedTheme,
+    setSelectedStock,
+    setSearchMode,
+    setUseRealData,
+    setLoading,
+    setError,
+    clearError,
+  } = useAppStore();
+
+  const {
+    sidebarCollapsed,
+    showShortcuts,
+    toggleSidebar,
+    setShowShortcuts,
+  } = useUIStore();
+
+  const {
+    setQuery,
+    addToHistory,
+  } = useSearchStore();
+
+  // URL 同步
+  // useUrlSync();
 
   // 處理搜尋
   const handleSearch = async (query: string, mode: 'theme' | 'stock', useRealData: boolean) => {
     setLoading(true);
     setUseRealData(useRealData);
+    setQuery(query);
+    addToHistory(query);
     
     try {
       if (mode === 'theme') {
@@ -33,7 +67,7 @@ function App() {
       }
     } catch (error) {
       console.error('搜尋失敗:', error);
-      // 這裡可以添加錯誤處理 UI
+      setError(error instanceof Error ? error.message : '搜尋失敗');
     } finally {
       setLoading(false);
     }
@@ -69,13 +103,17 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden">
+      {/* URL 同步 */}
+      <Suspense fallback={null}>
+        <UrlSyncWrapper />
+      </Suspense>
       {/* 側邊欄 */}
       <div className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out shadow-lg ${
         sidebarCollapsed ? 'w-16' : 'w-80'
       }`}>
         <Sidebar
           collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onToggleCollapse={toggleSidebar}
           onThemeClick={handleThemeClick}
           useRealData={useRealData}
           onUseRealDataChange={setUseRealData}
@@ -111,6 +149,21 @@ function App() {
             <span>•</span>
             <span>Tab 切換模式</span>
           </div>
+          
+          {/* 錯誤提示 */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-red-700">{error}</span>
+                <button
+                  onClick={clearError}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 內容區域 */}

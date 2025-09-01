@@ -14,6 +14,8 @@ interface SidebarProps {
   onUseRealDataChange: (useRealData: boolean) => void;
   lastUpdated?: Date | null;
   className?: string;
+  onToggleFavorite?: (themeId: string, themeName: string) => void;
+  isFavorite?: (themeId: string) => boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -27,7 +29,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   useRealData,
   onUseRealDataChange,
   lastUpdated,
-  className = ''
+  className = '',
+  onToggleFavorite,
+  isFavorite
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
@@ -166,6 +170,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             loading={loading}
             error={error}
             onRetry={onRetry}
+            onToggleFavorite={onToggleFavorite}
+            isFavorite={isFavorite}
           />
         ) : (
           <div className="p-4">
