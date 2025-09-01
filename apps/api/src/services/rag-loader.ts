@@ -1,5 +1,6 @@
 import { RAGDocument } from './vector';
 import { FULL_RAG_DOCUMENTS, FULL_RAG_MANIFEST } from './full-rag-data';
+import { RAGQueryService } from './rag-query-service';
 
 export interface RAGManifest {
   theme_overview: number;
@@ -451,19 +452,34 @@ class RAGLoaderService {
   }
 
   /**
-   * 取得所有股票名稱
+   * 搜尋文件
    */
-  async getAllStockNames(): Promise<string[]> {
+  async searchDocuments(query: string): Promise<RAGDocument[]> {
     const documents = await this.loadDocuments();
-    const stockNames = new Set<string>();
-    
-    for (const doc of documents) {
-      if (doc.stock_name) {
-        stockNames.add(doc.stock_name);
-      }
-    }
-    
-    return Array.from(stockNames);
+    return RAGQueryService.searchDocuments(documents, query);
+  }
+
+  /**
+   * 生成 RAG 上下文（用於 AI 分析）
+   */
+  async generateRAGContext(query: string, maxLength: number = 4000): Promise<string> {
+    const documents = await this.loadDocuments();
+    return RAGQueryService.generateRAGContext(documents, query, maxLength);
+  }
+
+  /**
+   * 生成 RAG 摘要
+   */
+  async generateRAGSummary(query: string): Promise<{
+    totalDocuments: number;
+    themeCount: number;
+    stockCount: number;
+    topThemes: string[];
+    topStocks: string[];
+    relevanceScore: number;
+  }> {
+    const documents = await this.loadDocuments();
+    return RAGQueryService.generateRAGSummary(documents, query);
   }
 
   /**

@@ -299,7 +299,7 @@ export const geminiService = {
     }
   },
 
-  // 🎯 新增：結合 RAG 資料的 AI 分析
+  // 🎯 優化：結合 RAG 資料的 AI 分析
   async generateAnalysisWithRAG(query: string, ragContext: string): Promise<any> {
     if (!genAI) {
       console.log('使用模擬 RAG + AI 分析資料');
@@ -322,56 +322,114 @@ export const geminiService = {
     try {
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
       
-      const aiPrompt = `請基於以下 RAG 資料庫的內容，對查詢「${query}」進行深入分析：
+      const aiPrompt = `你是一位專業的股票分析師，專門分析台灣概念股。請基於以下 RAG 資料庫的內容，對查詢「${query}」進行深入分析。
 
-RAG 資料庫內容：
+📊 RAG 資料庫內容：
 ${ragContext}
 
-請提供：
-1. 詳細的產業分析
-2. 相關概念股分析
-3. 投資機會和風險評估
-4. 市場趨勢預測
+🎯 分析要求：
+請提供以下結構化的分析：
 
-請以 JSON 格式回傳：
+1. **產業分析** (200-300字)
+   - 產業現況和發展趨勢
+   - 技術創新和市場機會
+   - 競爭格局分析
+
+2. **概念股分析** (300-400字)
+   - 相關概念股篩選和評級
+   - 各股在產業鏈中的定位
+   - 投資價值評估
+
+3. **投資機會** (150-200字)
+   - 短期投資機會
+   - 中長期發展潛力
+   - 投資時機建議
+
+4. **風險評估** (150-200字)
+   - 產業風險因素
+   - 個股風險分析
+   - 市場風險提醒
+
+5. **市場趨勢** (100-150字)
+   - 技術發展趨勢
+   - 市場需求變化
+   - 政策影響分析
+
+📋 請以以下 JSON 格式回傳（確保格式正確，不要有多餘的文字）：
+
 {
   "query": "${query}",
-  "analysis": "詳細的產業和市場分析",
-  "insights": ["關鍵洞察1", "關鍵洞察2", "關鍵洞察3"],
-  "recommendations": ["投資建議1", "投資建議2", "投資建議3"],
+  "summary": "簡要總結 (50字以內)",
+  "industryAnalysis": "詳細的產業分析",
+  "stockAnalysis": "概念股分析",
+  "investmentOpportunities": "投資機會分析",
+  "riskAssessment": "風險評估",
+  "marketTrend": "市場趨勢分析",
+  "insights": [
+    "關鍵洞察1",
+    "關鍵洞察2", 
+    "關鍵洞察3"
+  ],
+  "recommendations": [
+    "投資建議1",
+    "投資建議2",
+    "投資建議3"
+  ],
   "relatedStocks": [
     {
       "ticker": "股票代號",
       "name": "公司名稱",
-      "reason": "推薦理由"
+      "reason": "推薦理由",
+      "riskLevel": "低/中/高"
     }
   ],
-  "riskFactors": ["風險因素1", "風險因素2"],
-  "marketTrend": "市場趨勢分析"
+  "riskFactors": [
+    "風險因素1",
+    "風險因素2"
+  ],
+  "confidence": 0.85
 }
 
-注意：
-- 分析要基於提供的 RAG 資料
-- 提供具體的投資建議
-- 包含風險評估
-- 股票資訊要準確`;
+⚠️ 重要提醒：
+- 分析必須基於提供的 RAG 資料
+- 提供具體、可操作的投資建議
+- 包含詳細的風險評估
+- 股票資訊要準確，包含代號和名稱
+- 確保 JSON 格式正確，不要有多餘的文字或符號`;
 
       const result = await model.generateContent(aiPrompt);
       const response = await result.response;
       const text = response.text();
       
-      // 嘗試解析 JSON
+      // 改進的 JSON 解析
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          
+          // 驗證必要欄位
+          if (!parsed.query || !parsed.analysis) {
+            throw new Error('回應格式不完整');
+          }
+          
+          return parsed;
+        } catch (parseError) {
+          console.error('JSON 解析錯誤:', parseError);
+          throw new Error('無法解析 AI 回應格式');
+        }
       }
       
-      throw new Error('無法解析 AI 回應');
+      throw new Error('無法找到有效的 JSON 回應');
     } catch (error) {
       console.error('Gemini RAG Analysis API 錯誤:', error);
       return {
         query,
-        analysis: `基於 RAG 資料對「${query}」的分析`,
+        summary: `基於 RAG 資料對「${query}」的分析`,
+        industryAnalysis: '產業分析暫時無法提供',
+        stockAnalysis: '概念股分析暫時無法提供',
+        investmentOpportunities: '投資機會分析暫時無法提供',
+        riskAssessment: '風險評估暫時無法提供',
+        marketTrend: '市場趨勢分析暫時無法提供',
         insights: [
           '這是基於 RAG 資料庫的 AI 分析',
           '結合了結構化資料和 AI 生成內容',
@@ -381,7 +439,10 @@ ${ragContext}
           '建議關注相關概念股',
           '注意產業發展趨勢',
           '評估投資風險'
-        ]
+        ],
+        relatedStocks: [],
+        riskFactors: ['資料來源有限', '市場變化快速'],
+        confidence: 0.5
       };
     }
   },
