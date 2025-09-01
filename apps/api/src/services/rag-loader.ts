@@ -9,7 +9,54 @@ export interface RAGManifest {
   note: string;
 }
 
+// 快取機制
+class RAGCache {
+  private static instance: RAGCache;
+  private manifestCache: RAGManifest | null = null;
+  private documentsCache: RAGDocument[] | null = null;
+  private cacheTimestamp: number = 0;
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5分鐘快取
+
+  static getInstance(): RAGCache {
+    if (!RAGCache.instance) {
+      RAGCache.instance = new RAGCache();
+    }
+    return RAGCache.instance;
+  }
+
+  isCacheValid(): boolean {
+    return this.cacheTimestamp > 0 && 
+           (Date.now() - this.cacheTimestamp) < this.CACHE_DURATION;
+  }
+
+  setManifest(manifest: RAGManifest): void {
+    this.manifestCache = manifest;
+    this.cacheTimestamp = Date.now();
+  }
+
+  getManifest(): RAGManifest | null {
+    return this.isCacheValid() ? this.manifestCache : null;
+  }
+
+  setDocuments(documents: RAGDocument[]): void {
+    this.documentsCache = documents;
+    this.cacheTimestamp = Date.now();
+  }
+
+  getDocuments(): RAGDocument[] | null {
+    return this.isCacheValid() ? this.documentsCache : null;
+  }
+
+  clearCache(): void {
+    this.manifestCache = null;
+    this.documentsCache = null;
+    this.cacheTimestamp = 0;
+  }
+}
+
 class RAGLoaderService {
+  private cache = RAGCache.getInstance();
+
   /**
    * 統一環境檢測邏輯
    */
@@ -68,18 +115,27 @@ class RAGLoaderService {
   }
 
   /**
-   * 載入RAG manifest檔案
+   * 載入RAG manifest檔案（優化版本）
    */
   async loadManifest(): Promise<RAGManifest> {
+    // 檢查快取
+    const cachedManifest = this.cache.getManifest();
+    if (cachedManifest) {
+      console.log('Using cached RAG manifest');
+      return cachedManifest;
+    }
+
     try {
       const isCloudflareWorkers = this.isCloudflareWorkers();
       console.log('Loading manifest - Environment check:', { isCloudflareWorkers });
       
-                           if (isCloudflareWorkers) {
-          // 在 Cloudflare Workers 中，使用完整的 manifest
-          console.log('Using full RAG manifest for Cloudflare Workers');
-          return FULL_RAG_MANIFEST;
-        }
+      if (isCloudflareWorkers) {
+        // 在 Cloudflare Workers 中，使用完整的 manifest
+        console.log('Using full RAG manifest for Cloudflare Workers');
+        const manifest = FULL_RAG_MANIFEST;
+        this.cache.setManifest(manifest);
+        return manifest;
+      }
       
       // 在本地開發環境中，嘗試從檔案系統讀取
       try {
@@ -93,6 +149,7 @@ class RAGLoaderService {
           // 解析 markdown 格式的 manifest
           const manifest = this.parseManifestFromMarkdown(content);
           console.log('Successfully loaded manifest from file system');
+          this.cache.setManifest(manifest);
           return manifest;
         }
       } catch (fsError) {
@@ -114,6 +171,7 @@ class RAGLoaderService {
       
       const manifest = await response.json();
       console.log('Successfully loaded manifest from URL');
+      this.cache.setManifest(manifest);
       return manifest;
     } catch (error) {
       console.error('Failed to load RAG manifest:', error);
@@ -126,14 +184,22 @@ class RAGLoaderService {
         note: 'Fallback manifest - RAG manifest loading failed'
       };
       console.log('Using fallback manifest:', fallbackManifest);
+      this.cache.setManifest(fallbackManifest);
       return fallbackManifest;
     }
   }
 
   /**
-   * 載入RAG documents檔案
+   * 載入RAG documents檔案（優化版本）
    */
   async loadDocuments(): Promise<RAGDocument[]> {
+    // 檢查快取
+    const cachedDocuments = this.cache.getDocuments();
+    if (cachedDocuments) {
+      console.log('Using cached RAG documents');
+      return cachedDocuments;
+    }
+
     try {
       const isCloudflareWorkers = this.isCloudflareWorkers();
       console.log('Loading documents - Environment check:', { isCloudflareWorkers });
@@ -142,6 +208,7 @@ class RAGLoaderService {
       if (isCloudflareWorkers) {
         const builtinDocuments = this.getBuiltinRAGDocuments();
         console.log(`Using built-in RAG documents: ${builtinDocuments.length} documents`);
+        this.cache.setDocuments(builtinDocuments);
         return builtinDocuments;
       }
       
@@ -151,6 +218,7 @@ class RAGLoaderService {
         console.log('Fallback: Using built-in RAG documents in Cloudflare environment');
         const builtinDocuments = this.getBuiltinRAGDocuments();
         console.log(`Using built-in RAG documents: ${builtinDocuments.length} documents`);
+        this.cache.setDocuments(builtinDocuments);
         return builtinDocuments;
       }
       
@@ -175,16 +243,25 @@ class RAGLoaderService {
             
             const documents: RAGDocument[] = [];
             
-            for (const line of lines) {
-              try {
-                const doc = JSON.parse(line) as RAGDocument;
-                documents.push(doc);
-              } catch (parseError) {
-                console.warn('Failed to parse document line:', line.substring(0, 100));
-              }
+            // 使用並行處理來加速解析
+            const batchSize = 10;
+            for (let i = 0; i < lines.length; i += batchSize) {
+              const batch = lines.slice(i, i + batchSize);
+              const batchPromises = batch.map(async (line) => {
+                try {
+                  return JSON.parse(line) as RAGDocument;
+                } catch (parseError) {
+                  console.warn('Failed to parse document line:', line.substring(0, 100));
+                  return null;
+                }
+              });
+              
+              const batchResults = await Promise.all(batchPromises);
+              documents.push(...batchResults.filter(Boolean) as RAGDocument[]);
             }
             
             console.log(`Loaded ${documents.length} RAG documents from file system: ${docsPath}`);
+            this.cache.setDocuments(documents);
             return documents;
           }
         }
@@ -222,16 +299,25 @@ class RAGLoaderService {
       
       const documents: RAGDocument[] = [];
       
-      for (const line of lines) {
-        try {
-          const doc = JSON.parse(line) as RAGDocument;
-          documents.push(doc);
-        } catch (parseError) {
-          console.warn('Failed to parse document line:', line.substring(0, 100));
-        }
+      // 使用並行處理來加速解析
+      const batchSize = 10;
+      for (let i = 0; i < lines.length; i += batchSize) {
+        const batch = lines.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (line) => {
+          try {
+            return JSON.parse(line) as RAGDocument;
+          } catch (parseError) {
+            console.warn('Failed to parse document line:', line.substring(0, 100));
+            return null;
+          }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        documents.push(...batchResults.filter(Boolean) as RAGDocument[]);
       }
       
       console.log(`Successfully loaded ${documents.length} RAG documents from URL`);
+      this.cache.setDocuments(documents);
       return documents;
     } catch (error) {
       console.error('Failed to load RAG documents:', error);
@@ -247,24 +333,11 @@ class RAGLoaderService {
           theme_name: "AI 伺服器",
           source_urls: [],
           retrieved_at: new Date().toISOString(),
-          language: "zh-TW"
-        },
-        {
-          doc_id: "theme.ai_server.stock.2330",
-          type: "theme_to_stock",
-          title: "台積電 (2330) - AI 伺服器",
-          text: "台積電是全球最大的晶圓代工廠，在 AI 伺服器晶片製造方面具有領先優勢。公司為 NVIDIA、AMD 等 AI 晶片廠商提供先進製程服務。",
-          theme_id: "theme.ai_server",
-          theme_name: "AI 伺服器",
-          ticker: "2330",
-          stock_name: "台積電",
-          source_urls: [],
-          retrieved_at: new Date().toISOString(),
-          language: "zh-TW"
         }
       ];
       
-      console.log('Using fallback RAG documents:', fallbackDocs.length);
+      console.log('Using fallback RAG documents');
+      this.cache.setDocuments(fallbackDocs);
       return fallbackDocs;
     }
   }
@@ -391,6 +464,25 @@ class RAGLoaderService {
     }
     
     return Array.from(stockNames);
+  }
+
+  /**
+   * 清除快取（用於開發和測試）
+   */
+  clearCache(): void {
+    this.cache.clearCache();
+    console.log('RAG cache cleared');
+  }
+
+  /**
+   * 獲取快取狀態
+   */
+  getCacheStatus(): { hasManifest: boolean; hasDocuments: boolean; timestamp: number } {
+    return {
+      hasManifest: this.cache.getManifest() !== null,
+      hasDocuments: this.cache.getDocuments() !== null,
+      timestamp: this.cache['cacheTimestamp']
+    };
   }
 }
 

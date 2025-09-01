@@ -3,6 +3,51 @@ import type { StockConcept, StockAnalysisResult } from '@concepts-radar/types';
 
 let genAI: GoogleGenerativeAI | null = null;
 
+// API 快取機制
+class APICache {
+  private static instance: APICache;
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+  static getInstance(): APICache {
+    if (!APICache.instance) {
+      APICache.instance = new APICache();
+    }
+    return APICache.instance;
+  }
+
+  set(key: string, data: any, ttl: number = 5 * 60 * 1000): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  get(key: string): any | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+
+    const isExpired = (Date.now() - cached.timestamp) > cached.ttl;
+    if (isExpired) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return cached.data;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  getStats(): { size: number; keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    };
+  }
+}
+
 // 延遲初始化 Gemini
 function initializeGemini(env?: any) {
   if (genAI) return genAI;
@@ -564,6 +609,653 @@ ${ragContext}
           }
         ]
       };
+    }
+  },
+
+  // 快取管理方法
+  clearCache(): void {
+    const cache = APICache.getInstance();
+    cache.clear();
+    console.log('API cache cleared');
+  },
+
+  getCacheStats(): { size: number; keys: string[] } {
+    const cache = APICache.getInstance();
+    return cache.getStats();
+  },
+
+  // 🚀 AI 功能增強：智能投資建議
+  async generateInvestmentAdvice(stockId: string, theme: string, marketContext?: string): Promise<{
+    stockId: string;
+    theme: string;
+    advice: {
+      type: 'buy' | 'hold' | 'sell';
+      confidence: number;
+      reasoning: string;
+      timeframe: 'short' | 'medium' | 'long';
+    };
+    analysis: {
+      fundamentals: string;
+      technical: string;
+      sentiment: string;
+    };
+    risks: string[];
+    opportunities: string[];
+    targetPrice?: {
+      conservative: number;
+      moderate: number;
+      aggressive: number;
+    };
+  }> {
+    const cache = APICache.getInstance();
+    const cacheKey = `investment_advice_${stockId}_${theme}`;
+    
+    // 檢查快取
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      console.log('Using cached investment advice');
+      return cached;
+    }
+
+    if (!genAI) {
+      console.log('使用模擬智能投資建議');
+      const result = {
+        stockId,
+        theme,
+        advice: {
+          type: 'buy' as const,
+          confidence: 75,
+          reasoning: '基於產業發展趨勢和公司基本面分析',
+          timeframe: 'medium' as const
+        },
+        analysis: {
+          fundamentals: '公司基本面穩健，營收成長符合預期',
+          technical: '技術面顯示上升趨勢，支撐位明確',
+          sentiment: '市場情緒偏向樂觀，機構評級正面'
+        },
+        risks: ['產業競爭加劇', '政策風險', '匯率波動'],
+        opportunities: ['新產品線推出', '海外市場擴張', '技術創新'],
+        targetPrice: {
+          conservative: 500,
+          moderate: 600,
+          aggressive: 750
+        }
+      };
+      cache.set(cacheKey, result, 30 * 60 * 1000); // 30分鐘快取
+      return result;
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const prompt = `請為股票「${stockId}」在「${theme}」主題下提供智能投資建議。
+
+${marketContext ? `市場背景：${marketContext}` : ''}
+
+請以 JSON 格式回傳：
+{
+  "stockId": "${stockId}",
+  "theme": "${theme}",
+  "advice": {
+    "type": "buy"或"hold"或"sell",
+    "confidence": 0-100的信心度,
+    "reasoning": "投資建議的詳細理由",
+    "timeframe": "short"或"medium"或"long"
+  },
+  "analysis": {
+    "fundamentals": "基本面分析",
+    "technical": "技術面分析", 
+    "sentiment": "市場情緒分析"
+  },
+  "risks": ["風險因素1", "風險因素2", "風險因素3"],
+  "opportunities": ["機會1", "機會2", "機會3"],
+  "targetPrice": {
+    "conservative": 保守目標價,
+    "moderate": 適中目標價,
+    "aggressive": 積極目標價
+  }
+}
+
+注意：
+- 基於當前市場環境和產業趨勢
+- 提供具體的投資理由和風險評估
+- 目標價要合理且可實現
+- 考慮短期、中期和長期投資策略`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        cache.set(cacheKey, analysis, 30 * 60 * 1000); // 30分鐘快取
+        return analysis;
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini 智能投資建議 API 錯誤:', error);
+      const fallback = {
+        stockId,
+        theme,
+        advice: {
+          type: 'hold' as const,
+          confidence: 60,
+          reasoning: '建議觀望，等待更明確的市場信號',
+          timeframe: 'medium' as const
+        },
+        analysis: {
+          fundamentals: '基本面需要進一步觀察',
+          technical: '技術面呈現震盪整理',
+          sentiment: '市場情緒中性'
+        },
+        risks: ['市場不確定性', '產業風險', '政策變化'],
+        opportunities: ['潛在的產業機會', '技術突破', '市場擴張'],
+        targetPrice: {
+          conservative: 450,
+          moderate: 500,
+          aggressive: 600
+        }
+      };
+      cache.set(cacheKey, fallback, 30 * 60 * 1000);
+      return fallback;
+    }
+  },
+
+  // 🚀 AI 功能增強：風險評估分析
+  async analyzeRiskAssessment(stockId: string, theme: string): Promise<{
+    stockId: string;
+    theme: string;
+    riskScore: number; // 0-100，越高風險越大
+    riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+    riskCategories: {
+      market: { score: number; description: string };
+      industry: { score: number; description: string };
+      company: { score: number; description: string };
+      regulatory: { score: number; description: string };
+    };
+    riskFactors: Array<{
+      category: string;
+      factor: string;
+      impact: 'low' | 'medium' | 'high';
+      probability: 'low' | 'medium' | 'high';
+      mitigation: string;
+    }>;
+    stressTest: {
+      scenario: string;
+      impact: string;
+      probability: number;
+    }[];
+  }> {
+    const cache = APICache.getInstance();
+    const cacheKey = `risk_assessment_${stockId}_${theme}`;
+    
+    // 檢查快取
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      console.log('Using cached risk assessment');
+      return cached;
+    }
+
+    if (!genAI) {
+      console.log('使用模擬風險評估分析');
+      const result = {
+        stockId,
+        theme,
+        riskScore: 35,
+        riskLevel: 'medium' as const,
+        riskCategories: {
+          market: { score: 40, description: '市場波動風險中等' },
+          industry: { score: 30, description: '產業競爭風險較低' },
+          company: { score: 25, description: '公司基本面風險較低' },
+          regulatory: { score: 45, description: '政策監管風險中等' }
+        },
+        riskFactors: [
+          {
+            category: '市場風險',
+            factor: '全球經濟放緩',
+            impact: 'medium' as const,
+            probability: 'medium' as const,
+            mitigation: '分散投資組合，關注防禦性資產'
+          },
+          {
+            category: '產業風險',
+            factor: '技術變革加速',
+            impact: 'high' as const,
+            probability: 'medium' as const,
+            mitigation: '持續關注技術發展，適時調整策略'
+          }
+        ],
+        stressTest: [
+          {
+            scenario: '極端市場波動',
+            impact: '股價可能下跌15-20%',
+            probability: 0.15
+          },
+          {
+            scenario: '產業政策變化',
+            impact: '營收可能受到短期影響',
+            probability: 0.25
+          }
+        ]
+      };
+      cache.set(cacheKey, result, 60 * 60 * 1000); // 1小時快取
+      return result;
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const prompt = `請對股票「${stockId}」在「${theme}」主題下進行全面的風險評估分析。
+
+請以 JSON 格式回傳：
+{
+  "stockId": "${stockId}",
+  "theme": "${theme}",
+  "riskScore": 0-100的綜合風險分數,
+  "riskLevel": "low"或"medium"或"high"或"extreme",
+  "riskCategories": {
+    "market": {"score": 0-100, "description": "市場風險分析"},
+    "industry": {"score": 0-100, "description": "產業風險分析"},
+    "company": {"score": 0-100, "description": "公司風險分析"},
+    "regulatory": {"score": 0-100, "description": "監管風險分析"}
+  },
+  "riskFactors": [
+    {
+      "category": "風險類別",
+      "factor": "具體風險因素",
+      "impact": "low"或"medium"或"high",
+      "probability": "low"或"medium"或"high",
+      "mitigation": "風險緩解策略"
+    }
+  ],
+  "stressTest": [
+    {
+      "scenario": "壓力測試情境",
+      "impact": "對股價的影響",
+      "probability": 0-1的發生機率
+    }
+  ]
+}
+
+注意：
+- 全面評估各類風險因素
+- 提供具體的風險緩解建議
+- 包含壓力測試情境分析
+- 風險評分要客觀且可量化`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        cache.set(cacheKey, analysis, 60 * 60 * 1000); // 1小時快取
+        return analysis;
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini 風險評估 API 錯誤:', error);
+      const fallback = {
+        stockId,
+        theme,
+        riskScore: 50,
+        riskLevel: 'medium' as const,
+        riskCategories: {
+          market: { score: 50, description: '市場風險需要關注' },
+          industry: { score: 45, description: '產業風險中等' },
+          company: { score: 40, description: '公司風險可控' },
+          regulatory: { score: 55, description: '監管風險較高' }
+        },
+        riskFactors: [
+          {
+            category: '綜合風險',
+            factor: '市場不確定性',
+            impact: 'medium' as const,
+            probability: 'medium' as const,
+            mitigation: '建議分散投資，定期檢視風險'
+          }
+        ],
+        stressTest: [
+          {
+            scenario: '市場調整',
+            impact: '股價可能波動10-15%',
+            probability: 0.3
+          }
+        ]
+      };
+      cache.set(cacheKey, fallback, 60 * 60 * 1000);
+      return fallback;
+    }
+  },
+
+  // 🚀 AI 功能增強：市場趨勢預測
+  async predictMarketTrend(theme: string, timeframe: 'short' | 'medium' | 'long' = 'medium'): Promise<{
+    theme: string;
+    timeframe: string;
+    prediction: {
+      direction: 'bullish' | 'bearish' | 'sideways';
+      confidence: number;
+      reasoning: string;
+    };
+    factors: {
+      positive: string[];
+      negative: string[];
+      neutral: string[];
+    };
+    timeline: Array<{
+      period: string;
+      expected: string;
+      probability: number;
+    }>;
+    recommendations: string[];
+  }> {
+    const cache = APICache.getInstance();
+    const cacheKey = `market_trend_${theme}_${timeframe}`;
+    
+    // 檢查快取
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      console.log('Using cached market trend prediction');
+      return cached;
+    }
+
+    if (!genAI) {
+      console.log('使用模擬市場趨勢預測');
+      const result = {
+        theme,
+        timeframe,
+        prediction: {
+          direction: 'bullish' as const,
+          confidence: 70,
+          reasoning: '基於產業發展趨勢和技術創新推動'
+        },
+        factors: {
+          positive: ['技術創新加速', '政策支持', '需求增長'],
+          negative: ['競爭加劇', '成本上升'],
+          neutral: ['市場整合', '監管變化']
+        },
+        timeline: [
+          {
+            period: '短期 (1-3個月)',
+            expected: '震盪上行',
+            probability: 0.6
+          },
+          {
+            period: '中期 (3-12個月)',
+            expected: '穩健成長',
+            probability: 0.7
+          },
+          {
+            period: '長期 (1年以上)',
+            expected: '結構性成長',
+            probability: 0.8
+          }
+        ],
+        recommendations: [
+          '關注龍頭企業投資機會',
+          '分散投資降低風險',
+          '定期檢視投資組合'
+        ]
+      };
+      cache.set(cacheKey, result, 2 * 60 * 60 * 1000); // 2小時快取
+      return result;
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const prompt = `請預測「${theme}」主題在${timeframe === 'short' ? '短期(1-3個月)' : timeframe === 'medium' ? '中期(3-12個月)' : '長期(1年以上)'}的市場趨勢。
+
+請以 JSON 格式回傳：
+{
+  "theme": "${theme}",
+  "timeframe": "${timeframe}",
+  "prediction": {
+    "direction": "bullish"或"bearish"或"sideways",
+    "confidence": 0-100的信心度,
+    "reasoning": "預測的詳細理由"
+  },
+  "factors": {
+    "positive": ["正面因素1", "正面因素2"],
+    "negative": ["負面因素1", "負面因素2"],
+    "neutral": ["中性因素1", "中性因素2"]
+  },
+  "timeline": [
+    {
+      "period": "時間段",
+      "expected": "預期表現",
+      "probability": 0-1的機率
+    }
+  ],
+  "recommendations": ["投資建議1", "投資建議2", "投資建議3"]
+}
+
+注意：
+- 基於產業發展趨勢和市場環境
+- 提供具體的時間線預測
+- 包含正面和負面因素分析
+- 給出實用的投資建議`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        cache.set(cacheKey, analysis, 2 * 60 * 60 * 1000); // 2小時快取
+        return analysis;
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini 市場趨勢預測 API 錯誤:', error);
+      const fallback = {
+        theme,
+        timeframe,
+        prediction: {
+          direction: 'sideways' as const,
+          confidence: 50,
+          reasoning: '市場趨勢不明確，需要進一步觀察'
+        },
+        factors: {
+          positive: ['潛在機會'],
+          negative: ['風險因素'],
+          neutral: ['觀望因素']
+        },
+        timeline: [
+          {
+            period: '預測期間',
+            expected: '震盪整理',
+            probability: 0.5
+          }
+        ],
+        recommendations: [
+          '建議觀望',
+          '等待更明確信號',
+          '控制風險'
+        ]
+      };
+      cache.set(cacheKey, fallback, 2 * 60 * 60 * 1000);
+      return fallback;
+    }
+  },
+
+  // 🚀 AI 功能增強：投資組合優化建議
+  async optimizePortfolio(portfolio: Array<{ ticker: string; weight: number }>, riskTolerance: 'low' | 'medium' | 'high'): Promise<{
+    currentPortfolio: Array<{ ticker: string; weight: number; risk: number }>;
+    optimizedPortfolio: Array<{ ticker: string; weight: number; reason: string }>;
+    analysis: {
+      currentRisk: number;
+      optimizedRisk: number;
+      expectedReturn: number;
+      diversification: number;
+    };
+    recommendations: Array<{
+      action: 'buy' | 'sell' | 'hold' | 'add' | 'reduce';
+      ticker: string;
+      amount: number;
+      reason: string;
+    }>;
+    themes: Array<{
+      theme: string;
+      currentWeight: number;
+      suggestedWeight: number;
+      reasoning: string;
+    }>;
+  }> {
+    const cache = APICache.getInstance();
+    const cacheKey = `portfolio_optimization_${JSON.stringify(portfolio)}_${riskTolerance}`;
+    
+    // 檢查快取
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      console.log('Using cached portfolio optimization');
+      return cached;
+    }
+
+    if (!genAI) {
+      console.log('使用模擬投資組合優化建議');
+      const result = {
+        currentPortfolio: portfolio.map(p => ({ ...p, risk: 50 })),
+        optimizedPortfolio: [
+          { ticker: '2330', weight: 0.3, reason: '核心持股，技術領先' },
+          { ticker: '2317', weight: 0.25, reason: '產業龍頭，穩定成長' },
+          { ticker: '2454', weight: 0.2, reason: '成長型股票，潛力較大' },
+          { ticker: '1301', weight: 0.15, reason: '防禦性持股，分散風險' },
+          { ticker: '2881', weight: 0.1, reason: '金融股，穩定收益' }
+        ],
+        analysis: {
+          currentRisk: 60,
+          optimizedRisk: 45,
+          expectedReturn: 12.5,
+          diversification: 75
+        },
+        recommendations: [
+          {
+            action: 'add' as const,
+            ticker: '2330',
+            amount: 0.05,
+            reason: '增加核心持股比重'
+          },
+          {
+            action: 'reduce' as const,
+            ticker: '2317',
+            amount: 0.03,
+            reason: '適度降低集中度'
+          }
+        ],
+        themes: [
+          {
+            theme: '半導體',
+            currentWeight: 0.4,
+            suggestedWeight: 0.35,
+            reasoning: '適度降低集中度，提高分散性'
+          },
+          {
+            theme: '電子製造',
+            currentWeight: 0.3,
+            suggestedWeight: 0.25,
+            reasoning: '維持合理比重'
+          }
+        ]
+      };
+      cache.set(cacheKey, result, 4 * 60 * 60 * 1000); // 4小時快取
+      return result;
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      
+      const portfolioStr = JSON.stringify(portfolio);
+      const prompt = `請為以下投資組合提供優化建議，風險承受度為${riskTolerance}：
+
+當前投資組合：${portfolioStr}
+
+請以 JSON 格式回傳：
+{
+  "currentPortfolio": [
+    {"ticker": "股票代號", "weight": 權重, "risk": 風險評分}
+  ],
+  "optimizedPortfolio": [
+    {"ticker": "股票代號", "weight": 建議權重, "reason": "調整理由"}
+  ],
+  "analysis": {
+    "currentRisk": 當前風險評分,
+    "optimizedRisk": 優化後風險評分,
+    "expectedReturn": 預期報酬率,
+    "diversification": 分散度評分
+  },
+  "recommendations": [
+    {
+      "action": "buy"或"sell"或"hold"或"add"或"reduce",
+      "ticker": "股票代號",
+      "amount": 調整金額或比例,
+      "reason": "調整理由"
+    }
+  ],
+  "themes": [
+    {
+      "theme": "投資主題",
+      "currentWeight": 當前主題權重,
+      "suggestedWeight": "建議主題權重",
+      "reasoning": "調整理由"
+    }
+  ]
+}
+
+注意：
+- 根據風險承受度調整配置
+- 提供具體的調整建議
+- 考慮產業分散性
+- 平衡風險和報酬`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const analysis = JSON.parse(jsonMatch[0]);
+        cache.set(cacheKey, analysis, 4 * 60 * 60 * 1000); // 4小時快取
+        return analysis;
+      }
+      
+      throw new Error('無法解析 AI 回應');
+    } catch (error) {
+      console.error('Gemini 投資組合優化 API 錯誤:', error);
+      const fallback = {
+        currentPortfolio: portfolio.map(p => ({ ...p, risk: 50 })),
+        optimizedPortfolio: portfolio.map(p => ({ ...p, reason: '維持現有配置' })),
+        analysis: {
+          currentRisk: 50,
+          optimizedRisk: 50,
+          expectedReturn: 8.0,
+          diversification: 60
+        },
+        recommendations: [
+          {
+            action: 'hold' as const,
+            ticker: portfolio[0]?.ticker || '2330',
+            amount: 0,
+            reason: '建議維持現有配置'
+          }
+        ],
+        themes: [
+          {
+            theme: '綜合',
+            currentWeight: 1.0,
+            suggestedWeight: 1.0,
+            reasoning: '維持現有配置'
+          }
+        ]
+      };
+      cache.set(cacheKey, fallback, 4 * 60 * 60 * 1000);
+      return fallback;
     }
   }
 };

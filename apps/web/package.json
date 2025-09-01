@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@concepts-radar/types": "file:../../packages/types",
+    "@concepts-radar/ui": "file:../../packages/ui",
     "@heroicons/react": "^2.2.0",
     "next": "^14.0.0",
     "react": "^18.0.0",

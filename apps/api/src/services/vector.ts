@@ -32,13 +32,24 @@ export interface VectorSearchResult {
   content: string;
 }
 
+export interface VectorSearchOptions {
+  topK?: number;
+  filter?: {
+    type?: string;
+    theme_id?: string;
+    ticker?: string;
+  };
+  includeMetadata?: boolean;
+}
+
 class VectorService {
   private pinecone: Pinecone | null = null;
   private embeddings: GoogleGenerativeAIEmbeddings | null = null;
-  private indexName = 'concept-radar';
+  private indexName = 'concept-stock-screener';
   private isInitialized = false;
   // 本地開發用的記憶體儲存
   private localVectors: RAGDocument[] = [];
+  private localEmbeddings: Map<string, number[]> = new Map();
 
   constructor() {
     // 延遲初始化，等待環境變數可用
@@ -62,9 +73,10 @@ class VectorService {
     // 檢查 Pinecone 環境變數
     const pineconeApiKey = env?.PINECONE_API_KEY || (globalThis as any).PINECONE_API_KEY;
     const pineconeEnvironment = env?.PINECONE_ENVIRONMENT || (globalThis as any).PINECONE_ENVIRONMENT;
+    const geminiApiKey = env?.GEMINI_API_KEY || (globalThis as any).GEMINI_API_KEY;
     
-    if (!pineconeApiKey || !pineconeEnvironment) {
-      console.log('Pinecone API keys not found, using local memory mode');
+    if (!pineconeApiKey || !pineconeEnvironment || !geminiApiKey) {
+      console.log('API keys not found, using local memory mode');
       return false;
     }
     
@@ -93,7 +105,7 @@ class VectorService {
         
         return {
           describeIndexStats: async () => ({
-            totalVectorCount: 0,
+            totalVectorCount: this.localVectors.length,
             dimension: 768,
             indexFullness: 0,
             namespaces: {}
@@ -118,7 +130,6 @@ class VectorService {
       } else {
         // 在 Node.js 環境中，使用真正的 Pinecone
         if (!this.pinecone) {
-          // 在 Cloudflare Workers 中，環境變數通過 wrangler.toml 的 [vars] 設定
           const pineconeApiKey = (globalThis as any).PINECONE_API_KEY;
           const pineconeEnvironment = (globalThis as any).PINECONE_ENVIRONMENT;
           
@@ -141,6 +152,41 @@ class VectorService {
   }
 
   /**
+   * 初始化嵌入模型
+   */
+  private async initializeEmbeddings(env?: any) {
+    if (this.embeddings) return this.embeddings;
+
+    const geminiApiKey = env?.GEMINI_API_KEY || (globalThis as any).GEMINI_API_KEY;
+    
+    if (!geminiApiKey) {
+      throw new Error('Missing Gemini API key for embeddings');
+    }
+
+    this.embeddings = new GoogleGenerativeAIEmbeddings({
+      modelName: 'embedding-001',
+      apiKey: geminiApiKey,
+    });
+
+    return this.embeddings;
+  }
+
+  /**
+   * 生成文本嵌入
+   */
+  async generateEmbedding(text: string, env?: any): Promise<number[]> {
+    try {
+      const embeddings = await this.initializeEmbeddings(env);
+      const result = await embeddings.embedQuery(text);
+      return result;
+    } catch (error) {
+      console.error('Failed to generate embedding:', error);
+      // 返回零向量作為 fallback
+      return new Array(768).fill(0);
+    }
+  }
+
+  /**
    * 將RAG文件向量化並儲存到Pinecone或本地記憶體
    */
   async upsertDocuments(documents: RAGDocument[], env?: any) {
@@ -149,56 +195,59 @@ class VectorService {
       
       // 如果沒有 Pinecone 配置，直接使用本地記憶體模式
       if (!index) {
-        this.localVectors = documents;
-        console.log(`Successfully stored ${documents.length} documents in local memory`);
-        return documents.length;
+        console.log('Using local memory mode for vector storage');
+        
+        // 儲存到本地記憶體
+        this.localVectors = [...this.localVectors, ...documents];
+        
+        // 為每個文檔生成嵌入
+        for (const doc of documents) {
+          const embedding = await this.generateEmbedding(doc.text, env);
+          this.localEmbeddings.set(doc.doc_id, embedding);
+        }
+        
+        console.log(`Stored ${documents.length} documents in local memory`);
+        return { upsertedCount: documents.length };
       }
 
-      // 將文件分割成較小的chunks
-      const textSplitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
-        chunkOverlap: 200,
-      });
-
-      const vectors = [];
+      // 使用 Pinecone
+      const embeddings = await this.initializeEmbeddings(env);
       
-      for (const doc of documents) {
-        // 為每個文件創建向量
-        const text = `${doc.title}\n\n${doc.text}`;
-        
-        // 在Cloudflare Workers中，我們將使用模擬的embedding
-        const mockEmbedding = new Array(768).fill(0).map(() => Math.random() - 0.5);
-        
-        vectors.push({
-          id: doc.doc_id,
-          values: mockEmbedding,
-          metadata: {
-            type: doc.type,
-            title: doc.title,
-            theme_name: doc.theme_name,
-            ticker: doc.ticker || '',
-            stock_name: doc.stock_name || '',
-            tags: doc.tags,
-            content: doc.text,
-            source_urls: doc.source_urls,
-            retrieved_at: doc.retrieved_at,
-            language: doc.language,
-          },
-        });
-      }
+      // 將文檔轉換為 LangChain Document 格式
+      const langchainDocs = documents.map(doc => new Document({
+        pageContent: doc.text,
+        metadata: {
+          doc_id: doc.doc_id,
+          type: doc.type,
+          title: doc.title,
+          theme_id: doc.theme_id,
+          theme_name: doc.theme_name,
+          ticker: doc.ticker,
+          stock_name: doc.stock_name,
+          tags: doc.tags,
+          language: doc.language,
+          source_urls: doc.source_urls,
+          retrieved_at: doc.retrieved_at
+        }
+      }));
 
-      // 如果有 Pinecone 配置，嘗試使用 Pinecone
-      try {
-        await index.upsert(vectors);
-        console.log(`Successfully upserted ${vectors.length} vectors to Pinecone`);
-        return vectors.length;
-      } catch (pineconeError) {
-        console.warn('Failed to upsert to Pinecone, falling back to local memory:', pineconeError);
-        // 回退到本地記憶體
-        this.localVectors = documents;
-        console.log(`Successfully stored ${documents.length} documents in local memory`);
-        return documents.length;
-      }
+      // 生成嵌入
+      const vectors = await embeddings.embedDocuments(
+        langchainDocs.map(doc => doc.pageContent)
+      );
+
+      // 準備 Pinecone 向量格式
+      const pineconeVectors = vectors.map((vector, index) => ({
+        id: langchainDocs[index].metadata.doc_id,
+        values: vector,
+        metadata: langchainDocs[index].metadata
+      }));
+
+      // 儲存到 Pinecone
+      const result = await index.upsert(pineconeVectors);
+      console.log(`Upserted ${result.upsertedCount} vectors to Pinecone`);
+      
+      return result;
     } catch (error) {
       console.error('Failed to upsert documents:', error);
       throw error;
@@ -206,139 +255,227 @@ class VectorService {
   }
 
   /**
-   * 搜尋相似向量
+   * 向量搜尋
    */
-  async search(query: string, options: {
-    topK?: number;
-    filter?: any;
-    namespace?: string;
-  } = {}, env?: any) {
+  async search(
+    query: string, 
+    options: VectorSearchOptions = {}, 
+    env?: any
+  ): Promise<VectorSearchResult[]> {
     try {
-      // 確保初始化
-      await this.initializeIndex(env);
+      const index = await this.initializeIndex(env);
+      const topK = options.topK || 10;
       
-      // 檢查是否在 Cloudflare Workers 環境中
-      const isCloudflareWorkers = typeof globalThis !== 'undefined' && 'Cloudflare' in globalThis;
-      
-      let searchDocuments: RAGDocument[] = [];
-      
-      if (isCloudflareWorkers) {
-        // 在 Cloudflare Workers 中，使用內建的 RAG 資料
-        const { ragLoaderService } = await import('./rag-loader');
-        searchDocuments = await ragLoaderService.loadDocuments();
-        console.log(`Searching in Cloudflare Workers with ${searchDocuments.length} documents`);
-      } else {
-        // 在本地開發環境中，從記憶體搜尋
-        if (this.localVectors.length === 0) {
-          return [];
-        }
-        searchDocuments = this.localVectors;
+      // 如果沒有 Pinecone 配置，使用本地記憶體搜尋
+      if (!index) {
+        console.log('Using local memory mode for vector search');
+        return this.localSearch(query, options);
       }
 
-      const results = searchDocuments
-        .filter(doc => {
-          // 如果有過濾條件，應用過濾
-          if (options.filter) {
-            if (options.filter.type && doc.type !== options.filter.type) return false;
-            if (options.filter.theme_name && doc.theme_name !== options.filter.theme_name) return false;
-            if (options.filter.stock_name && doc.stock_name !== options.filter.stock_name) return false;
-          }
-          return true;
-        })
-        .map(doc => {
-          // 簡單的關鍵字匹配評分
-          const queryLower = query.toLowerCase();
-          const titleMatch = doc.title.toLowerCase().includes(queryLower) ? 0.8 : 0;
-          const textMatch = doc.text.toLowerCase().includes(queryLower) ? 0.6 : 0;
-          const themeMatch = doc.theme_name.toLowerCase().includes(queryLower) ? 0.9 : 0;
-          const stockMatch = doc.stock_name && doc.stock_name.toLowerCase().includes(queryLower) ? 0.9 : 0;
-          const score = Math.max(titleMatch, textMatch, themeMatch, stockMatch) + Math.random() * 0.1;
+      // 生成查詢嵌入
+      const queryEmbedding = await this.generateEmbedding(query, env);
+      
+      // 準備查詢參數
+      const queryRequest: any = {
+        vector: queryEmbedding,
+        topK,
+        includeMetadata: options.includeMetadata !== false
+      };
 
-          return {
-            doc_id: doc.doc_id,
-            score,
-            metadata: {
-              type: doc.type,
-              title: doc.title,
-              theme_name: doc.theme_name,
-              ticker: doc.ticker || '',
-              stock_name: doc.stock_name || '',
-              tags: doc.tags,
-            },
-            content: doc.text,
-          } as VectorSearchResult;
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, options.topK || 10);
+      // 添加過濾條件
+      if (options.filter) {
+        queryRequest.filter = {};
+        if (options.filter.type) {
+          queryRequest.filter.type = options.filter.type;
+        }
+        if (options.filter.theme_id) {
+          queryRequest.filter.theme_id = options.filter.theme_id;
+        }
+        if (options.filter.ticker) {
+          queryRequest.filter.ticker = options.filter.ticker;
+        }
+      }
 
-      console.log(`Search results: ${results.length} matches for query "${query}"`);
-      return results;
+      // 執行搜尋
+      const result = await index.query(queryRequest);
+      
+      // 轉換結果格式
+      return result.matches.map(match => ({
+        doc_id: match.id,
+        score: match.score || 0,
+        metadata: {
+          type: match.metadata?.type || '',
+          title: match.metadata?.title || '',
+          theme_name: match.metadata?.theme_name || '',
+          ticker: match.metadata?.ticker,
+          stock_name: match.metadata?.stock_name,
+          tags: match.metadata?.tags || []
+        },
+        content: match.metadata?.pageContent || ''
+      }));
     } catch (error) {
-      console.error('Failed to search vectors:', error);
+      console.error('Failed to perform vector search:', error);
+      // 回退到本地搜尋
+      return this.localSearch(query, options);
+    }
+  }
+
+  /**
+   * 本地記憶體向量搜尋
+   */
+  private async localSearch(
+    query: string, 
+    options: VectorSearchOptions = {}
+  ): Promise<VectorSearchResult[]> {
+    try {
+      const topK = options.topK || 10;
+      
+      // 生成查詢嵌入
+      const queryEmbedding = await this.generateEmbedding(query);
+      
+      // 計算相似度分數
+      const scores: Array<{ doc: RAGDocument; score: number }> = [];
+      
+      for (const doc of this.localVectors) {
+        const docEmbedding = this.localEmbeddings.get(doc.doc_id);
+        
+        if (docEmbedding) {
+          // 計算餘弦相似度
+          const score = this.cosineSimilarity(queryEmbedding, docEmbedding);
+          scores.push({ doc, score });
+        }
+      }
+      
+      // 排序並取前 topK 個結果
+      scores.sort((a, b) => b.score - a.score);
+      const topResults = scores.slice(0, topK);
+      
+      // 轉換為結果格式
+      return topResults.map(({ doc, score }) => ({
+        doc_id: doc.doc_id,
+        score,
+        metadata: {
+          type: doc.type,
+          title: doc.title,
+          theme_name: doc.theme_name,
+          ticker: doc.ticker,
+          stock_name: doc.stock_name,
+          tags: doc.tags
+        },
+        content: doc.text
+      }));
+    } catch (error) {
+      console.error('Failed to perform local search:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 計算餘弦相似度
+   */
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (vecA.length !== vecB.length) {
+      return 0;
+    }
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+    
+    if (normA === 0 || normB === 0) {
+      return 0;
+    }
+    
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  /**
+   * 獲取索引統計資訊
+   */
+  async getIndexStats(env?: any) {
+    try {
+      const index = await this.initializeIndex(env);
+      
+      if (!index) {
+        return {
+          totalVectorCount: this.localVectors.length,
+          dimension: 768,
+          indexFullness: 0,
+          namespaces: {}
+        };
+      }
+      
+      return await index.describeIndexStats();
+    } catch (error) {
+      console.error('Failed to get index stats:', error);
+      return {
+        totalVectorCount: 0,
+        dimension: 768,
+        indexFullness: 0,
+        namespaces: {}
+      };
+    }
+  }
+
+  /**
+   * 清空索引
+   */
+  async clearIndex(env?: any) {
+    try {
+      const index = await this.initializeIndex(env);
+      
+      if (!index) {
+        this.localVectors = [];
+        this.localEmbeddings.clear();
+        console.log('Cleared local memory vectors');
+        return { deletedCount: 0 };
+      }
+      
+      return await index.deleteAll();
+    } catch (error) {
+      console.error('Failed to clear index:', error);
       throw error;
     }
   }
 
   /**
-   * 根據主題搜尋相關股票
+   * 載入 RAG 文件到向量資料庫
    */
-  async searchStocksByTheme(themeName: string, topK: number = 10, env?: any) {
-    return this.search(themeName, {
-      topK,
-      filter: {
-        type: 'theme_to_stock',
-      },
-    }, env);
-  }
-
-  /**
-   * 根據股票搜尋相關主題
-   */
-  async searchThemesByStock(stockName: string, topK: number = 10, env?: any) {
-    return this.search(stockName, {
-      topK,
-      filter: {
-        type: 'theme_to_stock',
-      },
-    }, env);
-  }
-
-  /**
-   * 搜尋主題概覽
-   */
-  async searchThemeOverview(themeName: string, env?: any) {
-    return this.search(themeName, {
-      topK: 1,
-      filter: {
-        type: 'theme_overview',
-        theme_name: themeName,
-      },
-    }, env);
-  }
-
-  /**
-   * 搜尋相似主題
-   */
-  async searchSimilarThemes(themeName: string, topK: number = 5) {
-    return this.search(themeName, {
-      topK,
-      filter: {
-        type: 'theme_overview',
-      },
-    });
-  }
-
-  /**
-   * 清除所有向量
-   */
-  async clearAllVectors() {
+  async loadRAGDocuments(env?: any) {
     try {
-      // 清除本地記憶體
-      this.localVectors = [];
-      console.log('Successfully cleared all vectors from local memory');
-      return { deletedCount: this.localVectors.length };
+      // 讀取 RAG 文件
+      const response = await fetch('http://localhost:8787/rag/docs.jsonl');
+      if (!response.ok) {
+        throw new Error('Failed to fetch RAG documents');
+      }
+      
+      const text = await response.text();
+      const lines = text.trim().split('\n');
+      
+      const documents: RAGDocument[] = [];
+      for (const line of lines) {
+        try {
+          const doc = JSON.parse(line) as RAGDocument;
+          documents.push(doc);
+        } catch (error) {
+          console.warn('Failed to parse RAG document line:', line);
+        }
+      }
+      
+      console.log(`Loaded ${documents.length} RAG documents`);
+      
+      // 儲存到向量資料庫
+      await this.upsertDocuments(documents, env);
+      
+      return documents.length;
     } catch (error) {
-      console.error('Failed to clear vectors:', error);
+      console.error('Failed to load RAG documents:', error);
       throw error;
     }
   }

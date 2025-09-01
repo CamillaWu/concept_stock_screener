@@ -27,7 +27,7 @@ export const StockList: React.FC<StockListProps> = ({
     <div className={`space-y-2 ${className}`}>
       {stocks.map((stock) => (
         <div
-          key={stock.symbol}
+          key={stock.ticker}
           className={`bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 transition-colors cursor-pointer ${
             compact ? 'p-2' : ''
           }`}
@@ -45,7 +45,7 @@ export const StockList: React.FC<StockListProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium text-gray-900 truncate">
-                  {stock.symbol}
+                  {stock.ticker}
                 </span>
                 {stock.name && (
                   <span className="text-sm text-gray-500 truncate">

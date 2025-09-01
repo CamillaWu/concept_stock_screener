@@ -31,21 +31,99 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://concept-stock-screener-api.sandy246836.workers.dev')
   : (process.env.NEXT_PUBLIC_API_BASE_URL_DEV || 'http://localhost:8787');
 
-class ApiService {
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      ...options,
-    });
+// 前端快取機制
+class FrontendCache {
+  private static instance: FrontendCache;
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  static getInstance(): FrontendCache {
+    if (!FrontendCache.instance) {
+      FrontendCache.instance = new FrontendCache();
+    }
+    return FrontendCache.instance;
+  }
+
+  set(key: string, data: unknown, ttl: number = 5 * 60 * 1000): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  get(key: string): unknown | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+
+    const isExpired = (Date.now() - cached.timestamp) > cached.ttl;
+    if (isExpired) {
+      this.cache.delete(key);
+      return null;
     }
 
-    return response.json();
+    return cached.data;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  getStats(): { size: number; keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    };
+  }
+}
+
+class ApiService {
+  private cache = FrontendCache.getInstance();
+  private requestTimeout = 10000; // 10秒超時
+
+  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    // 檢查快取
+    const cacheKey = `${endpoint}_${JSON.stringify(options || {})}`;
+    const cached = this.cache.get(cacheKey) as T | null;
+    if (cached) {
+      console.log('Using cached API response:', endpoint);
+      return cached;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        ...options,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as T;
+      
+      // 快取成功的回應
+      this.cache.set(cacheKey, data, 2 * 60 * 1000); // 2分鐘快取
+      
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Request timeout after ${this.requestTimeout}ms`);
+      }
+      
+      throw error;
+    }
   }
 
   async getTrendingThemes(sortBy: 'popular' | 'latest' = 'popular', useRealData: boolean = false): Promise<StockConcept[]> {
@@ -111,20 +189,73 @@ class ApiService {
     }>(`/sentiment?theme=${encodeURIComponent(theme)}`);
   }
 
-  async getStockAttribution(stockId: string, theme: string): Promise<AttributionSource[]> {
-    return this.request<AttributionSource[]>(`/stock-attribution?stockId=${stockId}&theme=${encodeURIComponent(theme)}`);
+  async getAnomalies(theme?: string): Promise<{
+    type: 'price_up' | 'price_down' | 'volume_up' | 'volume_down';
+    value: number;
+    threshold: number;
+    timestamp: string;
+    description: string;
+    affectedStocks: string[];
+  }[]> {
+    const endpoint = theme ? `/anomalies?theme=${encodeURIComponent(theme)}` : '/anomalies';
+    return this.request<{
+      type: 'price_up' | 'price_down' | 'volume_up' | 'volume_down';
+      value: number;
+      threshold: number;
+      timestamp: string;
+      description: string;
+      affectedStocks: string[];
+    }[]>(endpoint);
   }
 
-  async getThemeAnalysis(theme: string): Promise<{
-    analysis: string;
-    recommendations: string[];
-    risks: string[];
-  }> {
-    return this.request<{
-      analysis: string;
-      recommendations: string[];
-      risks: string[];
-    }>(`/theme-analysis?theme=${encodeURIComponent(theme)}`);
+  async getAttributionSources(stockId: string, theme?: string): Promise<AttributionSource[]> {
+    const endpoint = theme 
+      ? `/attribution?stock=${stockId}&theme=${encodeURIComponent(theme)}`
+      : `/attribution?stock=${stockId}`;
+    return this.request<AttributionSource[]>(endpoint);
+  }
+
+  // RAG 相關 API
+  async getRAGManifest(): Promise<unknown> {
+    return this.request<unknown>('/rag/manifest.json');
+  }
+
+  async getRAGDocs(): Promise<unknown[]> {
+    return this.request<unknown[]>('/rag/docs.jsonl');
+  }
+
+  async getRAGStatus(): Promise<unknown> {
+    return this.request<unknown>('/rag/status');
+  }
+
+  async vectorizeQuery(query: string): Promise<unknown> {
+    return this.request<unknown>('/rag/vectorize', {
+      method: 'POST',
+      body: JSON.stringify({ query })
+    });
+  }
+
+  async searchRAGThemes(query: string): Promise<unknown[]> {
+    return this.request<unknown[]>(`/rag/themes?q=${encodeURIComponent(query)}`);
+  }
+
+  async getStocksByTheme(themeId: string): Promise<unknown[]> {
+    return this.request<unknown[]>(`/rag/stocks-by-theme?theme=${encodeURIComponent(themeId)}`);
+  }
+
+  // 快取管理方法
+  clearCache(): void {
+    this.cache.clear();
+    console.log('Frontend cache cleared');
+  }
+
+  getCacheStats(): { size: number; keys: string[] } {
+    return this.cache.getStats();
+  }
+
+  // 設定請求超時時間
+  setTimeout(timeout: number): void {
+    this.requestTimeout = timeout;
   }
 }
 

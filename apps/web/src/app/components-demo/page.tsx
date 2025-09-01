@@ -1,46 +1,47 @@
 'use client';
 
 import React, { useState } from 'react';
-import SearchBar from '../../components/ui/SearchBar';
+import { SearchBar } from '@concepts-radar/ui';
 import ThemeToStockList from '../../components/ui/ThemeToStockList';
 import StockToThemePills from '../../components/ui/StockToThemePills';
-import HeatBar from '../../components/ui/HeatBar';
-import ConceptStrength from '../../components/ui/ConceptStrength';
-import StockAttribution from '../../components/ui/StockAttribution';
+import { HeatBar } from '@concepts-radar/ui';
+import { ConceptStrength } from '../../components/ui/ConceptStrength';
+import { StockAttribution } from '../../components/ui/StockAttribution';
 
 export default function ComponentsDemo() {
-  const [searchMode, setSearchMode] = useState('theme');
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [selectedStock, setSelectedStock] = useState(null);
+  const [searchMode, setSearchMode] = useState<'theme' | 'stock'>('theme');
+  const [useRealData, setUseRealData] = useState(false);
 
   // Mock 數據
   const mockThemes = [
     {
       id: 'ai',
+      theme: 'AI 概念',
       name: 'AI 概念',
       heatScore: 85,
       stocks: [
-        { id: '2330', name: '台積電', ticker: '2330' },
-        { id: '2317', name: '鴻海', ticker: '2317' },
-        { id: '2454', name: '聯發科', ticker: '2454' }
+        { ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const },
+        { ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const },
+        { ticker: '2454', symbol: '2454', name: '聯發科', exchange: 'TWSE' as const }
       ]
     },
     {
       id: 'ev',
+      theme: '電動車',
       name: '電動車',
       heatScore: 72,
       stocks: [
-        { id: '2207', name: '和泰車', ticker: '2207' },
-        { id: '2201', name: '裕隆', ticker: '2201' }
+        { ticker: '2207', symbol: '2207', name: '和泰車', exchange: 'TWSE' as const },
+        { ticker: '2201', symbol: '2201', name: '裕隆', exchange: 'TWSE' as const }
       ]
     }
   ];
 
   const mockStockThemes = [
-    { id: 'ai', name: 'AI 概念' },
-    { id: 'semiconductor', name: '半導體' },
-    { id: 'tech', name: '科技股' },
-    { id: 'bluechip', name: '藍籌股' }
+    { id: 'ai', theme: 'AI 概念', name: 'AI 概念', heatScore: 85, stocks: [] },
+    { id: 'semiconductor', theme: '半導體', name: '半導體', heatScore: 70, stocks: [] },
+    { id: 'tech', theme: '科技股', name: '科技股', heatScore: 65, stocks: [] },
+    { id: 'bluechip', theme: '藍籌股', name: '藍籌股', heatScore: 60, stocks: [] }
   ];
 
   const handleSearch = (query) => {
@@ -48,12 +49,10 @@ export default function ComponentsDemo() {
   };
 
   const handleSelectTheme = (theme) => {
-    setSelectedTheme(theme);
     console.log('選擇主題:', theme);
   };
 
   const handleSelectStock = (stock) => {
-    setSelectedStock(stock);
     console.log('選擇股票:', stock);
   };
 
@@ -69,7 +68,8 @@ export default function ComponentsDemo() {
             mode={searchMode}
             onModeChange={setSearchMode}
             onSearch={handleSearch}
-            placeholder="搜尋投資主題或股票..."
+            useRealData={useRealData}
+            onUseRealDataChange={setUseRealData}
           />
         </section>
 
@@ -77,8 +77,7 @@ export default function ComponentsDemo() {
         <section className="bg-white rounded-lg p-6 shadow-sm">
           <h2 className="text-xl font-semibold mb-4">2. ThemeToStockList 元件</h2>
           <ThemeToStockList
-            themes={mockThemes}
-            onSelectTheme={handleSelectTheme}
+            theme={mockThemes[0]}
             onSelectStock={handleSelectStock}
           />
         </section>
@@ -88,7 +87,7 @@ export default function ComponentsDemo() {
           <h2 className="text-xl font-semibold mb-4">3. StockToThemePills 元件</h2>
           <StockToThemePills
             themes={mockStockThemes}
-            onSelectTheme={handleSelectTheme}
+            onThemeClick={handleSelectTheme}
           />
         </section>
 
@@ -98,11 +97,11 @@ export default function ComponentsDemo() {
           <div className="space-y-4">
             <div>
               <div className="text-sm text-gray-600 mb-2">有數據的熱度條：</div>
-              <HeatBar themeName="AI 概念" score={85} updatedAt="2024-01-15 14:30" />
+              <HeatBar score={85} />
             </div>
             <div>
               <div className="text-sm text-gray-600 mb-2">自動獲取數據的熱度條：</div>
-              <HeatBar themeName="電動車" />
+              <HeatBar score={72} />
             </div>
           </div>
         </section>
@@ -112,7 +111,7 @@ export default function ComponentsDemo() {
           <h2 className="text-xl font-semibold mb-4">5. ConceptStrength 元件</h2>
           <ConceptStrength 
             strengthScore={75}
-            dims={{
+            dimensions={{
               marketCapRatio: 70,
               priceContribution: 65,
               discussionLevel: 80
@@ -135,8 +134,7 @@ export default function ComponentsDemo() {
           <h2 className="text-xl font-semibold mb-4">當前狀態</h2>
           <div className="space-y-2 text-sm">
             <div>搜尋模式: <span className="font-medium">{searchMode}</span></div>
-            <div>選中主題: <span className="font-medium">{selectedTheme?.name || '無'}</span></div>
-            <div>選中股票: <span className="font-medium">{selectedStock?.name || '無'}</span></div>
+            <div>使用真實資料: <span className="font-medium">{useRealData ? '是' : '否'}</span></div>
           </div>
         </section>
       </div>

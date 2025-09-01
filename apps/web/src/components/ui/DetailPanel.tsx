@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { StockConcept } from '@concepts-radar/types';
-import { StockList } from './StockList';
-import { ConceptStrength } from './ConceptStrength';
-import { SentimentAnalysis } from './SentimentAnalysis';
-import { AnomalyAlert } from './AnomalyAlert';
+import { DetailPanel as UIDetailPanel } from '@concepts-radar/ui';
 import { apiService } from '../../services/api';
 
 interface DetailPanelProps {
@@ -43,7 +40,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
     description: string;
     affectedStocks: string[];
   }>>([]);
-  const [, setAnalysisLoading] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   // 當選中主題時，載入分析數據
   useEffect(() => {
@@ -114,51 +111,15 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
-      {/* 主題標題 */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {theme.theme}
-        </h1>
-        {theme.description && (
-          <p className="text-gray-600">{theme.description}</p>
-        )}
-      </div>
-
-      {/* 概念強度分析 */}
-      {conceptStrength && (
-        <div className="mb-6">
-          <ConceptStrength 
-            strengthScore={conceptStrength.strengthScore}
-            dimensions={conceptStrength.dimensions}
-          />
-        </div>
-      )}
-
-      {/* 情緒分析 */}
-      {sentiment && (
-        <div className="mb-6">
-          <SentimentAnalysis data={sentiment} />
-        </div>
-      )}
-
-      {/* 異常警示 */}
-      {anomalyEvents.length > 0 && (
-        <div className="mb-6">
-          <AnomalyAlert events={anomalyEvents} />
-        </div>
-      )}
-
-      {/* 相關股票列表 */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          相關股票 ({theme.stocks.length})
-        </h2>
-        <StockList
-          stocks={theme.stocks}
-          onStockClick={onStockClick}
-        />
-      </div>
-    </div>
+    <UIDetailPanel
+      selectedTheme={theme}
+      onStockClick={onStockClick}
+      loading={analysisLoading}
+      className={className}
+      conceptStrength={conceptStrength}
+      sentiment={sentiment}
+      anomalyEvents={anomalyEvents}
+      showAdvancedAnalysis={true}
+    />
   );
 };

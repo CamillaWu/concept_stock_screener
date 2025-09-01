@@ -16,7 +16,7 @@ interface SentimentAnalysisProps {
   className?: string;
 }
 
-const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({
+export const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({
   data,
   showDetails = false,
   className = ''
@@ -129,4 +129,4 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({
   );
 };
 
-export { SentimentAnalysis };
+

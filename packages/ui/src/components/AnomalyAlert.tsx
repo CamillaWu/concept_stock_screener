@@ -1,5 +1,4 @@
 import React from 'react';
-import { ExclamationTriangleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 interface AnomalyEvent {
   type: 'price_up' | 'price_down' | 'volume_up' | 'volume_down';
@@ -16,7 +15,7 @@ interface AnomalyAlertProps {
   className?: string;
 }
 
-const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
+export const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
   events = [],
   showDetails = false,
   className = ''
@@ -24,15 +23,35 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
   const getAnomalyIcon = (type: string) => {
     switch (type) {
       case 'price_up':
-        return <ArrowTrendingUpIcon className="w-4 h-4 text-red-500" />;
+        return (
+          <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        );
       case 'price_down':
-        return <ArrowTrendingDownIcon className="w-4 h-4 text-green-500" />;
+        return (
+          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+          </svg>
+        );
       case 'volume_up':
-        return <ChartBarIcon className="w-4 h-4 text-blue-500" />;
+        return (
+          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        );
       case 'volume_down':
-        return <ChartBarIcon className="w-4 h-4 text-orange-500" />;
+        return (
+          <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        );
       default:
-        return <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500" />;
+        return (
+          <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        );
     }
   };
 
@@ -123,4 +142,4 @@ const AnomalyAlert: React.FC<AnomalyAlertProps> = ({
   );
 };
 
-export { AnomalyAlert };
+

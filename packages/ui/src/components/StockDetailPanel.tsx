@@ -5,6 +5,39 @@ import { LoadingSkeleton } from './LoadingSkeleton';
 import { ErrorState } from './ErrorState';
 import { EmptyState } from './EmptyState';
 
+interface StockAttributionProps {
+  stockId: string;
+  stockName: string;
+  currentTheme: string;
+}
+
+// 簡化的 StockAttribution 組件（避免依賴問題）
+const StockAttribution: React.FC<StockAttributionProps> = ({
+  stockId,
+  stockName,
+  currentTheme
+}) => {
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <h4 className="text-sm font-medium text-gray-700 mb-2">個股歸因分析</h4>
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-gray-600">股票代號</span>
+          <span className="font-medium">{stockId}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">股票名稱</span>
+          <span className="font-medium">{stockName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-600">當前概念</span>
+          <span className="font-medium">{currentTheme}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface StockDetailPanelProps {
   selectedStock?: Stock;
   analysis?: StockAnalysisResult;
@@ -12,6 +45,9 @@ interface StockDetailPanelProps {
   error?: string;
   onRetry?: () => void;
   className?: string;
+  // 新增功能
+  useRealData?: boolean;
+  showStockAttribution?: boolean;
 }
 
 export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
@@ -20,7 +56,9 @@ export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
   loading = false,
   error,
   onRetry,
-  className = ''
+  className = '',
+  useRealData = false,
+  showStockAttribution = false
 }) => {
   if (loading) {
     return (
@@ -45,7 +83,7 @@ export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
     );
   }
 
-  if (!selectedStock) {
+  if (!selectedStock && !analysis) {
     return (
       <div className={`w-96 bg-white border-l border-gray-200 ${className}`}>
         <EmptyState
@@ -72,6 +110,11 @@ export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
     );
   }
 
+  // 決定顯示的股票資訊
+  const stockInfo = selectedStock || analysis?.stock;
+  const stockTicker = stockInfo?.ticker || '';
+  const stockName = stockInfo?.name || '';
+
   return (
     <div className={`w-96 bg-white border-l border-gray-200 overflow-y-auto ${className}`}>
       <div className="p-6">
@@ -80,40 +123,58 @@ export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
           <div className="flex items-start justify-between mb-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                {selectedStock.symbol}
+                {stockTicker}
               </h2>
-              {selectedStock.name && (
+              {stockName && (
                 <p className="text-gray-600 mt-1">
-                  {selectedStock.name}
+                  {stockName}
                 </p>
               )}
             </div>
             <HeatBar
-              score={selectedStock.heatScore || 0}
+              score={selectedStock?.heatScore || analysis?.themes?.[0]?.relevanceScore || 75}
               size="md"
               showScore={true}
             />
           </div>
 
           {/* 概念標籤 */}
-          {selectedStock.concepts && selectedStock.concepts.length > 0 && (
+          {(selectedStock?.concepts || analysis?.themes) && (
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">
                 相關概念
               </h3>
               <div className="flex flex-wrap gap-2">
-                {selectedStock.concepts.map((concept, index) => (
+                {selectedStock?.concepts?.map((concept, index) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
                   >
                     {concept}
                   </span>
+                )) || analysis?.themes?.map((theme, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                  >
+                    {theme.theme}
+                  </span>
                 ))}
               </div>
             </div>
           )}
         </div>
+
+        {/* 個股歸因分析 */}
+        {showStockAttribution && (
+          <div className="mb-6">
+            <StockAttribution
+              stockId={stockTicker}
+              stockName={stockName}
+              currentTheme={analysis?.themes?.[0]?.theme || ''}
+            />
+          </div>
+        )}
 
         {/* AI 分析結果 */}
         {analysis && (
@@ -166,6 +227,18 @@ export const StockDetailPanel: React.FC<StockDetailPanelProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* 資料來源提示 */}
+        {useRealData && (
+          <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center text-sm text-green-700">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              使用真實台股資料
+            </div>
           </div>
         )}
       </div>

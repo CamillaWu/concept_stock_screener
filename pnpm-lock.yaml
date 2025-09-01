@@ -61,6 +61,9 @@ importers:
       '@concepts-radar/types':
         specifier: file:../../packages/types
         version: link:../../packages/types
+      '@concepts-radar/ui':
+        specifier: file:../../packages/ui
+        version: file:packages/ui
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@18.3.1)
@@ -184,6 +187,9 @@ packages:
 
   '@cloudflare/workers-types@4.20250828.1':
     resolution: {integrity: sha512-xc8AvNWUVAM3adDgXaJpbEEOu0SgPbEtu+A2qu8DgmtPgQshY6a1iJ+hdOlG1Ws80fwWhwhwRlZgQRlwyZMLcA==}
+
+  '@concepts-radar/ui@file:packages/ui':
+    resolution: {directory: packages/ui, type: directory}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3282,6 +3288,12 @@ snapshots:
     optional: true
 
   '@cloudflare/workers-types@4.20250828.1': {}
+
+  '@concepts-radar/ui@file:packages/ui':
+    dependencies:
+      '@concepts-radar/types': link:packages/types
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:

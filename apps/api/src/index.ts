@@ -423,6 +423,213 @@ app.get('/theme-analysis', async (c) => {
   }
 });
 
+// 向量搜尋 API
+app.get('/vector-search', async (c) => {
+  try {
+    const query = c.req.query('q');
+    const topK = parseInt(c.req.query('topK') || '10');
+    const type = c.req.query('type');
+    const themeId = c.req.query('themeId');
+    const ticker = c.req.query('ticker');
+    
+    if (!query) {
+      return c.json({
+        success: false,
+        error: 'Missing query parameter',
+        code: 'invalid_query'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `vector-search:${query}:${topK}:${type}:${themeId}:${ticker}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    // 準備搜尋選項
+    const searchOptions: any = {
+      topK,
+      includeMetadata: true
+    };
+
+    if (type || themeId || ticker) {
+      searchOptions.filter = {};
+      if (type) searchOptions.filter.type = type;
+      if (themeId) searchOptions.filter.theme_id = themeId;
+      if (ticker) searchOptions.filter.ticker = ticker;
+    }
+
+    // 執行向量搜尋
+    const results = await vectorService.search(query, searchOptions, c.env);
+    
+    // 儲存到快取
+    await cacheService.set(cacheKey, results, 600); // 10分鐘快取
+    
+    return c.json({
+      success: true,
+      query,
+      results,
+      total: results.length
+    });
+  } catch (error) {
+    console.error('Vector search API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to perform vector search',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 向量索引統計 API
+app.get('/vector-stats', async (c) => {
+  try {
+    const stats = await vectorService.getIndexStats(c.env);
+    return c.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('Vector stats API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to get vector stats',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 載入 RAG 文件到向量資料庫 API
+app.post('/vector-load', async (c) => {
+  try {
+    const count = await vectorService.loadRAGDocuments(c.env);
+    return c.json({
+      success: true,
+      message: `Successfully loaded ${count} documents to vector database`,
+      count
+    });
+  } catch (error) {
+    console.error('Vector load API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to load documents to vector database',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 清空向量資料庫 API
+app.delete('/vector-clear', async (c) => {
+  try {
+    const result = await vectorService.clearIndex(c.env);
+    return c.json({
+      success: true,
+      message: 'Successfully cleared vector database',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Vector clear API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to clear vector database',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 主題相關股票搜尋 API
+app.get('/theme-stocks', async (c) => {
+  try {
+    const theme = c.req.query('theme');
+    const topK = parseInt(c.req.query('topK') || '10');
+    
+    if (!theme) {
+      return c.json({
+        success: false,
+        error: 'Missing theme parameter',
+        code: 'invalid_theme'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `theme-stocks:${theme}:${topK}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    // 搜尋相關股票
+    const results = await vectorService.search(theme, {
+      topK,
+      filter: { type: 'theme_to_stock' }
+    }, c.env);
+    
+    // 儲存到快取
+    await cacheService.set(cacheKey, results, 600); // 10分鐘快取
+    
+    return c.json({
+      success: true,
+      theme,
+      results,
+      total: results.length
+    });
+  } catch (error) {
+    console.error('Theme stocks API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to search theme stocks',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 股票相關主題搜尋 API
+app.get('/stock-themes', async (c) => {
+  try {
+    const stock = c.req.query('stock');
+    const topK = parseInt(c.req.query('topK') || '10');
+    
+    if (!stock) {
+      return c.json({
+        success: false,
+        error: 'Missing stock parameter',
+        code: 'invalid_stock'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `stock-themes:${stock}:${topK}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    // 搜尋相關主題
+    const results = await vectorService.search(stock, {
+      topK,
+      filter: { type: 'theme_to_stock' }
+    }, c.env);
+    
+    // 儲存到快取
+    await cacheService.set(cacheKey, results, 600); // 10分鐘快取
+    
+    return c.json({
+      success: true,
+      stock,
+      results,
+      total: results.length
+    });
+  } catch (error) {
+    console.error('Stock themes API error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to search stock themes',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
 // RAG 相關 API
 app.get('/rag/manifest.json', async (c) => {
   try {
@@ -847,6 +1054,322 @@ app.delete('/rag/vectors', async (c) => {
     return c.json({
       success: false,
       error: 'Failed to clear vectors',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：智能投資建議
+app.get('/ai/investment-advice', async (c) => {
+  try {
+    const stockId = c.req.query('stockId');
+    const theme = c.req.query('theme');
+    const marketContext = c.req.query('marketContext');
+    
+    if (!stockId || !theme) {
+      return c.json({
+        success: false,
+        error: 'Missing required parameters: stockId and theme',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-investment-advice:${stockId}:${theme}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const advice = await geminiService.generateInvestmentAdvice(stockId, theme, marketContext);
+    
+    const response = {
+      success: true,
+      data: advice
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 1800); // 30分鐘快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI investment advice failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to generate investment advice',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：風險評估分析
+app.get('/ai/risk-assessment', async (c) => {
+  try {
+    const stockId = c.req.query('stockId');
+    const theme = c.req.query('theme');
+    
+    if (!stockId || !theme) {
+      return c.json({
+        success: false,
+        error: 'Missing required parameters: stockId and theme',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-risk-assessment:${stockId}:${theme}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const assessment = await geminiService.analyzeRiskAssessment(stockId, theme);
+    
+    const response = {
+      success: true,
+      data: assessment
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 3600); // 1小時快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI risk assessment failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to analyze risk assessment',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：市場趨勢預測
+app.get('/ai/market-trend', async (c) => {
+  try {
+    const theme = c.req.query('theme');
+    const timeframe = c.req.query('timeframe') as 'short' | 'medium' | 'long' || 'medium';
+    
+    if (!theme) {
+      return c.json({
+        success: false,
+        error: 'Missing required parameter: theme',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-market-trend:${theme}:${timeframe}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const prediction = await geminiService.predictMarketTrend(theme, timeframe);
+    
+    const response = {
+      success: true,
+      data: prediction
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 7200); // 2小時快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI market trend prediction failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to predict market trend',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：投資組合優化建議
+app.post('/ai/portfolio-optimization', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { portfolio, riskTolerance } = body;
+    
+    if (!portfolio || !Array.isArray(portfolio) || !riskTolerance) {
+      return c.json({
+        success: false,
+        error: 'Missing or invalid parameters: portfolio array and riskTolerance required',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 驗證 portfolio 格式
+    const isValidPortfolio = portfolio.every(item => 
+      item.ticker && typeof item.weight === 'number' && item.weight >= 0 && item.weight <= 1
+    );
+    
+    if (!isValidPortfolio) {
+      return c.json({
+        success: false,
+        error: 'Invalid portfolio format: each item must have ticker and weight (0-1)',
+        code: 'invalid_portfolio'
+      }, 400);
+    }
+
+    // 檢查權重總和
+    const totalWeight = portfolio.reduce((sum, item) => sum + item.weight, 0);
+    if (Math.abs(totalWeight - 1) > 0.01) {
+      return c.json({
+        success: false,
+        error: 'Portfolio weights must sum to 1.0',
+        code: 'invalid_weights'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-portfolio-optimization:${JSON.stringify(portfolio)}:${riskTolerance}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const optimization = await geminiService.optimizePortfolio(portfolio, riskTolerance);
+    
+    const response = {
+      success: true,
+      data: optimization
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 14400); // 4小時快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI portfolio optimization failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to optimize portfolio',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：概念強度分析
+app.get('/ai/concept-strength', async (c) => {
+  try {
+    const theme = c.req.query('theme');
+    
+    if (!theme) {
+      return c.json({
+        success: false,
+        error: 'Missing required parameter: theme',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-concept-strength:${theme}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const strength = await geminiService.analyzeConceptStrength(theme);
+    
+    const response = {
+      success: true,
+      data: strength
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 3600); // 1小時快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI concept strength analysis failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to analyze concept strength',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：情緒分析
+app.get('/ai/sentiment', async (c) => {
+  try {
+    const theme = c.req.query('theme');
+    
+    if (!theme) {
+      return c.json({
+        success: false,
+        error: 'Missing required parameter: theme',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-sentiment:${theme}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const sentiment = await geminiService.analyzeSentiment(theme);
+    
+    const response = {
+      success: true,
+      data: sentiment
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 1800); // 30分鐘快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI sentiment analysis failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to analyze sentiment',
+      code: 'internal_error'
+    }, 500);
+  }
+});
+
+// 🚀 AI 功能增強：個股歸因分析
+app.get('/ai/stock-attribution', async (c) => {
+  try {
+    const stockId = c.req.query('stockId');
+    const theme = c.req.query('theme');
+    
+    if (!stockId || !theme) {
+      return c.json({
+        success: false,
+        error: 'Missing required parameters: stockId and theme',
+        code: 'invalid_parameters'
+      }, 400);
+    }
+
+    // 檢查快取
+    const cacheKey = `ai-stock-attribution:${stockId}:${theme}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
+
+    const attribution = await geminiService.analyzeStockAttribution(stockId, theme);
+    
+    const response = {
+      success: true,
+      data: attribution
+    };
+
+    // 儲存到快取
+    await cacheService.set(cacheKey, response, 3600); // 1小時快取
+    
+    return c.json(response);
+  } catch (error) {
+    console.error('AI stock attribution analysis failed:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to analyze stock attribution',
       code: 'internal_error'
     }, 500);
   }
