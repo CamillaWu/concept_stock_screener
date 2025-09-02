@@ -147,21 +147,8 @@ jobs:
     
     - name: 構建應用
       run: |
-        # 安裝根目錄依賴
-        npm install
-        
-        # 構建共享包
-        echo "構建共享包..."
-        cd packages/types && npm install && npm run build && cd ../..
-        cd packages/ui && npm install && npm run build && cd ../..
-        
-        # 構建前端
-        echo "構建前端..."
-        cd apps/web && npm install && npm run build && cd ../..
-        
-        # 構建後端
-        echo "構建後端..."
-        cd apps/api && npm install && npm run build && cd ../..
+        echo "開始構建流程..."
+        echo "當前目錄: $(pwd)"
         
         # 創建構建產物目錄
         mkdir -p dist
