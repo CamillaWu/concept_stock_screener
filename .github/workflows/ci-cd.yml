@@ -186,7 +186,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
-        path: scripts/dist/
+        path: dist/
         retention-days: 30
 
   # 部署階段
@@ -206,14 +206,6 @@ jobs:
       with:
         name: build-artifacts
         path: scripts/dist/
-    
-    - name: 部署到 Cloudflare Workers
-      run: |
-        cd scripts
-        npm run deploy:workers || echo "Cloudflare Workers 部署腳本未實現，跳過部署"
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     
     - name: 部署到 Cloudflare Workers
       run: |
