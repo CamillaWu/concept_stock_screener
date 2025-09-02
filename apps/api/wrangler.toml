@@ -39,10 +39,6 @@ command = "npm run build"
 # 外部依賴配置
 [build.upload]
 format = "modules"
-
-# 處理外部模組
-[build.upload.rules]
-type = "ESModule"
 main = "./dist/index.js"
 
 # 外部依賴排除
