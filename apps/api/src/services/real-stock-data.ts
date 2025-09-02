@@ -1,4 +1,5 @@
-import type { StockConcept, StockAnalysisResult, Stock } from '@concepts-radar/types';
+import { cacheService } from './cache';
+import type { StockPriceData, MarketData } from '@concepts-radar/types';
 
 // 台灣證券交易所 API 基礎 URL
 const TWSE_BASE_URL = 'https://www.twse.com.tw/rwd/zh';
@@ -6,7 +7,6 @@ const GOODINFO_BASE_URL = 'https://goodinfo.tw/tw';
 
 // 快取設定
 const CACHE_TTL = 5 * 60 * 1000; // 5分鐘
-const cache = new Map<string, { data: any; timestamp: number }>();
 
 interface TWSEStockInfo {
   code: string;
@@ -15,38 +15,13 @@ interface TWSEStockInfo {
   market: string;
 }
 
-interface StockPriceData {
-  ticker: string;
-  name: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  volume: number;
-  marketCap: number;
-  pe: number;
-  pb: number;
-}
-
-interface MarketData {
-  date: string;
-  totalVolume: number;
-  totalValue: number;
-  upCount: number;
-  downCount: number;
-  unchangedCount: number;
-}
-
 class RealStockDataService {
   private async getCachedData<T>(key: string): Promise<T | null> {
-    const cached = cache.get(key);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-    return null;
+    return await cacheService.get<T>(key);
   }
 
   private async setCachedData<T>(key: string, data: T): Promise<void> {
-    cache.set(key, { data, timestamp: Date.now() });
+    await cacheService.set(key, data, CACHE_TTL / 1000);
   }
 
   /**
@@ -191,7 +166,7 @@ class RealStockDataService {
   /**
    * 根據產業分類獲取概念股
    */
-  async getStocksByIndustry(industry: string): Promise<Stock[]> {
+  async getStocksByIndustry(industry: string): Promise<any[]> {
     const stocks = await this.getStockList();
     const filteredStocks = stocks.filter(stock => 
       stock.industry.includes(industry) || 
@@ -199,6 +174,7 @@ class RealStockDataService {
     );
 
     return filteredStocks.slice(0, 10).map(stock => ({
+      id: `stock-${stock.code}`,
       ticker: stock.code,
       symbol: stock.code,
       name: stock.name,
@@ -212,7 +188,7 @@ class RealStockDataService {
   /**
    * 獲取真實的熱門概念主題
    */
-  async getRealTrendingThemes(): Promise<StockConcept[]> {
+  async getRealTrendingThemes(): Promise<any[]> {
     try {
       // 定義主要投資主題和對應的產業關鍵字
       const themes = [
@@ -249,10 +225,10 @@ class RealStockDataService {
       ];
 
       const stockList = await this.getStockList();
-      const trendingThemes: StockConcept[] = [];
+      const trendingThemes: any[] = [];
 
       for (const theme of themes) {
-        const relatedStocks: Stock[] = [];
+        const relatedStocks: any[] = [];
         
         for (const stock of stockList) {
           const isRelated = theme.keywords.some(keyword => 
@@ -262,6 +238,7 @@ class RealStockDataService {
 
           if (isRelated && relatedStocks.length < 5) {
             relatedStocks.push({
+              id: `stock-${stock.code}`,
               ticker: stock.code,
               symbol: stock.code,
               name: stock.name,
@@ -277,6 +254,7 @@ class RealStockDataService {
           trendingThemes.push({
             id: theme.id,
             theme: theme.theme,
+            name: theme.theme,
             description: theme.description,
             heatScore: Math.floor(Math.random() * 30) + 70,
             stocks: relatedStocks
@@ -294,7 +272,7 @@ class RealStockDataService {
   /**
    * 獲取股票的概念分析
    */
-  async getStockConceptAnalysis(ticker: string): Promise<StockAnalysisResult | null> {
+  async getStockConceptAnalysis(ticker: string): Promise<any | null> {
     try {
       const stockList = await this.getStockList();
       const stock = stockList.find(s => s.code === ticker);
@@ -311,11 +289,13 @@ class RealStockDataService {
       ];
 
       return {
+        id: `analysis-${ticker}`,
         stock: {
           ticker: stock.code,
           name: stock.name
         },
         themes: concepts.map(concept => ({
+          id: `theme-${concept.theme}`,
           theme: concept.theme,
           name: concept.theme,
           description: concept.description,

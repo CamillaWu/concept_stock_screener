@@ -4,6 +4,7 @@ const nextConfig = {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://concept-stock-screener-api.sandy246836.workers.dev',
     NEXT_PUBLIC_API_BASE_URL_DEV: process.env.NEXT_PUBLIC_API_BASE_URL_DEV || 'http://localhost:8787',
   },
+  transpilePackages: ['@concepts-radar/ui', '@concepts-radar/types'],
   async rewrites() {
     const apiBaseUrl = process.env.NODE_ENV === 'production'
       ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://concept-stock-screener-api.sandy246836.workers.dev')

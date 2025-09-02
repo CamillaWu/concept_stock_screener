@@ -1,15 +1,15 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Sidebar } from './components/ui/Sidebar';
 import { SearchBar } from '@concepts-radar/ui';
 import { DetailPanel } from './components/ui/DetailPanel';
 import { StockDetailPanel } from './components/ui/StockDetailPanel';
 import { KeyboardShortcuts } from './components/ui/KeyboardShortcuts';
 import { useAppStore, useUIStore, useSearchStore } from './store';
-import { useUrlSync } from './store/useUrlSync';
+import { UrlSyncProvider } from './store/useUrlSync';
 import { useThemeSearch, useStockSearch } from './hooks';
 import type { StockConcept, StockAnalysisResult, Stock } from '@concepts-radar/types';
 
-function App() {
+function AppContent() {
   // 使用 Zustand 狀態管理
   const {
     selectedTheme,
@@ -40,8 +40,7 @@ function App() {
     addToHistory,
   } = useSearchStore();
 
-  // URL 同步
-  useUrlSync();
+  // URL 同步 - 由 UrlSyncProvider 處理
 
   // 使用新的搜尋 Hook
   const themeSearch = useThemeSearch(query, {
@@ -100,21 +99,23 @@ function App() {
 
   // 處理股票點擊
   const handleStockClick = (stock: Stock) => {
-    // 將 Stock 轉換為 StockAnalysisResult 格式
-    const stockAnalysis: StockAnalysisResult = {
-      stock: {
-        ticker: stock.ticker,
-        name: stock.name
-      },
-      themes: [
-        {
-          theme: selectedTheme?.theme || '相關概念',
-          name: selectedTheme?.theme || '相關概念',
-          description: selectedTheme?.description || '',
-          heatScore: stock.heatScore || 0,
-          relevanceScore: stock.heatScore || 0
-        }
-      ]
+          // 將 Stock 轉換為 StockAnalysisResult 格式
+      const stockAnalysis: StockAnalysisResult = {
+        id: `stock-${Date.now()}`,
+        stock: {
+          ticker: stock.ticker,
+          name: stock.name
+        },
+              themes: [
+          {
+            id: `theme-${Date.now()}`,
+            theme: selectedTheme?.theme || '相關概念',
+            name: selectedTheme?.theme || '相關概念',
+            description: selectedTheme?.description || '',
+            heatScore: stock.heatScore || 0,
+            relevanceScore: stock.heatScore || 0
+          }
+        ]
     };
     setSelectedStock(stockAnalysis);
     setSelectedTheme(null);
@@ -126,10 +127,7 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-hidden">
-      {/* URL 同步 */}
-      <Suspense fallback={null}>
-        <UrlSyncWrapper />
-      </Suspense>
+      
       {/* 側邊欄 */}
       <div className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out shadow-lg ${
         sidebarCollapsed ? 'w-16' : 'w-80'
@@ -273,11 +271,14 @@ function App() {
   );
 }
 
-// URL 同步包裝組件
-const UrlSyncWrapper = () => {
-  useUrlSync();
-  return null;
-};
+// 主 App 組件，包圍 Suspense 邊界
+function App() {
+  return (
+    <UrlSyncProvider>
+      <AppContent />
+    </UrlSyncProvider>
+  );
+}
 
 export default App;
 

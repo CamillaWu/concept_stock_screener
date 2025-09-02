@@ -30,8 +30,11 @@ export const TrendingList: React.FC<TrendingListProps> = ({
   const [sortBy, setSortBy] = useState<SortOption>('heat');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // 確保 themes 始終是一個陣列
+  const safeThemes = Array.isArray(themes) ? themes : [];
+
   const sortedThemes = useMemo(() => {
-    const sorted = [...themes].sort((a, b) => {
+    const sorted = [...safeThemes].sort((a, b) => {
       let comparison = 0;
       
       switch (sortBy) {
@@ -50,7 +53,7 @@ export const TrendingList: React.FC<TrendingListProps> = ({
     });
     
     return sorted;
-  }, [themes, sortBy, sortOrder]);
+  }, [safeThemes, sortBy, sortOrder]);
 
   const handleSort = (option: SortOption) => {
     if (sortBy === option) {
@@ -121,7 +124,7 @@ export const TrendingList: React.FC<TrendingListProps> = ({
     );
   }
 
-  if (themes.length === 0) {
+  if (safeThemes.length === 0) {
     return (
       <div className={`p-6 text-center ${className}`}>
         <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -175,18 +178,18 @@ export const TrendingList: React.FC<TrendingListProps> = ({
         {/* 統計資訊 */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{themes.length}</div>
+            <div className="text-2xl font-bold text-blue-600">{safeThemes.length}</div>
             <div className="text-sm text-blue-700">總概念數</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-600">
-              {themes.reduce((sum, theme) => sum + theme.stocks.length, 0)}
+              {safeThemes.reduce((sum, theme) => sum + theme.stocks.length, 0)}
             </div>
             <div className="text-sm text-green-700">總股票數</div>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-lg">
             <div className="text-2xl font-bold text-orange-600">
-              {Math.round(themes.reduce((sum, theme) => sum + (theme.heatScore || 0), 0) / themes.length)}
+              {Math.round(safeThemes.reduce((sum, theme) => sum + (theme.heatScore || 0), 0) / safeThemes.length)}
             </div>
             <div className="text-sm text-orange-700">平均熱度</div>
           </div>
@@ -224,7 +227,7 @@ export const TrendingList: React.FC<TrendingListProps> = ({
       {/* 底部提示 */}
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500">
-          共 {themes.length} 個熱門概念 • 每 5 分鐘自動更新
+          共 {safeThemes.length} 個熱門概念 • 每 5 分鐘自動更新
         </p>
       </div>
     </div>
