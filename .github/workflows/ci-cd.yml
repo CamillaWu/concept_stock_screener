@@ -42,31 +42,31 @@ jobs:
     
     - name: 運行單元測試
       run: |
-        cd scripts && npm test:unit
+        cd scripts && npm run test:unit
       env:
         CI: true
     
     - name: 運行整合測試
       run: |
-        cd scripts && npm test:integration
+        cd scripts && npm run test:integration
       env:
         CI: true
     
     - name: 運行 E2E 測試
       run: |
-        cd scripts && npm test:e2e
+        cd scripts && npm run test:e2e
       env:
         CI: true
     
     - name: 運行效能測試
       run: |
-        cd scripts && npm test:performance
+        cd scripts && npm run test:performance
       env:
         CI: true
     
     - name: 生成測試報告
       run: |
-        cd scripts && npm test:report
+        cd scripts && npm run test:report
       env:
         CI: true
     
