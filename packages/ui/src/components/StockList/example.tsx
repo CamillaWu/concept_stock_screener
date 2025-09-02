@@ -5,6 +5,7 @@ import { Stock } from '@concepts-radar/types';
 // 範例股票數據
 const sampleStocks: Stock[] = [
   {
+    id: 'stock-2330',
     ticker: '2330',
     symbol: '2330',
     name: '台積電',
@@ -14,6 +15,7 @@ const sampleStocks: Stock[] = [
     concepts: ['AI 伺服器', '半導體', 'CoWoS']
   },
   {
+    id: 'stock-2454',
     ticker: '2454',
     symbol: '2454',
     name: '聯發科',
@@ -23,6 +25,7 @@ const sampleStocks: Stock[] = [
     concepts: ['AI PC', '手機晶片', '邊緣運算']
   },
   {
+    id: 'stock-3034',
     ticker: '3034',
     symbol: '3034',
     name: '聯詠',
@@ -32,6 +35,7 @@ const sampleStocks: Stock[] = [
     concepts: ['車用晶片', '顯示驅動', 'IC 設計']
   },
   {
+    id: 'stock-2379',
     ticker: '2379',
     symbol: '2379',
     name: '瑞昱',
@@ -41,6 +45,7 @@ const sampleStocks: Stock[] = [
     concepts: ['網通晶片', 'WiFi 7', 'IoT']
   },
   {
+    id: 'stock-2308',
     ticker: '2308',
     symbol: '2308',
     name: '台達電',

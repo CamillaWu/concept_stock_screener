@@ -1,22 +1,10 @@
-import type { StockConcept, StockAnalysisResult, Stock } from '@concepts-radar/types';
-
-interface StockPriceData {
-  ticker: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  volume: number;
-  timestamp: string;
-}
-
-interface MarketData {
-  totalStocks: number;
-  upStocks: number;
-  downStocks: number;
-  unchangedStocks: number;
-  totalVolume: number;
-  timestamp: string;
-}
+import type { 
+  StockConcept, 
+  StockAnalysisResult, 
+  Stock, 
+  StockPriceData, 
+  MarketData
+} from '@concepts-radar/types';
 
 interface AttributionSource {
   type: 'news' | 'report' | 'announcement' | 'ai';

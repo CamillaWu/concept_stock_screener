@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import type { StockConcept, Stock } from '@concepts-radar/types';
 import { DetailPanel as UIDetailPanel } from '@concepts-radar/ui';
 import { useAiConceptStrength, useAiSentiment } from '../../hooks';
@@ -17,8 +17,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
   // 使用新的 AI 分析 Hook
   const { 
     data: conceptStrength, 
-    loading: strengthLoading, 
-    error: strengthError 
+    loading: strengthLoading
   } = useAiConceptStrength(selectedTheme?.theme || '', {
     enabled: !!selectedTheme?.theme,
     cacheTime: 10 * 60 * 1000, // 10分鐘快取
@@ -28,8 +27,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
 
   const { 
     data: sentiment, 
-    loading: sentimentLoading, 
-    error: sentimentError 
+    loading: sentimentLoading
   } = useAiSentiment(selectedTheme?.theme || '', {
     enabled: !!selectedTheme?.theme,
     cacheTime: 10 * 60 * 1000, // 10分鐘快取

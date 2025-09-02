@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSearchStore } from './searchStore';
 import { useAppStore } from './appStore';
 
 // URL 同步 Hook
-export function useUrlSync() {
+function useUrlSyncInternal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -65,4 +65,24 @@ export function useUrlSync() {
   return {
     clearUrlState,
   };
+}
+
+// Suspense 包圍的 URL 同步組件
+export function UrlSyncProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UrlSyncInner />
+      {children}
+    </Suspense>
+  );
+}
+
+function UrlSyncInner() {
+  useUrlSyncInternal();
+  return null;
+}
+
+// 導出 Hook 供組件使用
+export function useUrlSync() {
+  return useUrlSyncInternal();
 }

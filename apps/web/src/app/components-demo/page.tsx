@@ -20,9 +20,9 @@ export default function ComponentsDemo() {
       name: 'AI 概念',
       heatScore: 85,
       stocks: [
-        { ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const },
-        { ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const },
-        { ticker: '2454', symbol: '2454', name: '聯發科', exchange: 'TWSE' as const }
+        { id: 'stock-2330', ticker: '2330', symbol: '2330', name: '台積電', exchange: 'TWSE' as const },
+        { id: 'stock-2317', ticker: '2317', symbol: '2317', name: '鴻海', exchange: 'TWSE' as const },
+        { id: 'stock-2454', ticker: '2454', symbol: '2454', name: '聯發科', exchange: 'TWSE' as const }
       ]
     },
     {
@@ -31,8 +31,8 @@ export default function ComponentsDemo() {
       name: '電動車',
       heatScore: 72,
       stocks: [
-        { ticker: '2207', symbol: '2207', name: '和泰車', exchange: 'TWSE' as const },
-        { ticker: '2201', symbol: '2201', name: '裕隆', exchange: 'TWSE' as const }
+        { id: 'stock-2207', ticker: '2207', symbol: '2207', name: '和泰車', exchange: 'TWSE' as const },
+        { id: 'stock-2201', ticker: '2201', symbol: '2201', name: '裕隆', exchange: 'TWSE' as const }
       ]
     }
   ];
