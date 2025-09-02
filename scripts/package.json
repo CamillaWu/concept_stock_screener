@@ -19,7 +19,21 @@
     "jest:performance": "jest tests/performance",
     "jest:coverage": "jest --coverage",
     "jest:watch": "jest --watch",
-    "jest:debug": "jest --detectOpenHandles --forceExit"
+    "jest:debug": "jest --detectOpenHandles --forceExit",
+    "ci": "node ci-cd/ci-runner.js ci",
+    "ci:test": "node ci-cd/ci-runner.js test",
+    "ci:quality": "node ci-cd/ci-runner.js quality",
+    "ci:build": "node ci-cd/ci-runner.js build",
+    "deploy": "node ci-cd/deploy.js",
+    "deploy:staging": "node ci-cd/deploy.js staging",
+    "deploy:production": "node ci-cd/deploy.js production",
+    "deploy:rollback": "node ci-cd/deploy.js rollback",
+    "build": "echo '構建腳本 - 請根據項目需求自定義'",
+    "lint": "echo 'ESLint 檢查 - 請安裝 ESLint 並配置'",
+    "format:check": "echo 'Prettier 檢查 - 請安裝 Prettier 並配置'",
+    "type-check": "echo 'TypeScript 檢查 - 請安裝 TypeScript 並配置'",
+    "clean": "rm -rf dist/ coverage/ tests/reports/",
+    "clean:all": "rm -rf node_modules/ dist/ coverage/ tests/reports/ package-lock.json"
   },
   "devDependencies": {
     "jest": "^29.7.0",
