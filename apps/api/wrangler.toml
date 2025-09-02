@@ -46,7 +46,6 @@ type = "ESModule"
 main = "./dist/index.js"
 
 # 外部依賴排除
-[build.upload.exclude]
 exclude = [
   "node_modules/@pinecone-database/**",
   "node_modules/@langchain/**",
@@ -54,7 +53,6 @@ exclude = [
 ]
 
 # 添加外部依賴配置
-[build.upload.external]
 external = [
   "@pinecone-database/pinecone",
   "@langchain/google-genai",
