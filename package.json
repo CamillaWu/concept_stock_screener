@@ -8,18 +8,30 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "./scripts/dev.sh",
+    "dev": "node scripts/cross-platform-runner.js dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "clean": "pnpm -r clean",
+    "clean": "node scripts/path-utils.js clean",
     "api:dev": "cd apps/api && pnpm dev",
     "web:dev": "cd apps/web && pnpm dev",
     "api:deploy": "cd apps/api && pnpm deploy",
     "web:build": "cd apps/web && pnpm build",
     "test:api": "./scripts/test-api.sh",
     "deploy": "./scripts/deploy.sh",
-    "deploy:vercel": "./scripts/deploy-vercel.sh"
+    "deploy:vercel": "./scripts/deploy-vercel.sh",
+    "cross:info": "node scripts/cross-platform-runner.js info",
+    "cross:check": "node scripts/cross-platform-runner.js check",
+    "cross:install": "node scripts/cross-platform-runner.js install",
+    "env:detect": "node scripts/env-manager.js detect",
+    "env:setup": "node scripts/env-manager.js setup",
+    "env:validate": "node scripts/env-manager.js validate",
+    "path:info": "node scripts/path-utils.js info",
+    "path:create": "node scripts/path-utils.js create",
+    "test:setup": "node scripts/cross-platform-tester.js setup",
+    "test:cross": "node scripts/cross-platform-tester.js all",
+    "auto:setup": "node scripts/auto-setup.js",
+    "auto:dev": "node scripts/auto-setup.js && pnpm dev"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
