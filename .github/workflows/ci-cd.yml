@@ -38,6 +38,7 @@ jobs:
     - name: 安裝依賴
       run: |
         npm install
+        cd scripts && npm install
     
     - name: 運行單元測試
       run: |
@@ -107,6 +108,7 @@ jobs:
     - name: 安裝依賴
       run: |
         npm install
+        cd scripts && npm install
     
     - name: 運行 ESLint
       run: |
@@ -141,6 +143,7 @@ jobs:
     - name: 安裝依賴
       run: |
         npm install
+        cd scripts && npm install
     
     - name: 構建應用
       run: |
