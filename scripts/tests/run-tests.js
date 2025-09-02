@@ -83,7 +83,7 @@ function checkDependencies() {
   
   try {
     // 檢查 Jest
-    execSync('jest --version', { stdio: 'pipe' });
+    execSync('npx jest --version', { stdio: 'pipe' });
     logSuccess('Jest 已安裝');
   } catch (error) {
     logError('Jest 未安裝，請執行: npm install --save-dev jest');
@@ -122,7 +122,7 @@ function runTestType(type) {
   logSection(`運行 ${config.description}`);
   
   try {
-    const command = `jest ${config.pattern} --coverage --testTimeout=30000`;
+    const command = `npx jest ${config.pattern} --coverage --testTimeout=30000`;
     logInfo(`執行命令: ${command}`);
     
     const result = execSync(command, {
