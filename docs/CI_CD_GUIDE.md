@@ -63,8 +63,8 @@
    - 上傳構建產物
 
 4. **部署階段** (`deploy`)
-   - 部署到 Cloudflare Workers
-   - 部署到 Cloudflare Pages
+   - 部署到 Cloudflare Workers (後端 API)
+   - 部署到 Vercel (前端網站)
 
 5. **通知階段** (`notify`)
    - Slack 通知

@@ -12,7 +12,8 @@
   - 自動觸發測試（push、PR、定時）
   - 多 Node.js 版本測試 (16, 18, 20)
   - 代碼品質檢查
-  - 自動構建和部署
+  - 完整 monorepo 構建（types → ui → web → api）
+  - 自動部署到 Cloudflare Workers (後端) 和 Vercel (前端)
   - 測試報告和覆蓋率上傳
   - Slack 和郵件通知
 
@@ -43,7 +44,8 @@
 
 ### 4. 部署配置
 - **多環境支援**: development、staging、production、disaster_recovery
-- **Cloudflare 整合**: Workers 和 Pages 部署
+- **Cloudflare 整合**: Workers 後端 API 部署
+- **Vercel 整合**: 前端網站部署
 - **部署策略**: 藍綠部署、金絲雀部署、滾動部署
 - **監控和通知**: Slack、郵件、Webhook
 
@@ -90,9 +92,14 @@ SLACK_WEBHOOK_URL=your_webhook_url
 
 ### GitHub Secrets
 在 GitHub 倉庫設置中添加：
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
-- `SLACK_WEBHOOK_URL`
+- `CLOUDFLARE_API_TOKEN` - Cloudflare 部署權限
+- `CLOUDFLARE_ACCOUNT_ID` - Cloudflare 帳戶識別
+- `VERCEL_TOKEN` - Vercel 部署權限
+- `VERCEL_ORG_ID` - Vercel 組織識別
+- `VERCEL_PROJECT_ID` - Vercel 項目識別
+- `PINECONE_API_KEY` - Pinecone 向量數據庫存取
+- `GEMINI_API_KEY` - Google Gemini AI 引擎
+- `SLACK_WEBHOOK_URL` - Slack 通知（可選）
 
 ## 📊 測試整合狀態
 
