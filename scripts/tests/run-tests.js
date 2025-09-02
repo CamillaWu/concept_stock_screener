@@ -24,22 +24,22 @@ const colors = {
 // 測試配置
 const testConfig = {
   unit: {
-    pattern: 'unit/**/*.test.js',
+    pattern: 'tests/unit',
     description: '單元測試',
     target: 80
   },
   integration: {
-    pattern: 'integration/**/*.test.js',
+    pattern: 'tests/integration',
     description: '整合測試',
     target: 70
   },
   e2e: {
-    pattern: 'e2e/**/*.test.js',
+    pattern: 'tests/e2e',
     description: '端到端測試',
     target: 60
   },
   performance: {
-    pattern: 'performance/**/*.test.js',
+    pattern: 'tests/performance',
     description: '效能測試',
     target: 100
   }

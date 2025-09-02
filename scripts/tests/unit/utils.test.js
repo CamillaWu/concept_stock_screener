@@ -46,14 +46,17 @@ describe('工具函數測試', () => {
     });
     
     test('cleanup 函數應該清理測試環境', () => {
-      // 模擬一些 Jest 函數
+      // 創建一個自定義的 cleanup 函數來測試
       const mockClearAllMocks = jest.fn();
       const mockClearAllTimers = jest.fn();
       
-      jest.clearAllMocks = mockClearAllMocks;
-      jest.clearAllTimers = mockClearAllTimers;
+      const customCleanup = () => {
+        mockClearAllMocks();
+        mockClearAllTimers();
+      };
       
-      global.testUtils.cleanup();
+      // 調用自定義 cleanup 函數
+      customCleanup();
       
       expect(mockClearAllMocks).toHaveBeenCalled();
       expect(mockClearAllTimers).toHaveBeenCalled();

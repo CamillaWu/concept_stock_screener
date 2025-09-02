@@ -59,7 +59,7 @@
     },
     "testTimeout": 30000,
     "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
-    "moduleNameMapping": {
+    "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/../src/$1"
     },
     "transform": {
