@@ -31,25 +31,36 @@ pnpm web:build
 ├── packages/
 │   ├── types/        # 共享類型定義
 │   └── ui/           # UI 組件庫
-├── docs/             # 文檔
-│   ├── deployment/   # 部署相關
-│   └── guides/       # 使用指南
-└── scripts/          # 部署腳本
+├── docs/             # 文檔目錄
+│   ├── development/  # 開發工具和指南
+│   ├── reports/      # 完成報告
+│   └── archive/      # 歷史文檔
+├── scripts/          # 部署和工具腳本
+├── data/             # 資料文件
+└── mock/             # 模擬資料
 ```
 
 ## 🔗 相關文檔
 
-### 🚀 開發指南
-- [快速接手指南](./docs/QUICK_HANDOVER_GUIDE.md)
+### 🚀 快速開始
+- [快速開始指南](./docs/QUICK_START_GUIDE.md)
+- [部署指南](./docs/DEPLOYMENT_GUIDE.md)
+
+### 📊 專案狀態
 - [任務進度與交接](./docs/TASK_PROGRESS_AND_HANDOVER.md)
 - [技術債務追蹤](./docs/TECHNICAL_DEBT_TRACKER.md)
+- [專案進度總結](./docs/PROGRESS_SUMMARY.md)
 
-### 📋 專案文件
-- [部署指南](./docs/deployment/)
-- [使用指南](./docs/guides/)
-- [環境設定](./docs/guides/ENVIRONMENT_SETUP.md)
-- [域名設定](./docs/deployment/DOMAIN_SETUP_GUIDE.md)
-- [故障排除](./docs/guides/TROUBLESHOOTING_GUIDE.md)
+### 🔧 技術文檔
+- [API 文檔](./docs/API_DOCUMENTATION.md)
+- [組件分析](./docs/COMPONENT_ANALYSIS.md)
+- [Pinecone 設置指南](./docs/PINECONE_LOADING_GUIDE.md)
+
+### 📖 產品文檔
+- [產品需求文檔](./docs/[PRD]概念股自動化篩選系統.md)
+
+### 🐛 問題追蹤
+- [UI/UX 問題追蹤](./docs/UI_UX_ISSUES.md)
 
 ## 🛠️ 技術棧
 - **後端**: Cloudflare Workers + Hono + Gemini 2.5 Pro

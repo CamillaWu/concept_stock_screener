@@ -1,86 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
-interface ApiResponse {
-  themes?: Array<{
-    id: string;
-    theme: string;
-    description: string;
-    heatScore: number;
-    stocks: Array<{
-      ticker: string;
-      name: string;
-      reason: string;
-    }>;
-  }>;
-}
+import { useTrendingThemes } from '../../hooks';
 
 export default function DebugPage() {
-  const [data, setData] = useState<ApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
-
-  const addLog = (message: string) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        addLog('開始 API 呼叫...');
-        
-        const apiUrl = 'https://concept-stock-screener-api.sandy246836.workers.dev/trending';
-        addLog(`API URL: ${apiUrl}`);
-        
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          mode: 'cors',
-        });
-        
-        addLog(`回應狀態: ${response.status} ${response.statusText}`);
-        addLog(`回應標頭: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          addLog(`錯誤回應: ${errorText}`);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        addLog(`成功取得資料: ${JSON.stringify(result).substring(0, 200)}...`);
-        setData(result);
-      } catch (err) {
-        console.error('API 呼叫失敗:', err);
-        addLog(`錯誤: ${err instanceof Error ? err.message : '載入失敗'}`);
-        setError(err instanceof Error ? err.message : '載入失敗');
-      } finally {
-        setLoading(false);
-        addLog('API 呼叫完成');
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { 
+    data, 
+    loading, 
+    error, 
+    refetch,
+    isSuccess,
+    isError 
+  } = useTrendingThemes({
+    useRealData: false,
+    sortBy: 'popular',
+    cacheTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    retryCount: 3
+  });
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">API 調試頁面</h1>
+      <h1 className="text-3xl font-bold mb-6">API 調試頁面 (使用新 Hook)</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左側：日誌 */}
+        {/* 左側：Hook 狀態 */}
         <div className="bg-gray-100 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">調試日誌</h2>
-          <div className="bg-black text-green-400 p-4 rounded font-mono text-sm h-96 overflow-y-auto">
-            {logs.map((log, index) => (
-              <div key={index} className="mb-1">{log}</div>
-            ))}
+          <h2 className="text-xl font-semibold mb-4">Hook 狀態</h2>
+          <div className="space-y-2 text-sm">
+            <div><strong>載入狀態:</strong> {loading ? '載入中...' : '完成'}</div>
+            <div><strong>成功狀態:</strong> {isSuccess ? '是' : '否'}</div>
+            <div><strong>錯誤狀態:</strong> {isError ? '是' : '否'}</div>
+            <div><strong>數據數量:</strong> {data?.length || 0}</div>
+            {error && <div><strong>錯誤訊息:</strong> {error}</div>}
+          </div>
+          
+          <div className="mt-4">
+            <button
+              onClick={() => refetch()}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              重新載入
+            </button>
           </div>
         </div>
 
@@ -102,28 +62,21 @@ export default function DebugPage() {
           )}
           
           {data && (
-            <div className="bg-white p-4 rounded border">
-              <h3 className="font-semibold mb-2">API 回應:</h3>
-              <pre className="text-xs overflow-auto max-h-96">
-                {JSON.stringify(data, null, 2)}
-              </pre>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">趨勢主題 ({data.length} 個):</h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {data.map((theme, index) => (
+                  <div key={theme.id || index} className="bg-white p-3 rounded border">
+                    <div className="font-semibold">{theme.name}</div>
+                    <div className="text-sm text-gray-600">{theme.description}</div>
+                    <div className="text-sm text-blue-600">熱度: {theme.heatScore}</div>
+                    <div className="text-sm text-green-600">股票數量: {theme.stocks.length}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* 手動測試按鈕 */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-semibold mb-2">手動測試</h3>
-        <button
-          onClick={() => {
-            addLog('手動測試按鈕被點擊');
-            window.open('https://concept-stock-screener-api.sandy246836.workers.dev/trending', '_blank');
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          在新視窗開啟 API
-        </button>
       </div>
     </div>
   );

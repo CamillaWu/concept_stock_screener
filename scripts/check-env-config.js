@@ -118,4 +118,4 @@ recommendations.forEach(rec => {
 });
 
 console.log('\n✅ 環境配置檢查完成！');
-console.log('📖 詳細配置說明請參考: docs/deployment/ENVIRONMENT_CONFIG.md');
+console.log('📖 詳細配置說明請參考: docs/QUICK_START_GUIDE.md');

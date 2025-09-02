@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import type { StockConcept } from '@concepts-radar/types';
-import { apiService } from '../../services/api';
 import { Sidebar as UISidebar } from '@concepts-radar/ui';
 import { useFavoritesStore } from '../../store';
+import { useTrendingThemes } from '../../hooks';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -19,43 +19,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
   useRealData,
   onUseRealDataChange
 }) => {
-  const [trendingThemes, setTrendingThemes] = useState<StockConcept[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  // 使用新的 Hook 替代手動 API 調用
+  const { 
+    data: trendingThemes = [], 
+    loading, 
+    error, 
+    refetch: fetchTrendingThemes,
+    isSuccess 
+  } = useTrendingThemes({
+    useRealData,
+    sortBy: 'popular',
+    cacheTime: 5 * 60 * 1000, // 5分鐘快取
+    staleTime: 2 * 60 * 1000,  // 2分鐘過期
+    retryCount: 3
+  });
 
   // 使用收藏狀態
   const { toggleFavorite, isFavorite } = useFavoritesStore();
 
-  const fetchTrendingThemes = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const themes = await apiService.getTrendingThemes('popular', useRealData);
-      setTrendingThemes(themes);
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error('載入熱門概念失敗:', err);
-      setError('載入失敗');
-    } finally {
-      setLoading(false);
-    }
-  }, [useRealData]);
-
-  useEffect(() => {
+  // 自動刷新處理
+  const handleRetry = useCallback(() => {
     fetchTrendingThemes();
   }, [fetchTrendingThemes]);
 
-  // 自動刷新（每5分鐘）
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!loading) {
-        fetchTrendingThemes();
-      }
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [fetchTrendingThemes, loading]);
+  // 計算最後更新時間（基於快取時間）
+  const lastUpdated = isSuccess ? new Date() : null;
 
   return (
     <UISidebar
@@ -64,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       trendingThemes={trendingThemes}
       loading={loading}
       error={error}
-      onRetry={fetchTrendingThemes}
+      onRetry={handleRetry}
       onThemeClick={onThemeClick}
       useRealData={useRealData}
       onUseRealDataChange={onUseRealDataChange}
