@@ -152,21 +152,26 @@ jobs:
         
         # 構建共享包
         echo "構建共享包..."
-        cd packages/types && npm run build && cd ../..
-        cd packages/ui && npm run build && cd ../..
+        cd packages/types && npm install && npm run build && cd ../..
+        cd packages/ui && npm install && npm run build && cd ../..
         
         # 構建前端
         echo "構建前端..."
-        cd apps/web && npm run build && cd ../..
+        cd apps/web && npm install && npm run build && cd ../..
         
         # 構建後端
         echo "構建後端..."
-        cd apps/api && npm run build && cd ../..
+        cd apps/api && npm install && npm run build && cd ../..
         
         # 創建構建產物目錄
         mkdir -p dist
         echo "構建完成 - $(date)" > dist/build-info.txt
         echo "包含: types, ui, web, api" >> dist/build-info.txt
+        
+        # 驗證構建產物
+        echo "檢查構建產物..."
+        ls -la dist/
+        echo "構建完成！"
     
     - name: 上傳構建產物
       uses: actions/upload-artifact@v4
