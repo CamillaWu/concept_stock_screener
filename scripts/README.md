@@ -1,116 +1,209 @@
-# 測試工具說明
+# Scripts 資料夾
 
-本目錄包含用於測試概念股篩選系統的各種測試腳本。
+本資料夾包含概念股篩選系統的各種腳本和工具，已重新組織以提高可維護性和測試覆蓋率。
 
-## 測試腳本列表
+## 📁 資料夾結構
 
-### 1. 綜合測試腳本
-```bash
-node scripts/test-all.js
 ```
-- **功能**: 運行所有測試並提供詳細報告
-- **包含**: 環境配置檢查、開發環境測試、生產環境測試、RAG 檔案測試
-- **建議**: 在部署前或問題排查時使用
-
-### 2. 環境配置檢查
-```bash
-node scripts/test-env-config.js
-```
-- **功能**: 檢查所有必要的環境變數和配置文件
-- **檢查項目**:
-  - 根目錄 package.json
-  - Web App package.json
-  - API package.json
-  - Next.js 配置
-  - TypeScript 配置 (Web/API)
-  - Tailwind 配置
-  - Wrangler 配置
-  - RAG 文件 (可選)
-
-### 3. 開發環境測試
-```bash
-node scripts/test-dev-environment.js
-```
-- **功能**: 測試本地開發環境的 API 和前端服務
-- **測試項目**:
-  - API Root (localhost:8787)
-  - Trending API
-  - RAG Manifest API
-  - Frontend RAG Manifest (localhost:3000)
-  - Frontend RAG Docs
-
-### 4. 生產環境 API 測試
-```bash
-node scripts/test-production-api.js
-```
-- **功能**: 測試生產環境的 API 連接
-- **測試項目**:
-  - API Root Endpoint
-  - Trending API
-  - RAG Manifest API
-
-### 5. RAG 檔案載入測試
-```bash
-node scripts/test-rag-loading.js
-```
-- **功能**: 測試 RAG 檔案的載入和解析
-- **測試環境**:
-  - 生產環境 API
-  - 生產環境前端
-  - 本地環境
-- **測試項目**:
-  - RAG Manifest 檔案載入和驗證
-  - RAG 文件檔案載入和驗證
-
-## 使用建議
-
-### 開發階段
-1. 啟動本地服務後，運行開發環境測試
-2. 修改配置後，運行環境配置檢查
-3. 部署前，運行綜合測試
-
-### 問題排查
-1. 先運行環境配置檢查，確保基礎配置正確
-2. 根據問題類型選擇對應的測試腳本
-3. 查看測試報告中的詳細錯誤信息
-
-### 部署驗證
-1. 部署完成後，運行生產環境 API 測試
-2. 檢查 RAG 檔案載入測試結果
-3. 如有問題，對比本地和生產環境的差異
-
-## 測試結果解讀
-
-### 成功指標
-- ✅ PASS: 測試通過
-- 🎉 所有測試都通過了！系統運行正常
-
-### 失敗指標
-- ❌ FAIL: 測試失敗
-- ⚠️ 警告: 非關鍵問題，但需要注意
-- ⏰ 超時: 網絡或服務響應問題
-
-### 常見問題
-1. **開發環境測試失敗**: 確保本地服務正在運行
-2. **生產環境測試失敗**: 檢查部署狀態和網絡連接
-3. **RAG 測試失敗**: 檢查 RAG 檔案配置和路徑
-
-## 腳本權限
-
-所有測試腳本都已設置為可執行：
-```bash
-chmod +x scripts/*.js
+scripts/
+├── tests/                    # 測試腳本
+│   ├── unit/                # 單元測試
+│   ├── integration/         # 整合測試
+│   ├── e2e/                # 端到端測試
+│   └── performance/         # 效能測試
+├── deployment/              # 部署腳本
+│   ├── cloudflare/         # Cloudflare Workers 部署
+│   ├── vercel/             # Vercel 部署
+│   └── scripts/            # 通用部署腳本
+├── development/             # 開發工具
+│   ├── environment/        # 環境配置
+│   ├── rag/                # RAG 相關工具
+│   └── utilities/          # 通用工具
+├── maintenance/             # 維護腳本
+│   ├── cleanup/            # 清理腳本
+│   └── monitoring/         # 監控腳本
+└── legacy/                  # 舊版腳本（已歸檔）
 ```
 
-## 依賴要求
+## 🧪 測試策略
 
-- Node.js 14+
-- 本地開發服務 (API: 8787, Web: 3000)
-- 網絡連接 (用於生產環境測試)
+### 1. 單元測試 (Unit Tests)
+- **目標**: 測試個別函數和組件的功能
+- **覆蓋率目標**: 80%+
+- **工具**: Jest + TypeScript
+- **執行**: `pnpm test:unit`
 
-## 注意事項
+### 2. 整合測試 (Integration Tests)
+- **目標**: 測試 API 端點和服務整合
+- **覆蓋率目標**: 70%+
+- **工具**: Jest + Supertest
+- **執行**: `pnpm test:integration`
 
-1. 測試腳本會自動處理超時和錯誤
-2. 生產環境測試需要網絡連接
-3. 本地測試需要先啟動開發服務
-4. RAG 檔案測試會驗證文件格式和內容
+### 3. 端到端測試 (E2E Tests)
+- **目標**: 測試完整用戶流程
+- **覆蓋率目標**: 60%+
+- **工具**: Playwright
+- **執行**: `pnpm test:e2e`
+
+### 4. 效能測試 (Performance Tests)
+- **目標**: 測試系統效能和負載能力
+- **工具**: 自定義效能測試腳本
+- **執行**: `pnpm test:performance`
+
+## 🚀 快速開始
+
+### 安裝依賴
+```bash
+pnpm install
+```
+
+### 執行所有測試
+```bash
+pnpm test
+```
+
+### 執行特定測試類型
+```bash
+pnpm test:unit          # 單元測試
+pnpm test:integration   # 整合測試
+pnpm test:e2e          # 端到端測試
+pnpm test:performance  # 效能測試
+```
+
+### 生成測試報告
+```bash
+pnpm test:coverage      # 生成覆蓋率報告
+pnpm test:report        # 生成詳細測試報告
+```
+
+## 🍎 macOS 特定功能
+
+### 環境設置
+```bash
+# 設置 macOS 開發環境
+chmod +x scripts/setup-macos.sh
+./scripts/setup-macos.sh
+```
+
+### 測試執行
+```bash
+# 使用 macOS 優化腳本
+chmod +x scripts/test-runner-mac.sh
+./scripts/test-runner-mac.sh all
+
+# 查看幫助
+./scripts/test-runner-mac.sh help
+
+# 顯示 macOS 系統資訊
+./scripts/test-runner-mac.sh macos
+```
+
+### macOS 特色功能
+- 🚀 自動安裝 Xcode Command Line Tools
+- 🍺 Homebrew 依賴管理
+- 📱 自動打開 HTML 覆蓋率報告
+- 💻 系統資源檢查 (記憶體、磁碟空間)
+- 🔧 Apple Silicon 和 Intel 架構支援
+
+## 🪟 Windows 特定功能
+
+### 環境設置
+```powershell
+# 設置 Windows 開發環境
+.\scripts\quick-start-windows.ps1 setup
+```
+
+### 測試執行
+```powershell
+# 使用 Windows 優化腳本
+.\scripts\test-runner.ps1 all
+
+# 查看幫助
+.\scripts\test-runner.ps1 help
+
+# 顯示 Windows 系統資訊
+.\scripts\test-runner.ps1 system-info
+```
+
+### Windows 特色功能
+- 🔧 PowerShell 執行策略檢查和建議
+- 💻 Windows 系統資訊顯示 (記憶體、磁碟、處理器)
+- 📁 自動路徑處理和分隔符轉換
+- 🎨 彩色輸出和表情符號支援
+- 🚀 一鍵快速啟動腳本
+
+### 🚀 一鍵快速啟動
+
+**macOS**
+```bash
+# 一鍵完成環境設置和測試執行
+chmod +x scripts/quick-start-macos.sh
+./scripts/quick-start-macos.sh
+```
+
+**Windows**
+```powershell
+# 一鍵完成環境設置和測試執行
+.\scripts\quick-start-windows.ps1 all
+```
+
+這些腳本會自動：
+1. 檢查和設置腳本權限
+2. 設置開發環境 (macOS/Windows)
+3. 安裝測試依賴
+4. 運行完整測試套件
+5. 生成測試報告
+
+## 📊 測試覆蓋率目標
+
+| 測試類型 | 當前覆蓋率 | 目標覆蓋率 | 狀態 |
+|---------|-----------|-----------|------|
+| 單元測試 | 0% | 80% | 🚧 進行中 |
+| 整合測試 | 0% | 70% | 🚧 進行中 |
+| 端到端測試 | 0% | 60% | 🚧 進行中 |
+| 效能測試 | 100% | 100% | ✅ 完成 |
+
+## 🔧 腳本分類
+
+### 測試腳本 (tests/)
+- `unit/` - 單元測試
+- `integration/` - 整合測試
+- `e2e/` - 端到端測試
+- `performance/` - 效能測試
+
+### 部署腳本 (deployment/)
+- `cloudflare/` - Cloudflare Workers 部署
+- `vercel/` - Vercel 部署
+- `scripts/` - 通用部署腳本
+
+### 開發工具 (development/)
+- `environment/` - 環境配置管理
+- `rag/` - RAG 系統工具
+- `utilities/` - 通用開發工具
+
+### 維護腳本 (maintenance/)
+- `cleanup/` - 系統清理
+- `monitoring/` - 系統監控
+
+## 📝 腳本命名規範
+
+- **測試腳本**: `test-*.js`
+- **部署腳本**: `deploy-*.sh` 或 `deploy-*.ps1`
+- **工具腳本**: `*-tool.js` 或 `*-manager.js`
+- **配置腳本**: `config-*.js` 或 `setup-*.sh`
+
+## ⚠️ 注意事項
+
+1. **環境變數**: 執行腳本前請確保環境變數已正確設定
+2. **權限**: 某些腳本可能需要管理員權限
+3. **依賴**: 確保所有必要的依賴已安裝
+4. **備份**: 執行破壞性操作前請備份重要資料
+
+## 🔄 遷移指南
+
+舊版腳本已移至 `legacy/` 資料夾，如需使用請參考對應的遷移說明。
+
+---
+
+**最後更新**: 2025年1月15日
+**版本**: v2.0.0
