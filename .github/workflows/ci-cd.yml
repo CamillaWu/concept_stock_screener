@@ -11,7 +11,6 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '8'
 
 jobs:
   # 測試階段
@@ -33,44 +32,40 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'pnpm'
-        cache-dependency-path: pnpm-lock.yaml
-    
-    - name: 安裝 pnpm
-      run: |
-        npm install -g pnpm@${{ env.PNPM_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: scripts/package-lock.json
     
     - name: 安裝依賴
       run: |
-        pnpm install
+        npm install
     
     - name: 運行單元測試
       run: |
-        cd scripts && pnpm test:unit
+        cd scripts && npm test:unit
       env:
         CI: true
     
     - name: 運行整合測試
       run: |
-        cd scripts && pnpm test:integration
+        cd scripts && npm test:integration
       env:
         CI: true
     
     - name: 運行 E2E 測試
       run: |
-        cd scripts && pnpm test:e2e
+        cd scripts && npm test:e2e
       env:
         CI: true
     
     - name: 運行效能測試
       run: |
-        cd scripts && pnpm test:performance
+        cd scripts && npm test:performance
       env:
         CI: true
     
     - name: 生成測試報告
       run: |
-        cd scripts && pnpm test:report
+        cd scripts && npm test:report
       env:
         CI: true
     
@@ -106,28 +101,24 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-        cache-dependency-path: pnpm-lock.yaml
-    
-    - name: 安裝 pnpm
-      run: |
-        npm install -g pnpm@${{ env.PNPM_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: scripts/package-lock.json
     
     - name: 安裝依賴
       run: |
-        pnpm install
+        npm install
     
     - name: 運行 ESLint
       run: |
-        cd scripts && pnpm run lint || echo "ESLint 檢查跳過 - 工具未安裝"
+        cd scripts && npm run lint || echo "ESLint 檢查跳過 - 工具未安裝"
     
     - name: 運行 Prettier 檢查
       run: |
-        cd scripts && pnpm run format:check || echo "Prettier 檢查跳過 - 工具未安裝"
+        cd scripts && npm run format:check || echo "Prettier 檢查跳過 - 工具未安裝"
     
     - name: 檢查 TypeScript 類型
       run: |
-        cd scripts && pnpm run type-check || echo "TypeScript 檢查跳過 - 工具未安裝"
+        cd scripts && npm run type-check || echo "TypeScript 檢查跳過 - 工具未安裝"
 
   # 構建階段
   build:
@@ -144,34 +135,30 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'pnpm'
-        cache-dependency-path: pnpm-lock.yaml
-    
-    - name: 安裝 pnpm
-      run: |
-        npm install -g pnpm@${{ env.PNPM_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: scripts/package-lock.json
     
     - name: 安裝依賴
       run: |
-        pnpm install
+        npm install
     
     - name: 構建應用
       run: |
         # 安裝根目錄依賴
-        pnpm install
+        npm install
         
         # 構建共享包
         echo "構建共享包..."
-        cd packages/types && pnpm build && cd ../..
-        cd packages/ui && pnpm build && cd ../..
+        cd packages/types && npm run build && cd ../..
+        cd packages/ui && npm run build && cd ../..
         
         # 構建前端
         echo "構建前端..."
-        cd apps/web && pnpm build && cd ../..
+        cd apps/web && npm run build && cd ../..
         
         # 構建後端
         echo "構建後端..."
-        cd apps/api && pnpm build && cd ../..
+        cd apps/api && npm run build && cd ../..
         
         # 創建構建產物目錄
         mkdir -p dist
