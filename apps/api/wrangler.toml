@@ -40,15 +40,11 @@ command = "npm run build"
 [build.upload]
 format = "modules"
 main = "./dist/index.js"
-
-# 外部依賴排除
 exclude = [
   "node_modules/@pinecone-database/**",
   "node_modules/@langchain/**",
   "node_modules/langchain/**"
 ]
-
-# 添加外部依賴配置
 external = [
   "@pinecone-database/pinecone",
   "@langchain/google-genai",
