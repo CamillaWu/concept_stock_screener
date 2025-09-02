@@ -35,17 +35,3 @@ preview_id = "fccebf8318624229b84f8ae249cbe111"
 # 模組解析配置
 [build]
 command = "npm run build"
-
-# 外部依賴配置
-format = "modules"
-main = "./dist/index.js"
-exclude = [
-  "node_modules/@pinecone-database/**",
-  "node_modules/@langchain/**",
-  "node_modules/langchain/**"
-]
-external = [
-  "@pinecone-database/pinecone",
-  "@langchain/google-genai",
-  "langchain"
-]
