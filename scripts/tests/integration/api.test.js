@@ -127,19 +127,22 @@ describe('API 整合測試', () => {
     test('搜尋端點應該驗證必要參數', async () => {
       const invalidParams = { q: 'AI' }; // 缺少 mode 參數
       
-      axios.get.mockRejectedValue({
-        response: {
-          status: 400,
-          data: {
-            success: false,
-            error: '缺少必要參數',
-            code: 'missing_params'
-          }
+      // 模擬 API 返回錯誤響應
+      axios.get.mockResolvedValue({
+        status: 400,
+        data: {
+          success: false,
+          error: '缺少必要參數',
+          code: 'missing_params'
         }
       });
       
-      await expect(axios.get(`${baseURL}/search`, { params: invalidParams }))
-        .rejects.toThrow();
+      const response = await axios.get(`${baseURL}/search`, { params: invalidParams });
+      
+      expect(response.status).toBe(400);
+      expect(response.data.success).toBe(false);
+      expect(response.data.error).toBe('缺少必要參數');
+      expect(response.data.code).toBe('missing_params');
     });
   });
   

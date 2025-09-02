@@ -44,7 +44,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/setup.js'],
   
   // 模組路徑映射
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/../src/$1'
   },
   
