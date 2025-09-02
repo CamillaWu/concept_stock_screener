@@ -221,7 +221,7 @@ jobs:
         status: ${{ job.status }}
         channel: '#ci-cd'
         webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+      if: always()
     
     - name: 發送郵件通知
       run: |
