@@ -43,41 +43,35 @@ jobs:
     
     - name: 安裝依賴
       run: |
-        cd scripts
         pnpm install
     
     - name: 運行單元測試
       run: |
-        cd scripts
-        pnpm test:unit
+        cd scripts && pnpm test:unit
       env:
         CI: true
     
     - name: 運行整合測試
       run: |
-        cd scripts
-        pnpm test:integration
+        cd scripts && pnpm test:integration
       env:
         CI: true
     
     - name: 運行 E2E 測試
       run: |
-        cd scripts
-        pnpm test:e2e
+        cd scripts && pnpm test:e2e
       env:
         CI: true
     
     - name: 運行效能測試
       run: |
-        cd scripts
-        pnpm test:performance
+        cd scripts && pnpm test:performance
       env:
         CI: true
     
     - name: 生成測試報告
       run: |
-        cd scripts
-        pnpm test:report
+        cd scripts && pnpm test:report
       env:
         CI: true
     
@@ -118,23 +112,19 @@ jobs:
     
     - name: 安裝依賴
       run: |
-        cd scripts
-        npm install
+        pnpm install
     
     - name: 運行 ESLint
       run: |
-        cd scripts
-        npm run lint || echo "ESLint 檢查跳過 - 工具未安裝"
+        cd scripts && pnpm run lint || echo "ESLint 檢查跳過 - 工具未安裝"
     
     - name: 運行 Prettier 檢查
       run: |
-        cd scripts
-        npm run format:check || echo "Prettier 檢查跳過 - 工具未安裝"
+        cd scripts && pnpm run format:check || echo "Prettier 檢查跳過 - 工具未安裝"
     
     - name: 檢查 TypeScript 類型
       run: |
-        cd scripts
-        npm run type-check || echo "TypeScript 檢查跳過 - 工具未安裝"
+        cd scripts && pnpm run type-check || echo "TypeScript 檢查跳過 - 工具未安裝"
 
   # 構建階段
   build:
@@ -156,8 +146,7 @@ jobs:
     
     - name: 安裝依賴
       run: |
-        cd scripts
-        npm install
+        pnpm install
     
     - name: 構建應用
       run: |
@@ -205,7 +194,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: build-artifacts
-        path: scripts/dist/
+        path: dist/
     
     - name: 部署到 Cloudflare Workers
       run: |
@@ -234,14 +223,6 @@ jobs:
     if: always()
     
     steps:
-    - name: 發送 Slack 通知
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#ci-cd'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: always()
-    
     - name: 發送郵件通知
       run: |
         echo "CI/CD 流程完成，狀態: ${{ needs.test.result }}, ${{ needs.quality.result }}, ${{ needs.build.result }}, ${{ needs.deploy.result }}"
