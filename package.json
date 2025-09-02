@@ -3,35 +3,15 @@
   "version": "1.0.0",
   "description": "概念股自動化篩選系統",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "dev": "node scripts/cross-platform-runner.js dev",
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
-    "clean": "node scripts/path-utils.js clean",
-    "api:dev": "cd apps/api && pnpm dev",
-    "web:dev": "cd apps/web && pnpm dev",
-    "api:deploy": "cd apps/api && pnpm deploy",
-    "web:build": "cd apps/web && pnpm build",
-    "test:api": "./scripts/test-api.sh",
-    "deploy": "./scripts/deploy.sh",
-    "deploy:vercel": "./scripts/deploy-vercel.sh",
-    "cross:info": "node scripts/cross-platform-runner.js info",
-    "cross:check": "node scripts/cross-platform-runner.js check",
-    "cross:install": "node scripts/cross-platform-runner.js install",
-    "env:detect": "node scripts/env-manager.js detect",
-    "env:setup": "node scripts/env-manager.js setup",
-    "env:validate": "node scripts/env-manager.js validate",
-    "path:info": "node scripts/path-utils.js info",
-    "path:create": "node scripts/path-utils.js create",
-    "test:setup": "node scripts/cross-platform-tester.js setup",
-    "test:cross": "node scripts/cross-platform-tester.js all",
-    "auto:setup": "node scripts/auto-setup.js",
-    "auto:dev": "node scripts/auto-setup.js && pnpm dev"
+    "dev": "echo '開發環境設置中，請參考 docs-new/quick-start/QUICK_START_GUIDE.md'",
+    "build": "echo '構建流程設置中，請參考 docs-new/development/CI_CD_PIPELINE_DESIGN.md'",
+    "test": "echo '測試流程設置中，請參考 docs-new/development/TESTING_STRATEGY.md'",
+    "lint": "echo '代碼檢查流程設置中，請參考 docs-new/development/CI_CD_PIPELINE_DESIGN.md'",
+    "clean": "echo '清理流程設置中'",
+    "setup:macos": "./scripts/setup-macos.sh",
+    "setup:windows": "./scripts/quick-start-windows.ps1",
+    "quick:macos": "./scripts/quick-start-macos.sh"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -50,10 +30,5 @@
     "screener"
   ],
   "author": "Concept Stock Screener Team",
-  "license": "MIT",
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "zustand": "^5.0.8"
-  }
+  "license": "MIT"
 }
