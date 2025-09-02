@@ -37,9 +37,8 @@ jobs:
         cache-dependency-path: pnpm-lock.yaml
     
     - name: 安裝 pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: ${{ env.PNPM_VERSION }}
+      run: |
+        npm install -g pnpm@${{ env.PNPM_VERSION }}
     
     - name: 安裝依賴
       run: |
@@ -47,31 +46,31 @@ jobs:
     
     - name: 運行單元測試
       run: |
-        cd scripts && npx pnpm test:unit
+        cd scripts && pnpm test:unit
       env:
         CI: true
     
     - name: 運行整合測試
       run: |
-        cd scripts && npx pnpm test:integration
+        cd scripts && pnpm test:integration
       env:
         CI: true
     
     - name: 運行 E2E 測試
       run: |
-        cd scripts && npx pnpm test:e2e
+        cd scripts && pnpm test:e2e
       env:
         CI: true
     
     - name: 運行效能測試
       run: |
-        cd scripts && npx pnpm test:performance
+        cd scripts && pnpm test:performance
       env:
         CI: true
     
     - name: 生成測試報告
       run: |
-        cd scripts && npx pnpm test:report
+        cd scripts && pnpm test:report
       env:
         CI: true
     
@@ -110,21 +109,25 @@ jobs:
         cache: 'pnpm'
         cache-dependency-path: pnpm-lock.yaml
     
+    - name: 安裝 pnpm
+      run: |
+        npm install -g pnpm@${{ env.PNPM_VERSION }}
+    
     - name: 安裝依賴
       run: |
         pnpm install
     
     - name: 運行 ESLint
       run: |
-        cd scripts && npx pnpm run lint || echo "ESLint 檢查跳過 - 工具未安裝"
+        cd scripts && pnpm run lint || echo "ESLint 檢查跳過 - 工具未安裝"
     
     - name: 運行 Prettier 檢查
       run: |
-        cd scripts && npx pnpm run format:check || echo "Prettier 檢查跳過 - 工具未安裝"
+        cd scripts && pnpm run format:check || echo "Prettier 檢查跳過 - 工具未安裝"
     
     - name: 檢查 TypeScript 類型
       run: |
-        cd scripts && npx pnpm run type-check || echo "TypeScript 檢查跳過 - 工具未安裝"
+        cd scripts && pnpm run type-check || echo "TypeScript 檢查跳過 - 工具未安裝"
 
   # 構建階段
   build:
@@ -143,6 +146,10 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'pnpm'
         cache-dependency-path: pnpm-lock.yaml
+    
+    - name: 安裝 pnpm
+      run: |
+        npm install -g pnpm@${{ env.PNPM_VERSION }}
     
     - name: 安裝依賴
       run: |
