@@ -1,0 +1,20 @@
+name = "concept-stock-screener-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "concept-stock-screener-api-prod"
+
+[env.staging]
+name = "concept-stock-screener-api-staging"
+
+[[env.production.kv_namespaces]]
+binding = "STOCK_DATA"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+[[env.production.vars]]
+STAGE = "production"
+
+[[env.staging.vars]]
+STAGE = "staging"

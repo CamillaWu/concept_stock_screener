@@ -5,6 +5,19 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+// 檢測作業系統
+function detectOS() {
+  const platform = process.platform;
+
+  if (platform === 'win32') {
+    return 'windows';
+  } else if (platform === 'darwin') {
+    return 'macos';
+  } else {
+    return 'unknown';
+  }
+}
+
 class CrossPlatformTester {
   constructor() {
     this.platform = os.platform();
@@ -18,7 +31,7 @@ class CrossPlatformTester {
   // 檢測測試環境
   detectTestEnvironment() {
     console.log('🔍 檢測測試環境...');
-    
+
     const env = {
       platform: this.platform,
       nodeVersion: process.version,
@@ -50,7 +63,7 @@ class CrossPlatformTester {
   // 檢查測試依賴
   checkTestDependencies() {
     console.log('\n📦 檢查測試依賴...');
-    
+
     const dependencies = [
       'jest',
       '@types/jest',
@@ -60,12 +73,12 @@ class CrossPlatformTester {
     ];
 
     const missing = [];
-    
+
     dependencies.forEach(dep => {
       try {
         const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
         const hasDep = packageJson.devDependencies && packageJson.devDependencies[dep];
-        
+
         if (hasDep) {
           console.log(`✅ ${dep}: 已安裝`);
         } else {
@@ -88,7 +101,7 @@ class CrossPlatformTester {
   // 安裝測試依賴
   installTestDependencies(dependencies) {
     console.log('\n📥 安裝測試依賴...');
-    
+
     try {
       execSync(`pnpm add -D ${dependencies.join(' ')}`, { stdio: 'inherit' });
       console.log('✅ 測試依賴安裝完成');
@@ -100,7 +113,7 @@ class CrossPlatformTester {
   // 創建測試配置
   createTestConfig() {
     console.log('\n⚙️  創建測試配置...');
-    
+
     const jestConfig = {
       preset: 'ts-jest',
       testEnvironment: 'node',
@@ -125,7 +138,7 @@ class CrossPlatformTester {
 
     const configPath = path.join(this.projectRoot, 'jest.config.js');
     fs.writeFileSync(configPath, `module.exports = ${JSON.stringify(jestConfig, null, 2)};`);
-    
+
     console.log('✅ Jest 配置創建完成');
     return configPath;
   }
@@ -133,7 +146,7 @@ class CrossPlatformTester {
   // 創建測試設置文件
   createTestSetup() {
     console.log('\n🔧 創建測試設置...');
-    
+
     const setupContent = `
 // 測試環境設置
 process.env.NODE_ENV = 'test';
@@ -158,7 +171,7 @@ global.testUtils = {
     name: 'test-name',
     timestamp: new Date().toISOString()
   }),
-  
+
   createMockApiResponse: (data) => ({
     success: true,
     data,
@@ -169,7 +182,7 @@ global.testUtils = {
 
     const setupPath = path.join(this.projectRoot, 'scripts', 'test-setup.js');
     fs.writeFileSync(setupPath, setupContent);
-    
+
     console.log('✅ 測試設置文件創建完成');
     return setupPath;
   }
@@ -177,7 +190,7 @@ global.testUtils = {
   // 運行單元測試
   async runUnitTests() {
     console.log('\n🧪 運行單元測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=unit']);
       this.testResults.push({ type: 'unit', status: 'passed' });
@@ -191,7 +204,7 @@ global.testUtils = {
   // 運行整合測試
   async runIntegrationTests() {
     console.log('\n🔗 運行整合測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=integration']);
       this.testResults.push({ type: 'integration', status: 'passed' });
@@ -205,7 +218,7 @@ global.testUtils = {
   // 運行 E2E 測試
   async runE2ETests() {
     console.log('\n🌐 運行 E2E 測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=e2e']);
       this.testResults.push({ type: 'e2e', status: 'passed' });
@@ -219,7 +232,7 @@ global.testUtils = {
   // 運行性能測試
   async runPerformanceTests() {
     console.log('\n⚡ 運行性能測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=performance']);
       this.testResults.push({ type: 'performance', status: 'passed' });
@@ -233,12 +246,12 @@ global.testUtils = {
   // 運行所有測試
   async runAllTests() {
     console.log('\n🚀 運行所有測試...');
-    
+
     await this.runUnitTests();
     await this.runIntegrationTests();
     await this.runE2ETests();
     await this.runPerformanceTests();
-    
+
     this.generateTestReport();
   }
 
@@ -268,15 +281,15 @@ global.testUtils = {
   // 生成測試報告
   generateTestReport() {
     console.log('\n📊 測試結果報告:');
-    
+
     const passed = this.testResults.filter(r => r.status === 'passed').length;
     const failed = this.testResults.filter(r => r.status === 'failed').length;
     const total = this.testResults.length;
-    
+
     console.log(`總計: ${total} 項測試`);
     console.log(`通過: ${passed} 項`);
     console.log(`失敗: ${failed} 項`);
-    
+
     this.testResults.forEach(result => {
       const status = result.status === 'passed' ? '✅' : '❌';
       console.log(`${status} ${result.type}: ${result.status}`);

@@ -1,0 +1,108 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # 依賴安裝和類型檢查
+  setup-and-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 檢出代碼
+      uses: actions/checkout@v4
+
+    - name: 設置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: 安裝 pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+
+    - name: 安裝依賴
+      run: pnpm install
+
+    - name: 類型檢查
+      run: pnpm type-check
+
+    - name: 代碼風格檢查
+      run: pnpm lint
+
+  # 構建測試
+  build:
+    needs: setup-and-check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 檢出代碼
+      uses: actions/checkout@v4
+
+    - name: 設置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: 安裝 pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+
+    - name: 安裝依賴
+      run: pnpm install
+
+    - name: 構建基礎包
+      run: |
+        pnpm build:types
+        pnpm build:ui
+
+    - name: 構建前端
+      run: pnpm build:web
+
+    - name: 構建 API
+      run: pnpm build:api
+
+  # 測試
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 檢出代碼
+      uses: actions/checkout@v4
+
+    - name: 設置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+
+    - name: 安裝 pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+
+    - name: 安裝依賴
+      run: pnpm install
+
+    - name: 運行測試
+      run: pnpm test
+
+  # 部署到開發環境
+  deploy-dev:
+    if: github.ref == 'refs/heads/develop'
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 部署到開發環境
+      run: |
+        echo "部署到開發環境..."
+        # 這裡可以添加實際的部署腳本

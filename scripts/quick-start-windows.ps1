@@ -1,382 +1,353 @@
 # 概念股篩選系統 - Windows 快速啟動腳本
-# 一鍵設置和運行測試環境
+# 適用於 Windows 10/11 + PowerShell 5.1+
 
 param(
-    [Parameter(Position=0)]
-    [string]$Command = "all"
+    [switch]$SkipChecks,
+    [switch]$SkipInstall,
+    [switch]$SkipBuild,
+    [switch]$SkipTest,
+    [switch]$Help
 )
 
-# 腳本目錄
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# 顯示幫助信息
+if ($Help) {
+    Write-Host @"
+概念股篩選系統 - Windows 快速啟動腳本
 
-# 顏色函數
-function Write-ColorOutput {
+用法:
+    .\quick-start-windows.ps1 [選項]
+
+選項:
+    -SkipChecks    跳過環境檢查
+    -SkipInstall   跳過依賴安裝
+    -SkipBuild     跳過專案構建
+    -SkipTest      跳過測試執行
+    -Help          顯示此幫助信息
+
+示例:
+    .\quick-start-windows.ps1                    # 完整流程
+    .\quick-start-windows.ps1 -SkipChecks        # 跳過環境檢查
+    .\quick-start-windows.ps1 -SkipInstall       # 跳過依賴安裝
+"@
+    exit 0
+}
+
+# 顏色定義
+$Colors = @{
+    Info = "Cyan"
+    Success = "Green"
+    Warning = "Yellow"
+    Error = "Red"
+}
+
+# 日誌函數
+function Write-Log {
     param(
         [string]$Message,
-        [string]$Color = "White"
+        [string]$Level = "Info"
     )
-    Write-Host $Message -ForegroundColor $Color
-}
-
-function Write-Success {
-    param([string]$Message)
-    Write-ColorOutput "✅ $Message" "Green"
-}
-
-function Write-Warning {
-    param([string]$Message)
-    Write-ColorOutput "⚠️  $Message" "Yellow"
-}
-
-function Write-Error {
-    param([string]$Message)
-    Write-ColorOutput "❌ $Message" "Red"
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-ColorOutput "ℹ️  $Message" "Blue"
-}
-
-function Write-Header {
-    param([string]$Title)
-    Write-ColorOutput ""
-    Write-ColorOutput "============================================================" "Cyan"
-    Write-ColorOutput "  $Title" "Cyan"
-    Write-ColorOutput "============================================================" "Cyan"
-}
-
-# 檢查 PowerShell 版本
-function Test-PowerShellVersion {
-    Write-Info "檢查 PowerShell 版本..."
     
-    $psVersion = $PSVersionTable.PSVersion
-    Write-Info "PowerShell 版本: $psVersion"
-    
-    if ($psVersion.Major -lt 5) {
-        Write-Warning "建議使用 PowerShell 5.1 或更高版本"
-        Write-Info "可以從 Microsoft Store 或官網下載最新版本"
-    } else {
-        Write-Success "PowerShell 版本檢查通過"
-    }
+    $timestamp = Get-Date -Format "HH:mm:ss"
+    $color = $Colors[$Level]
+    Write-Host "[$timestamp] $Message" -ForegroundColor $color
 }
 
 # 檢查執行策略
 function Test-ExecutionPolicy {
-    Write-Info "檢查執行策略..."
+    Write-Log "檢查 PowerShell 執行策略..." "Info"
     
-    $currentPolicy = Get-ExecutionPolicy
-    Write-Info "當前執行策略: $currentPolicy"
-    
-    if ($currentPolicy -eq "Restricted") {
-        Write-Warning "執行策略過於嚴格，建議設置為 RemoteSigned"
-        Write-Info "請以管理員身份運行: Set-ExecutionPolicy RemoteSigned"
-        Write-Info "或為當前用戶設置: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
-    } else {
-        Write-Success "執行策略檢查通過"
-    }
-}
-
-# 檢查依賴
-function Test-Dependencies {
-    Write-Info "檢查依賴..."
-    
-    # 檢查 Node.js
-    $nodeVersion = $null
-    try {
-        $nodeVersion = node --version 2>$null
-    } catch {
-        $nodeVersion = $null
-    }
-    
-    if ($nodeVersion) {
-        Write-Success "Node.js 已安裝，版本: $nodeVersion"
-    } else {
-        Write-Error "Node.js 未安裝"
-        Write-Info "請從 https://nodejs.org 下載並安裝"
-        return $false
-    }
-    
-    # 檢查 npm
-    $npmVersion = $null
-    try {
-        $npmVersion = npm --version 2>$null
-    } catch {
-        $npmVersion = $null
-    }
-    
-    if ($npmVersion) {
-        Write-Success "npm 已安裝，版本: $npmVersion"
-    } else {
-        Write-Error "npm 未安裝"
-        return $false
-    }
-    
-    # 檢查 Git
-    $gitVersion = $null
-    try {
-        $gitVersion = git --version 2>$null
-    } catch {
-        $gitVersion = $null
-    }
-    
-    if ($gitVersion) {
-        Write-Success "Git 已安裝: $gitVersion"
-    } else {
-        Write-Warning "Git 未安裝，建議安裝以獲得更好的開發體驗"
-        Write-Info "請從 https://git-scm.com 下載並安裝"
-    }
-    
-    Write-Success "依賴檢查完成"
-    return $true
-}
-
-# 安裝測試依賴
-function Install-TestDependencies {
-    Write-Header "安裝測試依賴"
-    
-    Set-Location $ScriptDir
-    
-    if (Test-Path "package.json") {
-        Write-Info "安裝 npm 依賴..."
-        npm install
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "測試依賴安裝完成"
-        } else {
-            Write-Error "依賴安裝失敗"
+    $policy = Get-ExecutionPolicy
+    if ($policy -eq "Restricted") {
+        Write-Log "執行策略過於嚴格，嘗試設置為 RemoteSigned..." "Warning"
+        try {
+            Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+            Write-Log "執行策略已設置為 RemoteSigned" "Success"
+        }
+        catch {
+            Write-Log "無法設置執行策略，請手動執行: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser" "Error"
             return $false
         }
-    } else {
-        Write-Warning "未找到 package.json"
+    }
+    else {
+        Write-Log "執行策略: $policy" "Success"
+    }
+    return $true
+}
+
+# 檢查 Node.js
+function Test-NodeJS {
+    Write-Log "檢查 Node.js..." "Info"
+    
+    try {
+        $nodeVersion = node --version
+        $npmVersion = npm --version
+        Write-Log "Node.js 版本: $nodeVersion" "Success"
+        Write-Log "npm 版本: $npmVersion" "Success"
+        return $true
+    }
+    catch {
+        Write-Log "Node.js 未安裝或不在 PATH 中" "Error"
+        Write-Log "請從 https://nodejs.org/ 下載並安裝 Node.js" "Error"
         return $false
     }
+}
+
+# 檢查 pnpm
+function Test-Pnpm {
+    Write-Log "檢查 pnpm..." "Info"
     
-    return $true
+    try {
+        $pnpmVersion = pnpm --version
+        Write-Log "pnpm 版本: $pnpmVersion" "Success"
+        return $true
+    }
+    catch {
+        Write-Log "pnpm 未安裝，正在安裝..." "Warning"
+        try {
+            npm install -g pnpm
+            Write-Log "pnpm 安裝成功" "Success"
+            return $true
+        }
+        catch {
+            Write-Log "pnpm 安裝失敗" "Error"
+            return $false
+        }
+    }
+}
+
+# 檢查 Git
+function Test-Git {
+    Write-Log "檢查 Git..." "Info"
+    
+    try {
+        $gitVersion = git --version
+        Write-Log "Git 版本: $gitVersion" "Success"
+        return $true
+    }
+    catch {
+        Write-Log "Git 未安裝或不在 PATH 中" "Warning"
+        Write-Log "建議從 https://git-scm.com/ 下載並安裝 Git" "Warning"
+        return $false
+    }
+}
+
+# 環境檢查
+function Start-EnvironmentCheck {
+    if ($SkipChecks) {
+        Write-Log "跳過環境檢查" "Warning"
+        return $true
+    }
+    
+    Write-Log "開始環境檢查..." "Info"
+    
+    $checks = @(
+        @{ Name = "PowerShell 執行策略"; Function = "Test-ExecutionPolicy" },
+        @{ Name = "Node.js"; Function = "Test-NodeJS" },
+        @{ Name = "pnpm"; Function = "Test-Pnpm" },
+        @{ Name = "Git"; Function = "Test-Git" }
+    )
+    
+    $allPassed = $true
+    foreach ($check in $checks) {
+        Write-Log "檢查: $($check.Name)" "Info"
+        $result = & $check.Function
+        if (-not $result) {
+            $allPassed = $false
+        }
+        Write-Host ""
+    }
+    
+    if ($allPassed) {
+        Write-Log "所有環境檢查通過！" "Success"
+    }
+    else {
+        Write-Log "部分環境檢查失敗，請解決問題後重試" "Error"
+    }
+    
+    return $allPassed
+}
+
+# 安裝依賴
+function Start-DependencyInstall {
+    if ($SkipInstall) {
+        Write-Log "跳過依賴安裝" "Warning"
+        return $true
+    }
+    
+    Write-Log "開始安裝依賴..." "Info"
+    
+    try {
+        # 清理舊的依賴
+        if (Test-Path "node_modules") {
+            Write-Log "清理舊的依賴..." "Info"
+            Remove-Item -Recurse -Force "node_modules" -ErrorAction SilentlyContinue
+        }
+        
+        if (Test-Path "packages/*/node_modules") {
+            Write-Log "清理包的依賴..." "Info"
+            Get-ChildItem "packages" -Directory | ForEach-Object {
+                if (Test-Path "$($_.FullName)/node_modules") {
+                    Remove-Item -Recurse -Force "$($_.FullName)/node_modules" -ErrorAction SilentlyContinue
+                }
+            }
+        }
+        
+        # 安裝依賴
+        Write-Log "安裝專案依賴..." "Info"
+        pnpm install
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Log "依賴安裝成功！" "Success"
+            return $true
+        }
+        else {
+            Write-Log "依賴安裝失敗" "Error"
+            return $false
+        }
+    }
+    catch {
+        Write-Log "依賴安裝過程中發生錯誤: $($_.Exception.Message)" "Error"
+        return $false
+    }
+}
+
+# 構建專案
+function Start-ProjectBuild {
+    if ($SkipBuild) {
+        Write-Log "跳過專案構建" "Warning"
+        return $true
+    }
+    
+    Write-Log "開始構建專案..." "Info"
+    
+    try {
+        # 構建類型定義
+        Write-Log "構建類型定義..." "Info"
+        pnpm build:types
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "類型定義構建失敗" "Error"
+            return $false
+        }
+        
+        # 構建 UI 組件
+        Write-Log "構建 UI 組件..." "Info"
+        pnpm build:ui
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "UI 組件構建失敗" "Error"
+            return $false
+        }
+        
+        # 構建前端
+        Write-Log "構建前端..." "Info"
+        pnpm build:web
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "前端構建失敗" "Error"
+            return $false
+        }
+        
+        # 構建 API
+        Write-Log "構建 API..." "Info"
+        pnpm build:api
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log "API 構建失敗" "Error"
+            return $false
+        }
+        
+        Write-Log "專案構建成功！" "Success"
+        return $true
+    }
+    catch {
+        Write-Log "專案構建過程中發生錯誤: $($_.Exception.Message)" "Error"
+        return $false
+    }
 }
 
 # 運行測試
-function Invoke-Tests {
-    Write-Header "運行測試套件"
+function Start-Testing {
+    if ($SkipTest) {
+        Write-Log "跳過測試執行" "Warning"
+        return $true
+    }
     
-    Write-Info "開始執行測試..."
+    Write-Log "開始運行測試..." "Info"
     
-    # 使用 PowerShell 腳本運行測試
-    if (Test-Path "$ScriptDir\test-runner.ps1") {
-        & "$ScriptDir\test-runner.ps1" all
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "所有測試通過！"
-            return $true
-        } else {
-            Write-Error "部分測試失敗，請檢查錯誤訊息"
-            return $false
-        }
-    } else {
-        Write-Error "未找到 test-runner.ps1 腳本"
+    try {
+        # 類型檢查
+        Write-Log "運行類型檢查..." "Info"
+        pnpm type-check:types
+        pnpm type-check:ui
+        pnpm type-check:web
+        
+        # 基礎測試
+        Write-Log "運行基礎測試..." "Info"
+        pnpm test:basic
+        
+        Write-Log "測試完成！" "Success"
+        return $true
+    }
+    catch {
+        Write-Log "測試過程中發生錯誤: $($_.Exception.Message)" "Error"
         return $false
     }
 }
 
-# 生成報告
-function Generate-Reports {
-    Write-Header "生成測試報告"
-    
-    if (Test-Path "$ScriptDir\test-runner.ps1") {
-        Write-Info "生成覆蓋率報告..."
-        & "$ScriptDir\test-runner.ps1" coverage
-        
-        Write-Info "生成測試報告..."
-        & "$ScriptDir\test-runner.ps1" report
-    } else {
-        Write-Error "未找到 test-runner.ps1 腳本"
-    }
-}
-
-# 創建開發環境配置
-function New-DevConfig {
-    Write-Header "創建開發環境配置"
-    
-    $configDir = "$env:USERPROFILE\.concept-stock-screener"
-    if (!(Test-Path $configDir)) {
-        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
-    }
-    
-    $configFile = "$configDir\config.json"
-    
-    if (!(Test-Path $configFile)) {
-        $nodeVersion = "unknown"
-        $npmVersion = "unknown"
-        
-        try {
-            $nodeVersion = node --version
-        } catch {
-            $nodeVersion = "unknown"
-        }
-        
-        try {
-            $npmVersion = npm --version
-        } catch {
-            $npmVersion = "unknown"
-        }
-        
-        $config = @{
-            environment = "development"
-            platform = "windows"
-            setup_date = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
-            node_version = $nodeVersion
-            npm_version = $npmVersion
-            powershell_version = $PSVersionTable.PSVersion.ToString()
-        } | ConvertTo-Json -Depth 3
-        
-        $config | Out-File -FilePath $configFile -Encoding UTF8
-        Write-Success "開發環境配置文件已創建: $configFile"
-    } else {
-        Write-Info "開發環境配置文件已存在"
-    }
-}
-
-# 顯示系統資訊
-function Show-SystemInfo {
-    Write-Header "系統資訊"
-    
-    Write-Info "作業系統: $($env:OS)"
-    Write-Info "Windows 版本: $(Get-WmiObject -Class Win32_OperatingSystem | Select-Object -ExpandProperty Caption)"
-    Write-Info "架構: $env:PROCESSOR_ARCHITECTURE"
-    Write-Info "處理器: $(Get-WmiObject -Class Win32_Processor | Select-Object -ExpandProperty Name)"
-    
-    # 記憶體資訊
-    $memory = Get-WmiObject -Class Win32_ComputerSystem
-    $totalMemoryGB = [math]::Round($memory.TotalPhysicalMemory / 1GB, 2)
-    Write-Info "總記憶體: ${totalMemoryGB}GB"
-    
-    # 磁碟空間
-    $disk = Get-WmiObject -Class Win32_LogicalDisk -Filter "DeviceID='C:'"
-    $freeSpaceGB = [math]::Round($disk.FreeSpace / 1GB, 2)
-    Write-Info "C 槽可用空間: ${freeSpaceGB}GB"
-    
-    # 依賴版本
-    if (Get-Command node -ErrorAction SilentlyContinue) {
-        Write-Info "Node.js 版本: $(node --version)"
-    }
-    
-    if (Get-Command npm -ErrorAction SilentlyContinue) {
-        Write-Info "npm 版本: $(npm --version)"
-    }
-    
-    if (Get-Command git -ErrorAction SilentlyContinue) {
-        Write-Info "Git 版本: $(git --version)"
-    }
-}
-
-# 顯示完成訊息
-function Show-Completion {
-    Write-Header "🎉 快速啟動完成！"
-    
+# 顯示完成信息
+function Show-CompletionMessage {
     Write-Host ""
-    Write-Host "📋 接下來您可以："
-    Write-Host "  1. 查看測試覆蓋率: .\scripts\test-runner.ps1 coverage"
-    Write-Host "  2. 運行特定測試: .\scripts\test-runner.ps1 unit"
-    Write-Host "  3. 清理測試文件: .\scripts\test-runner.ps1 clean"
-    Write-Host "  4. 開始開發！"
+    Write-Log "🎉 概念股篩選系統設置完成！" "Success"
     Write-Host ""
-    Write-Host "🔧 有用的命令："
-    Write-Host "  - 查看幫助: .\scripts\test-runner.ps1 help"
-    Write-Host "  - 系統資訊: .\scripts\test-runner.ps1 system-info"
+    Write-Log "下一步操作:" "Info"
+    Write-Log "1. 啟動開發環境: pnpm start" "Info"
+    Write-Log "2. 運行完整測試: pnpm test" "Info"
+    Write-Log "3. 查看專案狀態: .\scripts\maintenance\status-check.ps1" "Info"
     Write-Host ""
-    Write-Host "📚 專案文檔位於 docs\ 目錄"
-    Write-Host ""
-    Write-Host "💡 Windows 特定提示："
-    Write-Host "  - 使用 PowerShell 或 Windows Terminal 獲得最佳體驗"
-    Write-Host "  - 如果遇到執行策略問題，請檢查 PowerShell 執行策略"
-    Write-Host "  - 建議安裝 Git for Windows 以獲得更好的 Git 支援"
-    Write-Host ""
-}
-
-# 顯示幫助
-function Show-Help {
-    Write-ColorOutput "概念股篩選系統 - Windows 快速啟動腳本" "Cyan"
-    Write-Host ""
-    Write-ColorOutput "用法: .\quick-start-windows.ps1 [命令]" "White"
-    Write-Host ""
-    Write-ColorOutput "命令:" "White"
-    Write-ColorOutput "  all            完整設置和測試 (預設)" "White"
-    Write-ColorOutput "  setup          只設置環境" "White"
-    Write-ColorOutput "  test           只運行測試" "White"
-    Write-ColorOutput "  help           顯示此幫助信息" "White"
-    Write-Host ""
-    Write-ColorOutput "示例:" "White"
-    Write-ColorOutput "  .\quick-start-windows.ps1 all      # 完整設置和測試" "White"
-    Write-ColorOutput "  .\quick-start-windows.ps1 setup    # 只設置環境" "White"
-    Write-ColorOutput "  .\quick-start-windows.ps1 test     # 只運行測試" "White"
-    Write-Host ""
-    Write-ColorOutput "Windows 特定功能:" "White"
-    Write-ColorOutput "  - PowerShell 執行策略檢查" "White"
-    Write-ColorOutput "  - Windows 系統資訊顯示" "White"
-    Write-ColorOutput "  - 自動路徑處理" "White"
+    Write-Log "專案文檔位於 docs/ 目錄" "Info"
+    Write-Log "快速開始指南: docs/quick-start/QUICK_START_GUIDE.md" "Info"
 }
 
 # 主函數
 function Main {
-    Write-Header "概念股篩選系統 - Windows 快速啟動"
-    
-    Write-Info "歡迎使用 Windows 快速啟動腳本！"
-    Write-Info "此腳本將自動完成環境設置和測試執行。"
+    Write-Host ""
+    Write-Log "🚀 概念股篩選系統 - Windows 快速啟動" "Info"
+    Write-Log "開始時間: $(Get-Date)" "Info"
     Write-Host ""
     
-    # 檢查 PowerShell 環境
-    Test-PowerShellVersion
-    Test-ExecutionPolicy
-    
-    # 檢查依賴
-    if (!(Test-Dependencies)) {
-        Write-Error "依賴檢查失敗，請先安裝必要的工具"
+    # 檢查工作目錄
+    if (-not (Test-Path "package.json")) {
+        Write-Log "錯誤：請在專案根目錄執行此腳本" "Error"
         exit 1
     }
     
-    # 創建配置
-    New-DevConfig
+    # 執行各階段
+    $stages = @(
+        @{ Name = "環境檢查"; Function = "Start-EnvironmentCheck" },
+        @{ Name = "依賴安裝"; Function = "Start-DependencyInstall" },
+        @{ Name = "專案構建"; Function = "Start-ProjectBuild" },
+        @{ Name = "測試執行"; Function = "Start-Testing" }
+    )
     
-    switch ($Command.ToLower()) {
-        "setup" {
-            Write-Header "只設置環境"
-            Install-TestDependencies
-            Show-SystemInfo
-        }
-        "test" {
-            Write-Header "只運行測試"
-            if (Install-TestDependencies) {
-                Invoke-Tests
-                Generate-Reports
-            }
-        }
-        "help" {
-            Show-Help
-            return
-        }
-        "all" {
-            # 完整設置和測試
-            if (Install-TestDependencies) {
-                if (Invoke-Tests) {
-                    Generate-Reports
-                    Show-SystemInfo
-                    Show-Completion
-                }
-            }
-        }
-        default {
-            Write-Error "未知命令: $Command"
-            Show-Help
+    foreach ($stage in $stages) {
+        Write-Log "=== $($stage.Name) ===" "Info"
+        $result = & $stage.Function
+        
+        if (-not $result) {
+            Write-Log "$($stage.Name) 失敗，停止執行" "Error"
             exit 1
         }
+        
+        Write-Host ""
     }
+    
+    # 顯示完成信息
+    Show-CompletionMessage
 }
 
-# 錯誤處理
-$ErrorActionPreference = "Stop"
-
-# 運行主函數
+# 執行主函數
 try {
     Main
-} catch {
-    Write-Error "腳本執行失敗: $_"
+}
+catch {
+    Write-Log "腳本執行過程中發生未預期的錯誤: $($_.Exception.Message)" "Error"
+    Write-Log "請檢查錯誤信息並重試" "Error"
     exit 1
 }

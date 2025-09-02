@@ -1,89 +1,166 @@
-# 🎯 概念股自動化篩選系統
+# 概念股自動化篩選系統
 
-## 📋 專案概述
-基於 AI 的台灣概念股篩選系統，使用 Gemini 2.5 Pro 進行智能分析。
+智能篩選概念股，提供專業的投資分析工具，助您做出明智的投資決策。
 
 ## 🚀 快速開始
 
-### 開發環境設置
+### 前置需求
+
+- **Node.js** 18.0.0 或更高版本
+- **pnpm** 8.0.0 或更高版本
+- **Python** 3.11+ (用於數據管道)
+
+### 一鍵設置
+
 ```bash
-# macOS 用戶
-pnpm run setup:macos
+# 克隆專案
+git clone <your-repo-url>
+cd concept_stock_screener
 
-# Windows 用戶
-pnpm run setup:windows
+# 一鍵設置開發環境
+pnpm setup
 
-# 快速開始 (macOS)
-pnpm run quick:macos
+# 啟動所有服務
+pnpm start
 ```
 
-### 開發命令
+### 手動設置
+
 ```bash
-# 開發環境
-pnpm dev
+# 安裝依賴
+pnpm install
 
-# 構建
-pnpm build
+# 構建基礎包
+pnpm build:types
+pnpm build:ui
 
-# 測試
-pnpm test
-
-# 代碼檢查
-pnpm lint
+# 啟動開發服務
+pnpm dev:web      # 前端 (http://localhost:3000)
+pnpm dev:api      # API (http://localhost:8787)
+pnpm dev:pipeline # 數據管道 (http://localhost:8000)
 ```
 
-## 📁 專案結構
+## 🏗️ 專案架構
+
 ```
-├── docs/             # 完整文檔體系
-│   ├── development/  # 開發文檔
-│   ├── deployment/   # 部署文檔
-│   ├── quick-start/  # 快速開始指南
-│   ├── progress/     # 進度追蹤
-│   ├── reports/      # 報告文檔
-│   ├── api/          # API 文檔
-│   ├── user/         # 用戶文檔
-│   └── archive/      # 核心需求文檔
-
-├── scripts/          # 跨平台腳本
-├── data/             # 資料文件
-└── env.example       # 環境配置範例
+concept_stock_screener/
+├── apps/                    # 應用程式層
+│   ├── web/                # Next.js 前端應用
+│   ├── api/                # Cloudflare Workers API
+│   └── data-pipeline/      # Python RAG 數據管道
+├── packages/                # 共享包層
+│   ├── types/              # 共享類型定義
+│   └── ui/                 # 共享 UI 組件
+├── docs-new/               # 新文檔結構
+├── scripts/                # 開發和部署腳本
+└── .github/                # GitHub 配置
 ```
 
-## 🔗 相關文檔
+## 🎯 核心功能
 
-### 🚀 快速開始
-- [快速開始指南](./docs/quick-start/QUICK_START_GUIDE.md)
-- [部署指南](./docs/deployment/DEPLOYMENT_GUIDE.md)
+### 智能搜尋
+- 支援股票代碼、名稱、產業等多維度搜尋
+- 即時搜尋建議和自動完成
+- 模糊搜尋和智能匹配
 
-### 📊 開發文檔
-- [專案架構重構](./docs/development/ARCHITECTURE_RESTRUCTURE.md)
-- [技術棧配置](./docs/development/TECH_STACK_CONFIGURATION.md)
-- [核心功能開發](./docs/development/CORE_FEATURES_DEVELOPMENT.md)
-- [跨平台開發支援](./docs/development/CROSS_PLATFORM_DEVELOPMENT.md)
-- [CI/CD 流程設計](./docs/development/CI_CD_PIPELINE_DESIGN.md)
-- [RAG 系統整合](./docs/development/RAG_SYSTEM_INTEGRATION.md)
-- [測試策略](./docs/development/TESTING_STRATEGY.md)
+### 概念股分析
+- 深入分析概念股產業鏈
+- 相關股票關聯分析
+- 投資機會和風險評估
 
-### 📖 產品文檔
-- [產品需求文檔](./docs/[PRD]概念股自動化篩選系統.md)
-- [功能規格書](./docs/archive/[功能&流程]概念股自動化篩選系統 - 功能細節與流程規格書.md)
-- [用戶使用指南](./docs/user/USER_GUIDE.md)
-- [API 文檔](./docs/api/API_DOCUMENTATION.md)
-
-### 📈 進度追蹤
-- [開發進度追蹤](./docs/progress/DEVELOPMENT_PROGRESS_TRACKER.md)
+### 即時數據
+- 即時股價、成交量、市值等關鍵數據
+- 歷史數據圖表和趨勢分析
+- 市場動態監控
 
 ## 🛠️ 技術棧
-- **後端**: Cloudflare Workers + TypeScript + Gemini 2.5 Pro
-- **前端**: Next.js 14 + React 18 + TypeScript + Tailwind CSS
-- **AI/RAG**: Python + FastAPI + LangChain + Pinecone
-- **包管理**: pnpm
-- **部署**: Cloudflare Workers + Vercel + GitHub Actions
-- **CI/CD**: 雙環境自動化部署流程
 
-## 🔄 重要說明
-⚠️ **注意**: 此專案正在進行全面重構，舊的程式碼已被清理。
-所有新的開發都基於 `docs/` 目錄中的完整文檔體系進行。
+### 前端
+- **Next.js 14** - React 框架
+- **React 18** - UI 庫
+- **TypeScript** - 類型安全
+- **Tailwind CSS** - 樣式框架
+
+### 後端
+- **Cloudflare Workers** - 邊緣計算
+- **TypeScript** - 類型安全
+- **RESTful API** - 標準化接口
+
+### 數據管道
+- **Python 3.11+** - 數據處理
+- **FastAPI** - Web 框架
+- **LangChain** - AI 整合
+- **RAG** - 檢索增強生成
+
+## 📚 開發指南
+
+### 添加新功能
+
+1. **類型定義**：在 `packages/types/src/` 中添加新的接口
+2. **UI 組件**：在 `packages/ui/src/components/` 中創建可重用組件
+3. **API 端點**：在 `apps/api/src/handlers/` 中實現新的處理器
+4. **前端頁面**：在 `apps/web/src/app/` 中創建新的頁面
+
+### 開發流程
+
+```bash
+# 開發模式
+pnpm dev:all
+
+# 構建檢查
+pnpm type-check
+pnpm lint
+pnpm test
+
+# 生產構建
+pnpm build
+```
+
+### 代碼規範
+
+- 使用 TypeScript 嚴格模式
+- 遵循 ESLint 和 Prettier 配置
+- 組件使用函數式組件和 Hooks
+- API 遵循 RESTful 設計原則
+
+## 🌐 部署
+
+### 開發環境
+- 前端：http://localhost:3000
+- API：http://localhost:8787
+- 數據管道：http://localhost:8000
+
+### 生產環境
+- 前端：Vercel / Netlify
+- API：Cloudflare Workers
+- 數據管道：Docker + 雲端服務
+
+## 📖 文檔
+
+- [架構設計](docs-new/development/ARCHITECTURE_RESTRUCTURE.md)
+- [API 文檔](docs-new/api/)
+- [部署指南](docs-new/deployment/)
+- [用戶手冊](docs-new/user/)
+
+## 🤝 貢獻
+
+1. Fork 專案
+2. 創建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 開啟 Pull Request
 
 ## 📄 授權
-MIT License
+
+本專案採用 MIT 授權條款 - 查看 [LICENSE](LICENSE) 文件了解詳情。
+
+## 📞 支援
+
+如有問題或建議，請：
+- 開啟 [Issue](../../issues)
+- 聯繫開發團隊
+- 查看 [文檔](docs-new/)
+
+---
+
+**概念股篩選系統** - 讓投資更智能，讓決策更明智 🚀

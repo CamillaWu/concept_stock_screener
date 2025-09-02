@@ -5,6 +5,20 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+// 獲取腳本路徑
+function getScriptPath(scriptName, os) {
+  const scriptsDir = path.join(__dirname);
+
+  switch (os) {
+    case 'windows':
+      return path.join(scriptsDir, `${scriptName}-windows.ps1`);
+    case 'macos':
+      return path.join(scriptsDir, `${scriptName}-macos.sh`);
+    default:
+      return null;
+  }
+}
+
 class CrossPlatformRunner {
   constructor() {
     this.platform = os.platform();
