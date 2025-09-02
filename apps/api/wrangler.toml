@@ -37,7 +37,6 @@ preview_id = "fccebf8318624229b84f8ae249cbe111"
 command = "npm run build"
 
 # 外部依賴配置
-[build.upload]
 format = "modules"
 main = "./dist/index.js"
 exclude = [
