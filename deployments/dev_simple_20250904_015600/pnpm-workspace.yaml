@@ -1,0 +1,5 @@
+# 工作區配置 - 待重新設置
+# 請參考 docs-new/development/ARCHITECTURE_RESTRUCTURE.md 中的目錄結構
+packages:
+  - 'apps/*'
+  - 'packages/*'
