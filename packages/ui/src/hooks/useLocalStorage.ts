@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   // 從 localStorage 獲取初始值
@@ -16,11 +16,12 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   const setValue = (value: T | ((val: T) => T)) => {
     try {
       // 允許值是一個函數，這樣我們就有與 useState 相同的 API
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
+
       // 保存到 state
       setStoredValue(valueToStore);
-      
+
       // 保存到 localStorage
       window.localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {

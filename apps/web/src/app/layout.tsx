@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import React from 'react';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -31,13 +32,22 @@ export default function RootLayout({
                   <a href="/" className="text-gray-500 hover:text-gray-900">
                     首頁
                   </a>
-                  <a href="/stocks" className="text-gray-500 hover:text-gray-900">
+                  <a
+                    href="/stocks"
+                    className="text-gray-500 hover:text-gray-900"
+                  >
                     股票列表
                   </a>
-                  <a href="/concepts" className="text-gray-500 hover:text-gray-900">
+                  <a
+                    href="/concepts"
+                    className="text-gray-500 hover:text-gray-900"
+                  >
                     概念股
                   </a>
-                  <a href="/screener" className="text-gray-500 hover:text-gray-900">
+                  <a
+                    href="/screener"
+                    className="text-gray-500 hover:text-gray-900"
+                  >
                     篩選器
                   </a>
                 </nav>

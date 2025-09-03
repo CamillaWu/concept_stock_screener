@@ -1,0 +1,18 @@
+# 編譯後的文件
+**/dist/
+**/build/
+**/out/
+**/.next/
+
+# 依賴目錄
+**/node_modules/
+
+# 生成的文件
+**/*.min.js
+**/*.bundle.js
+
+# 其他
+**/.git/
+**/.vscode/
+**/coverage/
+**/.nyc_output/
