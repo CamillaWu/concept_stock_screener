@@ -1,94 +1,25 @@
-// 驗證工具函數
+// 驗證工具函數 - 概念股篩選系統專用
 
 /**
- * 驗證電子郵件格式
+ * 驗證股票代號格式 (台灣股市)
  */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+export function isValidStockCode(code: string): boolean {
+  const stockCodeRegex = /^\d{4,5}$/;
+  return stockCodeRegex.test(code);
 }
 
 /**
- * 驗證手機號碼格式 (台灣)
+ * 驗證股票名稱格式
  */
-export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^09\d{8}$/;
-  return phoneRegex.test(phone);
+export function isValidStockName(name: string): boolean {
+  return name.length >= 1 && name.length <= 20;
 }
 
 /**
- * 驗證身份證字號 (台灣)
+ * 驗證搜尋關鍵字
  */
-export function isValidTaiwanId(id: string): boolean {
-  const idRegex = /^[A-Z][12]\d{8}$/;
-  if (!idRegex.test(id)) return false;
-
-  const letters = 'ABCDEFGHJKLMNPQRSTUVXYWZIO';
-  const letterValues = letters.split('').reduce((acc, letter, index) => {
-    acc[letter] = index + 10;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const firstLetter = id.charAt(0);
-  const firstValue = Math.floor(letterValues[firstLetter] / 10) + (letterValues[firstLetter] % 10) * 9;
-  
-  let sum = firstValue;
-  for (let i = 1; i < 9; i++) {
-    sum += parseInt(id.charAt(i)) * (9 - i);
-  }
-  sum += parseInt(id.charAt(9));
-
-  return sum % 10 === 0;
-}
-
-/**
- * 驗證密碼強度
- */
-export function validatePassword(password: string): {
-  isValid: boolean;
-  score: number;
-  feedback: string[];
-} {
-  const feedback: string[] = [];
-  let score = 0;
-
-  if (password.length < 8) {
-    feedback.push('密碼長度至少需要 8 個字元');
-  } else {
-    score += 1;
-  }
-
-  if (/[a-z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('需要包含小寫字母');
-  }
-
-  if (/[A-Z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('需要包含大寫字母');
-  }
-
-  if (/\d/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('需要包含數字');
-  }
-
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('建議包含特殊字元');
-  }
-
-  const isValid = score >= 3;
-
-  return {
-    isValid,
-    score,
-    feedback,
-  };
+export function isValidSearchKeyword(keyword: string): boolean {
+  return keyword.trim().length >= 1 && keyword.trim().length <= 100;
 }
 
 /**
