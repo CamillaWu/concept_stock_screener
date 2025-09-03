@@ -1,4 +1,4 @@
-import { ApiResponse, SearchParams, SearchResponse } from '@concept-stock-screener/types';
+import { ApiResponse, SearchResponse } from '@concept-stock-screener/types';
 
 // 模擬搜尋結果
 const mockSearchResults = {
@@ -19,7 +19,7 @@ const mockSearchResults = {
       name: '聯發科',
       price: 850,
       change: 25,
-      changePercent: 0.030,
+      changePercent: 0.03,
       volume: 30000000,
       marketCap: 1350000000000,
       sector: '半導體',
@@ -48,13 +48,13 @@ export const searchHandler = {
       const query = url.searchParams.get('q') || '';
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = parseInt(url.searchParams.get('limit') || '10');
-      
+
       if (!query.trim()) {
         const errorResponse: ApiResponse = {
           success: false,
           error: '搜尋關鍵字不能為空',
         };
-        
+
         return new Response(JSON.stringify(errorResponse), {
           status: 400,
           headers: {
@@ -62,28 +62,36 @@ export const searchHandler = {
           },
         });
       }
-      
+
       // 模擬搜尋邏輯
-      const filteredStocks = mockSearchResults.stocks.filter(stock =>
-        stock.name.toLowerCase().includes(query.toLowerCase()) ||
-        stock.symbol.includes(query) ||
-        stock.sector.toLowerCase().includes(query.toLowerCase())
+      const filteredStocks = mockSearchResults.stocks.filter(
+        stock =>
+          stock.name.toLowerCase().includes(query.toLowerCase()) ||
+          stock.symbol.includes(query) ||
+          stock.sector.toLowerCase().includes(query.toLowerCase())
       );
-      
-      const filteredConcepts = mockSearchResults.concepts.filter(concept =>
-        concept.name.toLowerCase().includes(query.toLowerCase()) ||
-        concept.keywords.some(keyword => 
-          keyword.toLowerCase().includes(query.toLowerCase())
-        )
+
+      const filteredConcepts = mockSearchResults.concepts.filter(
+        concept =>
+          concept.name.toLowerCase().includes(query.toLowerCase()) ||
+          concept.keywords.some(keyword =>
+            keyword.toLowerCase().includes(query.toLowerCase())
+          )
       );
-      
+
       const total = filteredStocks.length + filteredConcepts.length;
-      
+
       // 分頁處理
       const startIndex = (page - 1) * limit;
-      const paginatedStocks = filteredStocks.slice(startIndex, startIndex + limit);
-      const paginatedConcepts = filteredConcepts.slice(startIndex, startIndex + limit);
-      
+      const paginatedStocks = filteredStocks.slice(
+        startIndex,
+        startIndex + limit
+      );
+      const paginatedConcepts = filteredConcepts.slice(
+        startIndex,
+        startIndex + limit
+      );
+
       const response: ApiResponse<SearchResponse> = {
         success: true,
         data: {
@@ -96,7 +104,7 @@ export const searchHandler = {
         },
         message: `找到 ${total} 個相關結果`,
       };
-      
+
       return new Response(JSON.stringify(response), {
         status: 200,
         headers: {
@@ -108,7 +116,7 @@ export const searchHandler = {
         success: false,
         error: '搜尋失敗',
       };
-      
+
       return new Response(JSON.stringify(errorResponse), {
         status: 500,
         headers: {

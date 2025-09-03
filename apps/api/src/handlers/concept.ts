@@ -23,7 +23,7 @@ const mockConcepts: ConceptData[] = [
         name: '聯發科',
         price: 850,
         change: 25,
-        changePercent: 0.030,
+        changePercent: 0.03,
         volume: 30000000,
         marketCap: 1350000000000,
         sector: '半導體',
@@ -57,14 +57,14 @@ const mockConcepts: ConceptData[] = [
 
 export const conceptHandler = {
   // 獲取所有概念股
-  async getConcepts(request: Request): Promise<Response> {
+  async getConcepts(): Promise<Response> {
     try {
       const response: ApiResponse<ConceptData[]> = {
         success: true,
         data: mockConcepts,
         message: '成功獲取概念股列表',
       };
-      
+
       return new Response(JSON.stringify(response), {
         status: 200,
         headers: {
@@ -76,7 +76,7 @@ export const conceptHandler = {
         success: false,
         error: '獲取概念股列表失敗',
       };
-      
+
       return new Response(JSON.stringify(errorResponse), {
         status: 500,
         headers: {
@@ -87,16 +87,17 @@ export const conceptHandler = {
   },
 
   // 獲取單一概念股
-  async getConcept(request: Request, env: any, ctx: any): Promise<Response> {
+  async getConcept(request: Request): Promise<Response> {
     try {
-      const conceptId = ctx.params?.id;
-      
+      const url = new URL(request.url);
+      const conceptId = url.searchParams.get('id');
+
       if (!conceptId) {
         const errorResponse: ApiResponse = {
           success: false,
           error: '概念股 ID 不能為空',
         };
-        
+
         return new Response(JSON.stringify(errorResponse), {
           status: 400,
           headers: {
@@ -104,15 +105,15 @@ export const conceptHandler = {
           },
         });
       }
-      
+
       const concept = mockConcepts.find(c => c.id === conceptId);
-      
+
       if (!concept) {
         const errorResponse: ApiResponse = {
           success: false,
           error: '找不到該概念股',
         };
-        
+
         return new Response(JSON.stringify(errorResponse), {
           status: 404,
           headers: {
@@ -120,13 +121,13 @@ export const conceptHandler = {
           },
         });
       }
-      
+
       const response: ApiResponse<ConceptData> = {
         success: true,
         data: concept,
         message: '成功獲取概念股資訊',
       };
-      
+
       return new Response(JSON.stringify(response), {
         status: 200,
         headers: {
@@ -138,7 +139,7 @@ export const conceptHandler = {
         success: false,
         error: '獲取概念股資訊失敗',
       };
-      
+
       return new Response(JSON.stringify(errorResponse), {
         status: 500,
         headers: {

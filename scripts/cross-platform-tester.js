@@ -5,19 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// 檢測作業系統
-function detectOS() {
-  const platform = process.platform;
-
-  if (platform === 'win32') {
-    return 'windows';
-  } else if (platform === 'darwin') {
-    return 'macos';
-  } else {
-    return 'unknown';
-  }
-}
-
 class CrossPlatformTester {
   constructor() {
     this.platform = os.platform();
@@ -41,7 +28,7 @@ class CrossPlatformTester {
       availableMemory: Math.round(os.totalmem() / 1024 / 1024 / 1024),
       cpuCores: os.cpus().length,
       tempDir: os.tmpdir(),
-      homeDir: os.homedir()
+      homeDir: os.homedir(),
     };
 
     Object.entries(env).forEach(([key, value]) => {
@@ -69,7 +56,7 @@ class CrossPlatformTester {
       '@types/jest',
       'ts-jest',
       'supertest',
-      'playwright'
+      'playwright',
     ];
 
     const missing = [];
@@ -77,7 +64,8 @@ class CrossPlatformTester {
     dependencies.forEach(dep => {
       try {
         const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        const hasDep = packageJson.devDependencies && packageJson.devDependencies[dep];
+        const hasDep =
+          packageJson.devDependencies && packageJson.devDependencies[dep];
 
         if (hasDep) {
           console.log(`✅ ${dep}: 已安裝`);
@@ -118,26 +106,26 @@ class CrossPlatformTester {
       preset: 'ts-jest',
       testEnvironment: 'node',
       roots: ['<rootDir>/apps', '<rootDir>/packages'],
-      testMatch: [
-        '**/__tests__/**/*.ts',
-        '**/?(*.)+(spec|test).ts'
-      ],
+      testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
       transform: {
-        '^.+\\.ts$': 'ts-jest'
+        '^.+\\.ts$': 'ts-jest',
       },
       collectCoverageFrom: [
         'apps/**/*.ts',
         'packages/**/*.ts',
         '!**/*.d.ts',
-        '!**/node_modules/**'
+        '!**/node_modules/**',
       ],
       coverageDirectory: 'coverage',
       coverageReporters: ['text', 'lcov', 'html'],
-      setupFilesAfterEnv: ['<rootDir>/scripts/test-setup.js']
+      setupFilesAfterEnv: ['<rootDir>/scripts/test-setup.js'],
     };
 
     const configPath = path.join(this.projectRoot, 'jest.config.js');
-    fs.writeFileSync(configPath, `module.exports = ${JSON.stringify(jestConfig, null, 2)};`);
+    fs.writeFileSync(
+      configPath,
+      `module.exports = ${JSON.stringify(jestConfig, null, 2)};`
+    );
 
     console.log('✅ Jest 配置創建完成');
     return configPath;
@@ -196,7 +184,11 @@ global.testUtils = {
       this.testResults.push({ type: 'unit', status: 'passed' });
       console.log('✅ 單元測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'unit', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'unit',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ 單元測試失敗:', error.message);
     }
   }
@@ -210,7 +202,11 @@ global.testUtils = {
       this.testResults.push({ type: 'integration', status: 'passed' });
       console.log('✅ 整合測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'integration', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'integration',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ 整合測試失敗:', error.message);
     }
   }
@@ -224,7 +220,11 @@ global.testUtils = {
       this.testResults.push({ type: 'e2e', status: 'passed' });
       console.log('✅ E2E 測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'e2e', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'e2e',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ E2E 測試失敗:', error.message);
     }
   }
@@ -238,7 +238,11 @@ global.testUtils = {
       this.testResults.push({ type: 'performance', status: 'passed' });
       console.log('✅ 性能測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'performance', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'performance',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ 性能測試失敗:', error.message);
     }
   }
@@ -261,10 +265,10 @@ global.testUtils = {
       const child = spawn(command, args, {
         stdio: 'inherit',
         shell: this.isWindows,
-        ...options
+        ...options,
       });
 
-      child.on('close', (code) => {
+      child.on('close', code => {
         if (code === 0) {
           resolve(code);
         } else {
@@ -272,7 +276,7 @@ global.testUtils = {
         }
       });
 
-      child.on('error', (error) => {
+      child.on('error', error => {
         reject(error);
       });
     });
@@ -300,12 +304,19 @@ global.testUtils = {
 
     // 保存測試報告
     const reportPath = path.join(this.projectRoot, 'test-report.json');
-    fs.writeFileSync(reportPath, JSON.stringify({
-      platform: this.platform,
-      timestamp: new Date().toISOString(),
-      results: this.testResults,
-      summary: { total, passed, failed }
-    }, null, 2));
+    fs.writeFileSync(
+      reportPath,
+      JSON.stringify(
+        {
+          platform: this.platform,
+          timestamp: new Date().toISOString(),
+          results: this.testResults,
+          summary: { total, passed, failed },
+        },
+        null,
+        2
+      )
+    );
 
     console.log(`\n📝 測試報告已保存到: ${reportPath}`);
   }

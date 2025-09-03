@@ -1,5 +1,5 @@
 // 內聯類型定義
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
@@ -46,7 +46,7 @@ const mockStocks: StockData[] = [
 
 export const stockHandler = {
   // 獲取所有股票
-  async getStocks(request: Request): Promise<Response> {
+  async getStocks(): Promise<Response> {
     try {
       const response: ApiResponse<StockData[]> = {
         success: true,
@@ -76,10 +76,10 @@ export const stockHandler = {
   },
 
   // 獲取單一股票
-  async getStock(request: Request, env: any, ctx: any): Promise<Response> {
+  async getStock(request: Request): Promise<Response> {
     try {
       const url = new URL(request.url);
-      const symbol = ctx.params?.symbol;
+      const symbol = url.searchParams.get('symbol');
 
       if (!symbol) {
         const errorResponse: ApiResponse = {

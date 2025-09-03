@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -10,7 +10,7 @@ interface ApiResponse<T> {
 interface UseApiOptions<T> {
   url: string;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  body?: any;
+  body?: unknown;
   headers?: Record<string, string>;
   immediate?: boolean;
   onSuccess?: (data: T) => void;
@@ -44,7 +44,11 @@ export function useApi<T>({
     setError(null);
 
     try {
-      const requestOptions: RequestInit = {
+      const requestOptions: {
+        method: string;
+        headers: Record<string, string>;
+        body?: string;
+      } = {
         method,
         headers: {
           'Content-Type': 'application/json',

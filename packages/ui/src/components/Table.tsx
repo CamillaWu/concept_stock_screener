@@ -16,14 +16,14 @@ interface TableProps<T> {
   className?: string;
 }
 
-const Table = <T extends Record<string, any>>({
+export function Table<T extends Record<string, unknown>>({
   data,
   columns,
   pagination = false,
   searchable = false,
   sortable = false,
   className = '',
-}: TableProps<T>) => {
+}: TableProps<T>) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -35,7 +35,7 @@ const Table = <T extends Record<string, any>>({
     if (!searchable || !searchTerm) return data;
 
     return data.filter((item: T) =>
-      Object.values(item).some(value =>
+      Object.values(item as Record<string, unknown>).some(value =>
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
@@ -82,7 +82,7 @@ const Table = <T extends Record<string, any>>({
             type="text"
             placeholder="搜尋..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
         </div>
@@ -96,7 +96,9 @@ const Table = <T extends Record<string, any>>({
                 <th
                   key={String(column.key)}
                   className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    sortable && column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                    sortable && column.sortable
+                      ? 'cursor-pointer hover:bg-gray-100'
+                      : ''
                   }`}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
@@ -114,8 +116,13 @@ const Table = <T extends Record<string, any>>({
             {paginatedData.map((row: T, index: number) => (
               <tr key={index} className="hover:bg-gray-50">
                 {columns.map((column: TableColumn<T>) => (
-                  <td key={String(column.key)} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {column.render ? column.render(row[column.key], row) : String(row[column.key])}
+                  <td
+                    key={String(column.key)}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                  >
+                    {column.render
+                      ? column.render(row[column.key], row)
+                      : String(row[column.key])}
                   </td>
                 ))}
               </tr>
@@ -127,7 +134,9 @@ const Table = <T extends Record<string, any>>({
       {pagination && totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            顯示第 {(currentPage - 1) * itemsPerPage + 1} 到 {Math.min(currentPage * itemsPerPage, filteredData.length)} 筆，共 {filteredData.length} 筆
+            顯示第 {(currentPage - 1) * itemsPerPage + 1} 到{' '}
+            {Math.min(currentPage * itemsPerPage, filteredData.length)} 筆，共{' '}
+            {filteredData.length} 筆
           </div>
           <div className="flex gap-2">
             <button
@@ -152,6 +161,4 @@ const Table = <T extends Record<string, any>>({
       )}
     </div>
   );
-};
-
-export default Table;
+}

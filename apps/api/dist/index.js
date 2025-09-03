@@ -11,115 +11,6 @@ var e = /* @__PURE__ */ __name(({ base: e2 = "", routes: r = [] } = {}) => ({ __
   }
 } }), "e");
 
-// src/handlers/stock.ts
-var mockStocks = [
-  {
-    symbol: "2330",
-    name: "\u53F0\u7A4D\u96FB",
-    price: 580,
-    change: 15,
-    changePercent: 0.026,
-    volume: 5e7,
-    marketCap: 15e12,
-    sector: "\u534A\u5C0E\u9AD4",
-    industry: "\u6676\u5713\u4EE3\u5DE5"
-  },
-  {
-    symbol: "2317",
-    name: "\u9D3B\u6D77",
-    price: 105,
-    change: -2,
-    changePercent: -0.019,
-    volume: 8e7,
-    marketCap: 145e10,
-    sector: "\u96FB\u5B50\u96F6\u7D44\u4EF6",
-    industry: "\u96FB\u5B50\u88FD\u9020\u670D\u52D9"
-  }
-];
-var stockHandler = {
-  // 獲取所有股票
-  async getStocks(request) {
-    try {
-      const response = {
-        success: true,
-        data: mockStocks,
-        message: "\u6210\u529F\u7372\u53D6\u80A1\u7968\u5217\u8868"
-      };
-      return new Response(JSON.stringify(response), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-    } catch (error) {
-      const errorResponse = {
-        success: false,
-        error: "\u7372\u53D6\u80A1\u7968\u5217\u8868\u5931\u6557"
-      };
-      return new Response(JSON.stringify(errorResponse), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-    }
-  },
-  // 獲取單一股票
-  async getStock(request, env, ctx) {
-    try {
-      const url = new URL(request.url);
-      const symbol = ctx.params?.symbol;
-      if (!symbol) {
-        const errorResponse = {
-          success: false,
-          error: "\u80A1\u7968\u4EE3\u78BC\u4E0D\u80FD\u70BA\u7A7A"
-        };
-        return new Response(JSON.stringify(errorResponse), {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-      }
-      const stock = mockStocks.find((s) => s.symbol === symbol);
-      if (!stock) {
-        const errorResponse = {
-          success: false,
-          error: "\u627E\u4E0D\u5230\u8A72\u80A1\u7968"
-        };
-        return new Response(JSON.stringify(errorResponse), {
-          status: 404,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-      }
-      const response = {
-        success: true,
-        data: stock,
-        message: "\u6210\u529F\u7372\u53D6\u80A1\u7968\u8CC7\u8A0A"
-      };
-      return new Response(JSON.stringify(response), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-    } catch (error) {
-      const errorResponse = {
-        success: false,
-        error: "\u7372\u53D6\u80A1\u7968\u8CC7\u8A0A\u5931\u6557"
-      };
-      return new Response(JSON.stringify(errorResponse), {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-    }
-  }
-};
-
 // src/handlers/concept.ts
 var mockConcepts = [
   {
@@ -176,7 +67,7 @@ var mockConcepts = [
 ];
 var conceptHandler = {
   // 獲取所有概念股
-  async getConcepts(request) {
+  async getConcepts() {
     try {
       const response = {
         success: true,
@@ -203,9 +94,10 @@ var conceptHandler = {
     }
   },
   // 獲取單一概念股
-  async getConcept(request, env, ctx) {
+  async getConcept(request) {
     try {
-      const conceptId = ctx.params?.id;
+      const url = new URL(request.url);
+      const conceptId = url.searchParams.get("id");
       if (!conceptId) {
         const errorResponse = {
           success: false,
@@ -361,25 +253,114 @@ var searchHandler = {
   }
 };
 
-// src/middleware/error.ts
-var errorHandler = /* @__PURE__ */ __name(async (request, env, ctx) => {
-  try {
-    return await ctx.next();
-  } catch (error) {
-    console.error("API Error:", error);
-    const errorResponse = {
-      success: false,
-      error: error instanceof Error ? error.message : "\u5167\u90E8\u4F3A\u670D\u5668\u932F\u8AA4",
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    return new Response(JSON.stringify(errorResponse), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
+// src/handlers/stock.ts
+var mockStocks = [
+  {
+    symbol: "2330",
+    name: "\u53F0\u7A4D\u96FB",
+    price: 580,
+    change: 15,
+    changePercent: 0.026,
+    volume: 5e7,
+    marketCap: 15e12,
+    sector: "\u534A\u5C0E\u9AD4",
+    industry: "\u6676\u5713\u4EE3\u5DE5"
+  },
+  {
+    symbol: "2317",
+    name: "\u9D3B\u6D77",
+    price: 105,
+    change: -2,
+    changePercent: -0.019,
+    volume: 8e7,
+    marketCap: 145e10,
+    sector: "\u96FB\u5B50\u96F6\u7D44\u4EF6",
+    industry: "\u96FB\u5B50\u88FD\u9020\u670D\u52D9"
   }
-}, "errorHandler");
+];
+var stockHandler = {
+  // 獲取所有股票
+  async getStocks() {
+    try {
+      const response = {
+        success: true,
+        data: mockStocks,
+        message: "\u6210\u529F\u7372\u53D6\u80A1\u7968\u5217\u8868"
+      };
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    } catch (error) {
+      const errorResponse = {
+        success: false,
+        error: "\u7372\u53D6\u80A1\u7968\u5217\u8868\u5931\u6557"
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    }
+  },
+  // 獲取單一股票
+  async getStock(request) {
+    try {
+      const url = new URL(request.url);
+      const symbol = url.searchParams.get("symbol");
+      if (!symbol) {
+        const errorResponse = {
+          success: false,
+          error: "\u80A1\u7968\u4EE3\u78BC\u4E0D\u80FD\u70BA\u7A7A"
+        };
+        return new Response(JSON.stringify(errorResponse), {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+      }
+      const stock = mockStocks.find((s) => s.symbol === symbol);
+      if (!stock) {
+        const errorResponse = {
+          success: false,
+          error: "\u627E\u4E0D\u5230\u8A72\u80A1\u7968"
+        };
+        return new Response(JSON.stringify(errorResponse), {
+          status: 404,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+      }
+      const response = {
+        success: true,
+        data: stock,
+        message: "\u6210\u529F\u7372\u53D6\u80A1\u7968\u8CC7\u8A0A"
+      };
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    } catch (error) {
+      const errorResponse = {
+        success: false,
+        error: "\u7372\u53D6\u80A1\u7968\u8CC7\u8A0A\u5931\u6557"
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+    }
+  }
+};
 
 // src/middleware/cors.ts
 var corsMiddleware = /* @__PURE__ */ __name((request) => {
@@ -395,8 +376,7 @@ var corsMiddleware = /* @__PURE__ */ __name((request) => {
 
 // src/index.ts
 var router = e();
-router.use(corsMiddleware);
-router.use(errorHandler);
+router.all("*", corsMiddleware);
 router.get("/api/health", () => new Response("OK", { status: 200 }));
 router.get("/api/stocks", stockHandler.getStocks);
 router.get("/api/stocks/:symbol", stockHandler.getStock);
