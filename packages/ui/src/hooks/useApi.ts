@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -37,6 +37,7 @@ export function useApi<T>({
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const immediateRef = useRef(immediate);
 
   const execute = useCallback(async () => {
     setLoading(true);
@@ -85,10 +86,11 @@ export function useApi<T>({
   }, []);
 
   useEffect(() => {
-    if (immediate) {
+    if (immediateRef.current) {
+      immediateRef.current = false; // 防止重複執行
       execute();
     }
-  }, [immediate, execute]);
+  }, []); // 只在組件掛載時執行一次
 
   return {
     data,

@@ -53,7 +53,8 @@ describe('Input 組件', () => {
 
     it('應該支援 password 類型', () => {
       render(<Input {...defaultProps} type="password" />);
-      expect(screen.getByRole('textbox')).toHaveAttribute('type', 'password');
+      const input = screen.getByDisplayValue('');
+      expect(input).toHaveAttribute('type', 'password');
     });
 
     it('應該支援 number 類型', () => {
@@ -112,7 +113,7 @@ describe('Input 組件', () => {
       render(<Input {...defaultProps} onKeyPress={onKeyPress} />);
 
       const input = screen.getByRole('textbox');
-      fireEvent.keyPress(input, { key: 'Enter', code: 'Enter' });
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
       expect(onKeyPress).toHaveBeenCalledTimes(1);
     });
@@ -122,7 +123,7 @@ describe('Input 組件', () => {
       render(<Input {...defaultProps} onKeyPress={onKeyPress} />);
 
       const input = screen.getByRole('textbox');
-      fireEvent.keyPress(input, { key: 'a', code: 'KeyA' });
+      fireEvent.keyDown(input, { key: 'a', code: 'KeyA' });
 
       expect(onKeyPress).toHaveBeenCalledTimes(1);
     });
