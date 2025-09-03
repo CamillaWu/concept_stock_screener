@@ -1,16 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# 運行類型檢查
-echo "🔍 運行類型檢查..."
-pnpm type-check
-
-# 運行 ESLint 檢查
-echo "🔍 運行 ESLint 檢查..."
-pnpm lint
-
-# 運行 Prettier 格式化
-echo "💅 運行 Prettier 格式化..."
-pnpm prettier --write .
-
-echo "✅ 所有檢查通過！"
+pnpm lint-staged
