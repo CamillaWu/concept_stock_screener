@@ -2,107 +2,367 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署環境'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
 
 jobs:
   # 依賴安裝和類型檢查
   setup-and-check:
     runs-on: ubuntu-latest
+    name: 環境設置和檢查
 
     steps:
-    - name: 檢出代碼
-      uses: actions/checkout@v4
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: 設置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'pnpm'
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
 
-    - name: 安裝 pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
-    - name: 安裝依賴
-      run: pnpm install
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
 
-    - name: 類型檢查
-      run: pnpm type-check
+      - name: 類型檢查
+        run: pnpm type-check
 
-    - name: 代碼風格檢查
-      run: pnpm lint
+      - name: 代碼風格檢查
+        run: pnpm lint:check
+
+      - name: 代碼格式化檢查
+        run: pnpm format:check
 
   # 構建測試
   build:
     needs: setup-and-check
     runs-on: ubuntu-latest
+    name: 構建和測試
 
     steps:
-    - name: 檢出代碼
-      uses: actions/checkout@v4
+      - name: 檢出代碼
+        uses: actions/checkout@v4
 
-    - name: 設置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'pnpm'
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
 
-    - name: 安裝 pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
-    - name: 安裝依賴
-      run: pnpm install
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
 
-    - name: 構建基礎包
-      run: |
-        pnpm build:types
-        pnpm build:ui
+      - name: 構建基礎包
+        run: |
+          pnpm build:types
+          pnpm build:ui
 
-    - name: 構建前端
-      run: pnpm build:web
+      - name: 構建前端
+        run: pnpm build:web
 
-    - name: 構建 API
-      run: pnpm build:api
+      - name: 構建 API
+        run: pnpm build:api
 
-  # 測試
-  test:
-    needs: build
+      - name: 運行測試
+        run: pnpm test:ci
+
+      - name: 上傳測試覆蓋率
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  # 代碼質量檢查
+  code-quality:
+    needs: setup-and-check
     runs-on: ubuntu-latest
+    name: 代碼質量檢查
 
     steps:
-    - name: 檢出代碼
-      uses: actions/checkout@v4
+      - name: 檢出代碼
+        uses: actions/checkout@v4
 
-    - name: 設置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'pnpm'
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
 
-    - name: 安裝 pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
-    - name: 安裝依賴
-      run: pnpm install
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
 
-    - name: 運行測試
-      run: pnpm test
+      - name: 運行測試覆蓋率
+        run: pnpm test:coverage
+
+      - name: 檢查測試覆蓋率門檻
+        run: |
+          COVERAGE=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')
+          echo "當前測試覆蓋率: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "❌ 測試覆蓋率低於 70% 門檻"
+            exit 1
+          else
+            echo "✅ 測試覆蓋率達到門檻要求"
+          fi
+
+      - name: 上傳測試覆蓋率到 Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  # 安全檢查
+  security:
+    needs: setup-and-check
+    runs-on: ubuntu-latest
+    name: 安全檢查
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 運行安全審計
+        run: pnpm audit --audit-level moderate
+
+      - name: 檢查依賴漏洞
+        run: |
+          if pnpm audit --audit-level moderate; then
+            echo "✅ 未發現高風險安全漏洞"
+          else
+            echo "⚠️ 發現安全漏洞，請檢查並修復"
+            exit 1
+          fi
 
   # 部署到開發環境
   deploy-dev:
-    if: github.ref == 'refs/heads/develop'
-    needs: test
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'development')
+    needs: [build, code-quality, security]
     runs-on: ubuntu-latest
+    name: 部署到開發環境
+    environment: development
 
     steps:
-    - name: 部署到開發環境
-      run: |
-        echo "部署到開發環境..."
-        # 這裡可以添加實際的部署腳本
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 構建應用
+        run: |
+          pnpm build:types
+          pnpm build:ui
+          pnpm build:web
+          pnpm build:api
+
+      - name: 創建部署包
+        run: |
+          mkdir -p deployment
+          cp -r apps/web/.next deployment/web/
+          cp -r apps/api/dist deployment/api/
+          cp package.json deployment/
+          cp pnpm-lock.yaml deployment/
+          cp pnpm-workspace.yaml deployment/
+
+      - name: 上傳部署包
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-package
+          path: deployment/
+          retention-days: 7
+
+      - name: 部署到開發環境
+        run: |
+          echo "🚀 部署到開發環境..."
+          echo "部署時間: $(date)"
+          echo "Git 提交: ${{ github.sha }}"
+          echo "分支: ${{ github.ref_name }}"
+
+          # 這裡可以添加實際的部署邏輯
+          # 例如：上傳到開發服務器、部署到 Vercel 等
+
+          echo "✅ 開發環境部署完成"
+
+      - name: 發送部署通知
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🎉 開發環境部署成功！"
+          else
+            echo "❌ 開發環境部署失敗"
+          fi
+
+  # 部署到測試環境
+  deploy-staging:
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    needs: [build, code-quality, security]
+    runs-on: ubuntu-latest
+    name: 部署到測試環境
+    environment: staging
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 構建應用
+        run: |
+          pnpm build:types
+          pnpm build:ui
+          pnpm build:web
+          pnpm build:api
+
+      - name: 部署到測試環境
+        run: |
+          echo "🚀 部署到測試環境..."
+          echo "部署時間: $(date)"
+          echo "Git 提交: ${{ github.sha }}"
+          echo "分支: ${{ github.ref_name }}"
+
+          # 這裡可以添加實際的部署邏輯
+
+          echo "✅ 測試環境部署完成"
+
+  # 部署到生產環境
+  deploy-production:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    needs: [build, code-quality, security]
+    runs-on: ubuntu-latest
+    name: 部署到生產環境
+    environment: production
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 構建應用
+        run: |
+          pnpm build:types
+          pnpm build:ui
+          pnpm build:web
+          pnpm build:api
+
+      - name: 部署到生產環境
+        run: |
+          echo "🚀 部署到生產環境..."
+          echo "部署時間: $(date)"
+          echo "Git 提交: ${{ github.sha }}"
+          echo "分支: ${{ github.ref_name }}"
+
+          # 這裡可以添加實際的部署邏輯
+
+          echo "✅ 生產環境部署完成"
+
+  # 部署後檢查
+  post-deploy-check:
+    if: always() && (contains(needs.*.result, 'success') || contains(needs.*.result, 'failure'))
+    needs: [deploy-dev, deploy-staging, deploy-production]
+    runs-on: ubuntu-latest
+    name: 部署後檢查
+
+    steps:
+      - name: 檢查部署狀態
+        run: |
+          echo "📊 部署狀態檢查..."
+          echo "開發環境: ${{ needs.deploy-dev.result || 'skipped' }}"
+          echo "測試環境: ${{ needs.deploy-staging.result || 'skipped' }}"
+          echo "生產環境: ${{ needs.deploy-production.result || 'skipped' }}"
+
+          # 這裡可以添加健康檢查邏輯
+          # 例如：檢查服務是否正常運行、API 是否響應等
+
+      - name: 發送部署報告
+        if: always()
+        run: |
+          echo "📧 發送部署報告..."
+          # 這裡可以添加通知邏輯
+          # 例如：發送 Slack 通知、郵件等

@@ -40,6 +40,10 @@
     "setup:macos": "./scripts/setup-macos.sh",
     "setup:windows": "./scripts/quick-start-windows.ps1",
     "quick:macos": "./scripts/quick-start-macos.sh",
+    "deploy:dev": "./scripts/deployment/deploy-dev.sh",
+    "deploy:dev:force": "./scripts/deployment/deploy-dev.sh --force",
+    "health:check": "./scripts/deployment/health-check-dev.sh",
+    "monitor:dev": "./scripts/deployment/monitor-dev.sh",
     "prepare": "husky install"
   },
   "devDependencies": {

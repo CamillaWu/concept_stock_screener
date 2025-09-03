@@ -1,0 +1,21 @@
+name: development
+on:
+  branch:
+    - develop
+  workflow_dispatch:
+
+environment:
+  name: development
+  url: https://dev.concept-stock-screener.com
+
+protection_rules:
+  required_reviewers: 0
+  required_status_checks: []
+  required_conversation_resolution: false
+  required_workflows: []
+  allow_deletions: false
+  allow_force_pushes: false
+  allow_fork_syncing: false
+  restrict_workflows: false
+  required_environment: false
+  wait_timer: 0
