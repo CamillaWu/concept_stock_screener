@@ -2,8 +2,7 @@ module.exports = {
   presets: [
     ['@babel/preset-env', {
       targets: {
-        node: 'current',
-        browsers: ['last 2 versions', 'safari >= 7']
+        node: 'current'
       }
     }],
     '@babel/preset-typescript',
@@ -11,5 +10,7 @@ module.exports = {
       runtime: 'automatic'
     }]
   ],
-  plugins: []
+  plugins: [
+    '@babel/plugin-transform-runtime'
+  ]
 };
