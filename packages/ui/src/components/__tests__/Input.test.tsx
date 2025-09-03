@@ -127,6 +127,46 @@ describe('Input 組件', () => {
 
       expect(onKeyPress).toHaveBeenCalledTimes(1);
     });
+
+    it('應該在按下鍵時調用 onKeyDown', () => {
+      const onKeyDown = jest.fn();
+      render(<Input {...defaultProps} onKeyDown={onKeyDown} />);
+
+      const input = screen.getByRole('textbox');
+      fireEvent.keyDown(input, { key: 'a', code: 'KeyA' });
+
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+    });
+
+    it('應該在 onKeyDown 時同時觸發 onKeyPress（向後兼容）', () => {
+      const onKeyPress = jest.fn();
+      const onKeyDown = jest.fn();
+      render(
+        <Input
+          {...defaultProps}
+          onKeyPress={onKeyPress}
+          onKeyDown={onKeyDown}
+        />
+      );
+
+      const input = screen.getByRole('textbox');
+      fireEvent.keyDown(input, { key: 'a', code: 'KeyA' });
+
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onKeyPress).toHaveBeenCalledTimes(1);
+    });
+
+    it('應該在只有 onKeyDown 時不觸發 onKeyPress', () => {
+      const onKeyPress = jest.fn();
+      const onKeyDown = jest.fn();
+      render(<Input {...defaultProps} onKeyDown={onKeyDown} />);
+
+      const input = screen.getByRole('textbox');
+      fireEvent.keyDown(input, { key: 'a', code: 'KeyA' });
+
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onKeyPress).not.toHaveBeenCalled();
+    });
   });
 
   describe('默認值', () => {

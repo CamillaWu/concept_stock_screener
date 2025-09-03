@@ -18,6 +18,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   const handleSearch = () => {
     if (query.trim()) {
       onSearch(query.trim());
+      setQuery(''); // 清空輸入框
     }
   };
 
@@ -28,7 +29,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   };
 
   return (
-    <div className={`flex gap-2 ${className}`}>
+    <div className={`flex gap-2 ${className}`} data-testid="search-box">
       <Input
         type="search"
         placeholder={placeholder}
