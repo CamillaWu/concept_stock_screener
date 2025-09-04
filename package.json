@@ -10,6 +10,7 @@
     "dev:pipeline": "pnpm --filter data-pipeline dev",
     "dev:all": "pnpm run --parallel dev:web dev:api",
     "build": "pnpm run build:types && pnpm run build:ui && pnpm run build:web && pnpm run build:api",
+    "vercel-build": "pnpm run build:web",
     "build:types": "pnpm --filter types build",
     "build:ui": "pnpm --filter ui build",
     "build:web": "pnpm --filter web build",
