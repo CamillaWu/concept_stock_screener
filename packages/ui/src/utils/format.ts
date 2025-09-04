@@ -33,6 +33,11 @@ export function formatNumber(value: number, decimals = 0): string {
  * 格式化日期
  */
 export function formatDate(date: Date | string, format = 'YYYY-MM-DD'): string {
+  // 處理 null 和 undefined
+  if (date === null || date === undefined) {
+    return '1970-01-01';
+  }
+
   const d = new Date(date);
 
   if (isNaN(d.getTime())) {

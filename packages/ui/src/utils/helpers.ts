@@ -147,8 +147,17 @@ export function truncateText(
   maxLength: number,
   suffix = '...'
 ): string {
+  // 如果 maxLength 小於等於 suffix 長度，直接返回 suffix
+  if (maxLength <= suffix.length) {
+    return suffix;
+  }
+
+  // 如果文本長度小於等於最大長度，直接返回原文本
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength - suffix.length) + suffix;
+
+  // 計算可用於文本的長度
+  const availableLength = maxLength - suffix.length;
+  return text.substring(0, availableLength) + suffix;
 }
 
 /**
@@ -162,5 +171,12 @@ export function toCamelCase(str: string): string {
  * 轉換為短橫線命名
  */
 export function toKebabCase(str: string): string {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .replace(/([A-Z]+)(?=[A-Z]|$)/g, match => {
+      // 將連續大寫字母分割並用短橫線連接
+      return match.split('').join('-');
+    })
+    .toLowerCase();
 }
