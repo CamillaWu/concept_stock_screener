@@ -46,7 +46,7 @@ const mockStocks: StockData[] = [
 
 export const stockHandler = {
   // 獲取所有股票
-  async getStocks(): Promise<Response> {
+  async getStocks(_request: Request): Promise<Response> {
     try {
       const response: ApiResponse<StockData[]> = {
         success: true,

@@ -57,7 +57,7 @@ const mockConcepts: ConceptData[] = [
 
 export const conceptHandler = {
   // 獲取所有概念股
-  async getConcepts(): Promise<Response> {
+  async getConcepts(_request: Request): Promise<Response> {
     try {
       const response: ApiResponse<ConceptData[]> = {
         success: true,

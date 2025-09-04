@@ -10,18 +10,12 @@ const router = Router();
 // 中間件
 router.all('*', corsMiddleware);
 
-// 路由
-// @ts-ignore - 跳過類型檢查以解決 itty-router 兼容性問題
+// 路由 - 使用正確的類型定義
 router.get('/api/health', () => new Response('OK', { status: 200 }));
-// @ts-ignore - 跳過類型檢查以解決 itty-router 兼容性問題
 router.get('/api/stocks', stockHandler.getStocks);
-// @ts-ignore - 跳過類型檢查以解決 itty-router 兼容性問題
 router.get('/api/stocks/:symbol', stockHandler.getStock);
-// @ts-ignore - 跳過類型檢查以解決 itty-router 兼容性問題
 router.get('/api/concepts', conceptHandler.getConcepts);
-// @ts-ignore - 跳過類型檢查以解決 itty-router 兼容性問題
 router.get('/api/concepts/:id', conceptHandler.getConcept);
-// @ts-ignore - 跳過類型檢查以解決 itty-router 兼容性問題
 router.get('/api/search', searchHandler.search);
 
 // 404 處理
