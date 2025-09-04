@@ -222,7 +222,7 @@ jobs:
           cp pnpm-workspace.yaml deployment/
 
       - name: 上傳部署包
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deployment-package
           path: deployment/
