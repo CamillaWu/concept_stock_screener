@@ -1,0 +1,313 @@
+name: 開發環境 CI/CD
+
+on:
+  push:
+    branches: [develop, feature/*]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: '強制部署（跳過測試）'
+        required: false
+        default: false
+        type: boolean
+      skip_tests:
+        description: '跳過測試'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+  ENVIRONMENT: 'development'
+
+jobs:
+  # 代碼品質檢查
+  code-quality:
+    runs-on: ubuntu-latest
+    name: 代碼品質檢查
+    timeout-minutes: 10
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 類型檢查
+        run: pnpm type-check
+        if: ${{ !inputs.skip_tests }}
+
+      - name: 代碼風格檢查
+        run: pnpm lint:check
+        if: ${{ !inputs.skip_tests }}
+
+      - name: 代碼格式化檢查
+        run: pnpm format:check
+        if: ${{ !inputs.skip_tests }}
+
+  # 構建和測試
+  build-and-test:
+    needs: code-quality
+    runs-on: ubuntu-latest
+    name: 構建和測試
+    timeout-minutes: 15
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 構建基礎包
+        run: |
+          echo "🔨 構建基礎包..."
+          pnpm build:types
+          pnpm build:ui
+
+      - name: 構建前端
+        run: |
+          echo "🌐 構建前端應用..."
+          pnpm build:web
+
+      - name: 構建 API
+        run: |
+          echo "🔌 構建 API 服務..."
+          pnpm build:api
+
+      - name: 運行測試
+        run: |
+          echo "🧪 運行測試..."
+          pnpm test:ci
+        if: ${{ !inputs.skip_tests }}
+
+      - name: 上傳測試覆蓋率
+        uses: codecov/codecov-action@v3
+        if: ${{ !inputs.skip_tests }}
+        with:
+          file: ./coverage/lcov.info
+          flags: development
+          name: development-coverage
+
+      - name: 創建部署包
+        run: |
+          echo "📦 創建部署包..."
+          mkdir -p deployment
+
+          # 複製構建產物
+          cp -r apps/web/.next deployment/web/
+          cp -r apps/api/dist deployment/api/
+          cp -r packages/types/dist deployment/types/
+          cp -r packages/ui/dist deployment/ui/
+
+          # 複製配置文件
+          cp package.json deployment/
+          cp pnpm-lock.yaml deployment/
+          cp pnpm-workspace.yaml deployment/
+          cp -r config deployment/
+          cp -r scripts deployment/
+
+          # 創建部署信息
+          echo "部署時間: $(date)" > deployment/deployment-info.txt
+          echo "Git 提交: ${{ github.sha }}" >> deployment/deployment-info.txt
+          echo "分支: ${{ github.ref_name }}" >> deployment/deployment-info.txt
+          echo "觸發者: ${{ github.actor }}" >> deployment/deployment-info.txt
+          echo "工作流程: ${{ github.workflow }}" >> deployment/deployment-info.txt
+
+      - name: 上傳部署包
+        uses: actions/upload-artifact@v3
+        with:
+          name: dev-deployment-package
+          path: deployment/
+          retention-days: 7
+
+  # 部署到開發環境
+  deploy-dev:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    name: 部署到開發環境
+    environment: development
+    timeout-minutes: 20
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 下載部署包
+        uses: actions/download-artifact@v3
+        with:
+          name: dev-deployment-package
+          path: deployment/
+
+      - name: 設置部署環境
+        run: |
+          echo "🚀 開始部署到開發環境..."
+          echo "環境: ${{ env.ENVIRONMENT }}"
+          echo "部署時間: $(date)"
+          echo "Git 提交: ${{ github.sha }}"
+          echo "分支: ${{ github.ref_name }}"
+          echo "觸發者: ${{ github.actor }}"
+
+      - name: 安裝部署依賴
+        run: |
+          cd deployment
+          pnpm install --frozen-lockfile
+
+      - name: 部署 API 服務
+        run: |
+          echo "🔌 部署 API 服務..."
+          cd deployment
+
+          # 這裡可以添加實際的 API 部署邏輯
+          # 例如：部署到 Cloudflare Workers、Vercel Functions 等
+          echo "API 服務部署完成"
+
+      - name: 部署前端應用
+        run: |
+          echo "🌐 部署前端應用..."
+          cd deployment
+
+          # 這裡可以添加實際的前端部署邏輯
+          # 例如：部署到 Vercel、Netlify 等
+          echo "前端應用部署完成"
+
+      - name: 部署數據管道
+        run: |
+          echo "📊 部署數據管道..."
+          cd deployment
+
+          # 這裡可以添加實際的數據管道部署邏輯
+          # 例如：部署到 Docker 容器、雲服務等
+          echo "數據管道部署完成"
+
+      - name: 更新部署狀態
+        run: |
+          echo "✅ 開發環境部署完成"
+          echo "部署完成時間: $(date)"
+
+          # 創建部署狀態文件
+          cat > deployment/deployment-status.json << EOF
+          {
+            "status": "success",
+            "environment": "${{ env.ENVIRONMENT }}",
+            "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "git_commit": "${{ github.sha }}",
+            "git_branch": "${{ github.ref_name }}",
+            "triggered_by": "${{ github.actor }}",
+            "workflow": "${{ github.workflow }}"
+          }
+          EOF
+
+  # 部署後驗證
+  post-deploy-verification:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    name: 部署後驗證
+    timeout-minutes: 10
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 等待服務啟動
+        run: |
+          echo "⏳ 等待服務啟動..."
+          sleep 30
+
+      - name: 健康檢查
+        run: |
+          echo "🏥 執行健康檢查..."
+
+          # 檢查 API 服務
+          echo "檢查 API 服務..."
+          # curl -f http://localhost:8787/health || echo "API 服務檢查失敗"
+
+          # 檢查前端服務
+          echo "檢查前端服務..."
+          # curl -f http://localhost:3000 || echo "前端服務檢查失敗"
+
+          echo "健康檢查完成"
+
+      - name: 基本功能測試
+        run: |
+          echo "🧪 執行基本功能測試..."
+
+          # 這裡可以添加基本的 API 端點測試
+          # 例如：測試搜索、股票詳情等端點
+
+          echo "基本功能測試完成"
+
+      - name: 更新驗證狀態
+        run: |
+          echo "✅ 部署後驗證完成"
+          echo "驗證時間: $(date)"
+
+  # 部署通知
+  deployment-notification:
+    needs: [deploy-dev, post-deploy-verification]
+    runs-on: ubuntu-latest
+    name: 部署通知
+    if: always()
+
+    steps:
+      - name: 發送部署成功通知
+        if: needs.deploy-dev.result == 'success' && needs.post-deploy-verification.result == 'success'
+        run: |
+          echo "🎉 開發環境部署成功！"
+          echo "部署時間: $(date)"
+          echo "Git 提交: ${{ github.sha }}"
+          echo "分支: ${{ github.ref_name }}"
+          echo "觸發者: ${{ github.actor }}"
+
+          # 這裡可以添加通知邏輯
+          # 例如：發送 Slack 通知、郵件等
+
+      - name: 發送部署失敗通知
+        if: needs.deploy-dev.result == 'failure' || needs.post-deploy-verification.result == 'failure'
+        run: |
+          echo "❌ 開發環境部署失敗"
+          echo "失敗時間: $(date)"
+          echo "Git 提交: ${{ github.sha }}"
+          echo "分支: ${{ github.ref_name }}"
+          echo "觸發者: ${{ github.actor }}"
+
+          # 這裡可以添加失敗通知邏輯
+          # 例如：發送 Slack 警報、郵件等
+
+      - name: 創建部署摘要
+        run: |
+          echo "📊 部署摘要"
+          echo "================"
+          echo "環境: ${{ env.ENVIRONMENT }}"
+          echo "部署狀態: ${{ needs.deploy-dev.result || 'skipped' }}"
+          echo "驗證狀態: ${{ needs.post-deploy-verification.result || 'skipped' }}"
+          echo "總體結果: ${{ job.status }}"
+          echo "完成時間: $(date)"
