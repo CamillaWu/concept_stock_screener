@@ -19,7 +19,7 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '10'
 
 jobs:
   # 依賴安裝和類型檢查
@@ -37,7 +37,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
@@ -70,7 +69,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
@@ -116,7 +114,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
@@ -162,7 +159,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
@@ -200,7 +196,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
@@ -270,7 +265,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
@@ -314,7 +308,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
       - name: 安裝 pnpm
         uses: pnpm/action-setup@v2
