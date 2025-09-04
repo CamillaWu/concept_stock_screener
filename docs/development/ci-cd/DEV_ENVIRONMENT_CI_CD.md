@@ -2,7 +2,7 @@
 
 ## 📋 概述
 
-本文檔詳細說明概念股篩選系統開發環境的 CI/CD 流程配置，包括自動化構建、測試、部署和監控。
+本文檔詳細說明概念股篩選系統開發環境的 CI/CD 流程配置，包括自動化構建、測試、部署和監控。系統已簡化為兩個環境：開發環境和生產環境。
 
 ## 🏗️ 架構設計
 
@@ -10,11 +10,16 @@
 
 ```
 開發環境 CI/CD 流程
-├── 代碼品質檢查 (code-quality)
-├── 構建和測試 (build-and-test)
-├── 部署到開發環境 (deploy-dev)
-├── 部署後驗證 (post-deploy-verification)
-└── 部署通知 (deployment-notification)
+├── CI 工作流程 (ci.yml)
+│   ├── 代碼品質檢查 (code-quality)
+│   ├── 構建和測試 (build-and-test)
+│   └── 上傳構建產物 (upload-artifacts)
+├── 開發環境部署 (dev-deploy.yml)
+│   ├── 部署到開發環境 (deploy-dev)
+│   └── 部署後驗證 (post-deploy-verification)
+└── 生產環境部署 (production-deploy.yml)
+    ├── 部署到生產環境 (deploy-production)
+    └── 部署後驗證 (post-deploy-verification)
 ```
 
 ### 1.2 觸發條件
