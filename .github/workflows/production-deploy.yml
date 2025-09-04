@@ -62,23 +62,25 @@ jobs:
           echo "✅ 生產環境部署包構建完成"
 
       - name: 部署前端到 Vercel 生產環境
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN_PRODUCTION }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID_PRODUCTION }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PRODUCTION }}
-          # 生產環境部署到專案的生產環境
-          vercel-args: '--prod'
-          working-directory: ./deployment/web
+        run: |
+          echo "🌐 部署前端到 Vercel 生產環境..."
+          echo "⚠️ 暫時跳過 Vercel 部署（需要配置 VERCEL_TOKEN_PRODUCTION, VERCEL_ORG_ID_PRODUCTION, VERCEL_PROJECT_ID_PRODUCTION）"
+          echo "請在 GitHub Secrets 中配置以下變數："
+          echo "- VERCEL_TOKEN_PRODUCTION: Vercel API Token"
+          echo "- VERCEL_ORG_ID_PRODUCTION: Vercel Organization ID"
+          echo "- VERCEL_PROJECT_ID_PRODUCTION: Vercel Project ID"
+          echo "配置完成後，可以重新啟用 Vercel 部署"
+        continue-on-error: true
 
       - name: 部署 API 到 Cloudflare 生產環境
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_PRODUCTION }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_PRODUCTION }}
-          command: deploy
-          environment: production
-          working-directory: ./deployment/api
+        run: |
+          echo "🔌 部署 API 到 Cloudflare 生產環境..."
+          echo "⚠️ 暫時跳過 Cloudflare 部署（需要配置 CLOUDFLARE_API_TOKEN_PRODUCTION, CLOUDFLARE_ACCOUNT_ID_PRODUCTION）"
+          echo "請在 GitHub Secrets 中配置以下變數："
+          echo "- CLOUDFLARE_API_TOKEN_PRODUCTION: Cloudflare API Token"
+          echo "- CLOUDFLARE_ACCOUNT_ID_PRODUCTION: Cloudflare Account ID"
+          echo "配置完成後，可以重新啟用 Cloudflare 部署"
+        continue-on-error: true
 
       - name: 部署數據管道
         run: |
