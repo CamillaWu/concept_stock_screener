@@ -108,7 +108,7 @@ jobs:
           EOF
 
       - name: 上傳快速部署包
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: quick-dev-deployment
           path: quick-deployment/
@@ -127,7 +127,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 下載快速部署包
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: quick-dev-deployment
           path: quick-deployment/

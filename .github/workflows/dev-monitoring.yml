@@ -229,7 +229,7 @@ jobs:
 
     steps:
       - name: 下載監控報告
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: monitoring-reports
           path: reports/
@@ -279,7 +279,7 @@ jobs:
           EOF
 
       - name: 上傳綜合報告
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: comprehensive-monitoring-report
           path: comprehensive-monitoring-report.md
