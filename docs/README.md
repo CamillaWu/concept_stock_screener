@@ -2,41 +2,51 @@
 
 歡迎來到概念股自動化篩選系統的項目文檔！本目錄包含了項目的完整文檔，幫助您了解系統架構、開發進度和使用方法。
 
-## 📁 文檔結構
+## 📚 文檔結構
 
-### 🎯 核心文檔
+### 🚀 快速開始
 
-- **[PRD]概念股自動化篩選系統.md** - 產品需求文檔，定義產品目標、功能和規格
-- **API_DOCUMENTATION.md** - 完整的 API 文檔，包含所有端點和數據模型
+- **[快速開始指南](quick-start/QUICK_START_GUIDE.md)** - 5分鐘內啟動項目
+- **[用戶手冊](user/USER_GUIDE.md)** - 系統功能和使用說明
 
-### 🚀 開發文檔
+### 🏗️ 開發文檔
 
-- **PROJECT_PROGRESS_TRACKER.md** - 主要進度追蹤，包含整體進度概覽和當前狀態
-- **PROJECT_MILESTONES.md** - 項目里程碑規劃，詳細的階段目標和交付物
-- **DEVELOPMENT_TASKS.md** - 開發任務清單，詳細的待辦事項和行動計劃
-- **TECHNICAL_ISSUES.md** - 技術問題記錄，已解決的問題和經驗教訓
+- **[架構設計](development/architecture/ARCHITECTURE_RESTRUCTURE.md)** - 系統架構和設計原則
+- **[技術棧配置](development/architecture/TECH_STACK_CONFIGURATION.md)** - 開發環境和工具配置
+- **[開發任務](development/DEVELOPMENT_TASKS.md)** - 開發任務清單和進度
 
-### 🏗️ 架構文檔
+### 🔧 技術實現
 
-- **ARCHITECTURE_RESTRUCTURE.md** - 架構重構進度，Monorepo 結構和依賴管理
-- **CI_CD_PIPELINE_DESIGN.md** - CI/CD 流程設計，自動化測試和部署策略
-- **CORE_FEATURES_DEVELOPMENT.md** - 核心功能開發，AI 集成和用戶界面
-- **CROSS_PLATFORM_DEVELOPMENT.md** - 跨平台開發支持，Windows 和 macOS 腳本
-- **RAG_SYSTEM_INTEGRATION.md** - RAG 系統集成，AI 驅動的信息檢索
-- **TECH_STACK_CONFIGURATION.md** - 技術棧配置，前端、後端和開發工具
+- **[核心功能開發](development/features/CORE_FEATURES_DEVELOPMENT.md)** - 主要功能實現詳情
+- **[RAG 系統整合](development/features/RAG_SYSTEM_INTEGRATION.md)** - AI 檢索增強生成系統
+- **[測試策略](development/testing/TESTING_STRATEGY.md)** - 測試方法和覆蓋率
 
-### 📚 用戶文檔
+### 🌐 跨平台開發
 
-- **QUICK_START_GUIDE.md** - 快速開始指南，環境設置和開發教程
-- **USER_GUIDE.md** - 用戶使用指南，功能說明和最佳實踐
+- **[跨平台開發支援](development/platform/CROSS_PLATFORM_DEVELOPMENT.md)** - Windows 和 macOS 環境配置
+- **[Windows 環境修復](development/platform/WINDOWS_ENVIRONMENT_FIX_SUMMARY.md)** - 環境問題解決記錄
 
-### 🚢 部署文檔
+### 🔄 流程和部署
 
-- **DEPLOYMENT_GUIDE.md** - 完整部署指南，環境配置和部署策略
+- **[CI/CD 流程設計](development/ci-cd/CI_CD_PIPELINE_DESIGN.md)** - 持續整合和部署流程
+- **[CI/CD 進度總結](development/ci-cd/CI_CD_PROGRESS_SUMMARY.md)** - 建制進度和完成狀態
+- **[部署指南](deployment/DEPLOYMENT_GUIDE.md)** - 生產環境部署說明
+- **[開發環境部署](deployment/DEVELOPMENT_DEPLOYMENT.md)** - 本地開發環境部署
 
-### 📋 歸檔文檔
+### 📡 API 文檔
 
-- **[功能&流程]概念股自動化篩選系統 - 功能細節與流程規格書.md** - 功能規格書（已歸檔）
+- **[API 文檔](api/API_DOCUMENTATION.md)** - 完整的 API 接口說明
+
+### 📊 項目管理
+
+- **[項目里程碑](development/PROJECT_MILESTONES.md)** - 項目發展階段和目標
+- **[進度追蹤](development/PROJECT_PROGRESS_TRACKER.md)** - 開發進度追蹤
+- **[修改協調](development/MODIFICATION_COORDINATION.md)** - 代碼修改協調流程
+
+### 🐛 問題和修復
+
+- **[技術問題](development/issues/TECHNICAL_ISSUES.md)** - 已知技術問題和解決方案
+- **[ESLint 修復總結](development/issues/ESLINT_FIX_SUMMARY.md)** - 代碼質量問題修復記錄
 
 ## 🔄 進度追蹤整合
 

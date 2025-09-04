@@ -3,6 +3,7 @@
 ## 1. 技術棧選擇原則
 
 ### 1.1 選擇標準
+
 - **穩定性優先**：選擇成熟、穩定的技術
 - **開發效率**：提升開發速度和代碼品質
 - **維護成本**：降低長期維護成本
@@ -10,6 +11,7 @@
 - **社區支持**：有活躍的社區和豐富的資源
 
 ### 1.2 重構原則
+
 - **完全重頭開始**：除了必要文件，所有代碼重新開發
 - **統一技術棧**：避免技術碎片化
 - **現代化架構**：採用最新的最佳實踐
@@ -18,7 +20,9 @@
 ## 2. 前端技術棧
 
 ### 2.1 Next.js 14
+
 #### **選擇原因**
+
 - **App Router**：最新的路由系統，支援 React 18 特性
 - **TypeScript 原生支持**：完整的類型安全
 - **SSR/SSG 支持**：提升 SEO 和首屏載入速度
@@ -26,6 +30,7 @@
 - **開發體驗**：熱重載、快速刷新等
 
 #### **配置要求**
+
 ```json
 // package.json
 {
@@ -43,32 +48,36 @@
 ```
 
 #### **基礎配置**
+
 ```javascript
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    appDir: true
+    appDir: true,
   },
   typescript: {
-    ignoreBuildErrors: false
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: false
-  }
-}
+    ignoreDuringBuilds: false,
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
 ```
 
 ### 2.2 TypeScript 5.0+
+
 #### **選擇原因**
+
 - **類型安全**：減少運行時錯誤
 - **開發體驗**：智能提示、重構支持
 - **代碼品質**：強制類型檢查
 - **團隊協作**：清晰的接口定義
 
 #### **配置要求**
+
 ```json
 // tsconfig.json
 {
@@ -99,13 +108,16 @@ module.exports = nextConfig
 ```
 
 ### 2.3 Tailwind CSS 3.3+
+
 #### **選擇原因**
+
 - **原子化 CSS**：快速構建界面
 - **響應式設計**：內建響應式工具
 - **設計系統**：一致的設計語言
 - **開發效率**：減少 CSS 編寫時間
 
 #### **配置要求**
+
 ```javascript
 // tailwind.config.js
 /** @type {import('tailwindcss').Config} */
@@ -122,18 +134,20 @@ module.exports = {
           50: '#eff6ff',
           500: '#3b82f6',
           900: '#1e3a8a',
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],
-}
+};
 ```
 
 ## 3. 後端技術棧
 
 ### 3.1 Cloudflare Workers
+
 #### **選擇原因**
+
 - **邊緣計算**：全球低延遲
 - **無服務器**：自動擴展，按使用計費
 - **TypeScript 支持**：原生 TypeScript 支持
@@ -141,6 +155,7 @@ module.exports = {
 - **基礎額度**：每日 10 萬次請求基礎額度
 
 #### **配置要求**
+
 ```toml
 # wrangler.toml
 name = "concept-stock-api"
@@ -160,6 +175,7 @@ preview_id = "your-preview-kv-namespace-id"
 ```
 
 #### **依賴配置**
+
 ```json
 // package.json
 {
@@ -173,7 +189,9 @@ preview_id = "your-preview-kv-namespace-id"
 ```
 
 ### 3.2 類型定義
+
 #### **API 類型**
+
 ```typescript
 // packages/types/src/api/index.ts
 export interface StockConcept {
@@ -203,13 +221,16 @@ export interface StockAnalysisResult {
 ## 4. 數據管道技術棧
 
 ### 4.1 Python 3.11+
+
 #### **選擇原因**
+
 - **AI/ML 生態**：豐富的機器學習庫
 - **RAG 支持**：LangChain、Chroma 等
 - **數據處理**：Pandas、NumPy 等
 - **社區支持**：活躍的 AI 開發社區
 
 #### **環境配置**
+
 ```python
 # requirements.txt
 fastapi==0.104.1
@@ -223,13 +244,16 @@ httpx==0.25.2
 ```
 
 ### 4.2 FastAPI
+
 #### **選擇原因**
+
 - **現代化框架**：基於 Python 3.6+ 類型提示
 - **自動文檔**：OpenAPI/Swagger 自動生成
 - **高性能**：基於 Starlette 和 Pydantic
 - **類型安全**：完整的類型檢查
 
 #### **基礎配置**
+
 ```python
 # main.py
 from fastapi import FastAPI
@@ -253,13 +277,16 @@ app.add_middleware(
 ## 5. 開發工具配置
 
 ### 5.1 包管理器：pnpm
+
 #### **選擇原因**
+
 - **效能優越**：比 npm 快 2-3 倍
 - **磁盤空間**：節省大量磁盤空間
 - **Monorepo 支持**：原生工作區支持
 - **依賴管理**：更嚴格的依賴管理
 
 #### **配置要求**
+
 ```yaml
 # pnpm-workspace.yaml
 packages:
@@ -283,6 +310,7 @@ packages:
 ### 5.2 代碼品質工具
 
 #### **ESLint**
+
 ```javascript
 // .eslintrc.js
 module.exports = {
@@ -290,18 +318,19 @@ module.exports = {
   extends: [
     'next/core-web-vitals',
     '@typescript-eslint/recommended',
-    'prettier'
+    'prettier',
   ],
   rules: {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-explicit-any': 'warn',
     'prefer-const': 'error',
-    'no-var': 'error'
-  }
-}
+    'no-var': 'error',
+  },
+};
 ```
 
 #### **Prettier**
+
 ```json
 // .prettierrc
 {
@@ -315,6 +344,7 @@ module.exports = {
 ```
 
 #### **Husky + lint-staged**
+
 ```json
 // package.json
 {
@@ -323,10 +353,7 @@ module.exports = {
     "lint-staged": "^15.0.0"
   },
   "lint-staged": {
-    "*.{js,ts,jsx,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "*.{js,ts,jsx,tsx}": ["eslint --fix", "prettier --write"]
   }
 }
 ```
@@ -334,6 +361,7 @@ module.exports = {
 ## 6. 環境配置
 
 ### 6.1 環境變數
+
 ```bash
 # .env.local
 NEXT_PUBLIC_API_URL=http://localhost:8787
@@ -345,6 +373,7 @@ NEXT_PUBLIC_APP_ENV=production
 ```
 
 ### 6.2 開發環境配置
+
 ```json
 // .vscode/settings.json
 {
@@ -360,11 +389,13 @@ NEXT_PUBLIC_APP_ENV=production
 ## 7. 依賴管理策略
 
 ### 7.1 版本鎖定
+
 - **生產依賴**：使用 `^` 允許補丁和次要版本更新
 - **開發依賴**：使用 `~` 只允許補丁版本更新
 - **核心依賴**：鎖定特定版本確保穩定性
 
 ### 7.2 依賴更新策略
+
 ```bash
 # 檢查過時依賴
 pnpm outdated
@@ -379,6 +410,7 @@ pnpm audit --fix
 ## 8. 跨平台兼容性
 
 ### 8.1 macOS 開發環境
+
 ```bash
 # 安裝 Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -394,6 +426,7 @@ brew install python@3.11
 ```
 
 ### 8.2 Windows 開發環境
+
 ```powershell
 # 安裝 Chocolatey
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
@@ -411,21 +444,23 @@ choco install python
 ## 9. 性能優化配置
 
 ### 9.1 Next.js 優化
+
 ```javascript
 // next.config.js
 const nextConfig = {
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ['@/components']
+    optimizePackageImports: ['@/components'],
   },
   images: {
     domains: ['your-domain.com'],
-    formats: ['image/webp', 'image/avif']
-  }
-}
+    formats: ['image/webp', 'image/avif'],
+  },
+};
 ```
 
 ### 9.2 TypeScript 優化
+
 ```json
 // tsconfig.json
 {
@@ -440,6 +475,7 @@ const nextConfig = {
 ## 10. 安全配置
 
 ### 10.1 環境變數安全
+
 ```bash
 # .env.example
 NEXT_PUBLIC_API_URL=
@@ -448,6 +484,7 @@ CLOUDFLARE_API_TOKEN=
 ```
 
 ### 10.2 依賴安全
+
 ```bash
 # 定期檢查安全漏洞
 pnpm audit
@@ -459,18 +496,21 @@ pnpm audit --fix
 ## 11. 成功標準
 
 ### 11.1 技術棧完整性
+
 - ✅ 所有技術選擇明確且有充分理由
 - ✅ 配置文件完整且正確
 - ✅ 依賴關係清晰且無衝突
 - ✅ 跨平台兼容性驗證通過
 
 ### 11.2 開發效率
+
 - ✅ 開發環境快速啟動
 - ✅ 構建流程穩定快速
 - ✅ 代碼品質工具正常工作
 - ✅ 熱重載和快速刷新正常
 
 ### 11.3 維護性
+
 - ✅ 技術棧現代化且穩定
 - ✅ 配置集中管理
 - ✅ 依賴版本控制

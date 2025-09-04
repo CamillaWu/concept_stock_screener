@@ -1,14 +1,16 @@
-# RAG 系統整合完整文檔 
+# RAG 系統整合完整文檔
 
 ## 1. RAG 系統設計原則
 
 ### 1.1 設計目標
+
 - **智能檢索**：基於語義的準確信息檢索
 - **實時更新**：支持動態數據更新和重新向量化
 - **高效查詢**：快速響應用戶查詢，支持複雜語義理解
 - **可擴展性**：支持多種數據源和 AI 模型
 
 ### 1.2 核心原則
+
 - **檢索優先**：先檢索相關信息，再生成答案
 - **上下文感知**：充分利用檢索到的上下文信息
 - **事實性保證**：基於真實數據生成答案，避免幻覺
@@ -17,6 +19,7 @@
 ## 2. 系統架構設計
 
 ### 2.1 整體架構圖
+
 ```
 用戶查詢
     ↓
@@ -34,6 +37,7 @@ Gemini 2.5 Pro 生成
 ```
 
 ### 2.2 組件架構
+
 ```
 RAG System
 ├── Data Ingestion Layer (數據攝入層)
@@ -65,6 +69,7 @@ RAG System
 ## 3. Gemini 2.5 Pro 整合
 
 ### 3.1 模型配置
+
 ```typescript
 // Gemini 配置接口
 interface GeminiConfig {
@@ -96,6 +101,7 @@ interface GeminiResponse {
 ```
 
 ### 3.2 Gemini 服務封裝
+
 ```typescript
 // Gemini 服務類
 class GeminiService {
@@ -117,7 +123,8 @@ class GeminiService {
       model: options?.model || this.config.model,
       generationConfig: {
         temperature: options?.temperature || this.config.temperature,
-        maxOutputTokens: options?.maxOutputTokens || this.config.maxOutputTokens,
+        maxOutputTokens:
+          options?.maxOutputTokens || this.config.maxOutputTokens,
         topP: options?.topP || this.config.topP,
         topK: options?.topK || this.config.topK,
       },
@@ -126,7 +133,7 @@ class GeminiService {
 
     const fullPrompt = this.buildPrompt(prompt, context);
     const result = await model.generateContent(fullPrompt);
-    
+
     return {
       text: result.response.text(),
       usageMetadata: result.response.usageMetadata,
@@ -137,7 +144,7 @@ class GeminiService {
   // 構建提示詞
   private buildPrompt(query: string, context: string[]): string {
     const contextText = context.join('\n\n');
-    
+
     return `你是一個專業的股票概念分析助手。請基於以下上下文信息回答用戶的問題：
 
 上下文信息：
@@ -159,7 +166,7 @@ ${contextText}
     queries: string[],
     context: string[]
   ): Promise<GeminiResponse[]> {
-    const promises = queries.map(query => 
+    const promises = queries.map(query =>
       this.generateResponse(query, context)
     );
     return Promise.all(promises);
@@ -168,6 +175,7 @@ ${contextText}
 ```
 
 ### 3.3 提示工程優化
+
 ```typescript
 // 專業提示詞模板
 const PROMPT_TEMPLATES = {
@@ -222,13 +230,14 @@ const PROMPT_TEMPLATES = {
 4. 投資策略建議
 
 要求：謹慎、客觀、有據可依
-`
+`,
 };
 ```
 
 ## 4. 數據處理和向量化
 
 ### 4.1 文檔處理流程
+
 ```python
 # 數據處理管道
 from typing import List, Dict, Any
@@ -245,19 +254,19 @@ class DocumentProcessor:
             length_function=len,
         )
         self.embeddings = OpenAIEmbeddings()
-        
+
     def process_documents(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """處理文檔並生成向量"""
         processed_chunks = []
-        
+
         for doc in documents:
             # 文本分塊
             chunks = self.text_splitter.split_text(doc['content'])
-            
+
             for i, chunk in enumerate(chunks):
                 # 生成嵌入向量
                 embedding = self.embeddings.embed_query(chunk)
-                
+
                 processed_chunks.append({
                     'id': f"{doc['id']}_chunk_{i}",
                     'content': chunk,
@@ -271,11 +280,12 @@ class DocumentProcessor:
                         'tags': doc.get('tags', []),
                     }
                 })
-        
+
         return processed_chunks
 ```
 
 ### 4.2 向量存儲管理
+
 ```python
 # Pinecone 向量存儲管理
 class VectorStoreManager:
@@ -283,7 +293,7 @@ class VectorStoreManager:
         pinecone.init(api_key=api_key, environment=environment)
         self.index_name = index_name
         self.index = self._get_or_create_index()
-        
+
     def _get_or_create_index(self, dimension: int = 1536):
         """獲取或創建索引"""
         if self.index_name not in pinecone.list_indexes():
@@ -292,24 +302,24 @@ class VectorStoreManager:
                 dimension=dimension,
                 metric='cosine'
             )
-        
+
         return pinecone.Index(self.index_name)
-    
+
     def upsert_vectors(self, vectors: List[Dict[str, Any]]):
         """插入或更新向量"""
         # 準備數據格式
         ids = [v['id'] for v in vectors]
         embeddings = [v['embedding'] for v in vectors]
         metadata = [v['metadata'] for v in vectors]
-        
+
         # 批量插入
         self.index.upsert(
             vectors=zip(ids, embeddings, metadata)
         )
-    
+
     def search_similar(
-        self, 
-        query_embedding: List[float], 
+        self,
+        query_embedding: List[float],
         top_k: int = 10,
         filter_dict: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
@@ -320,28 +330,29 @@ class VectorStoreManager:
             include_metadata=True,
             filter=filter_dict
         )
-        
+
         return results.matches
-    
+
     def delete_vectors(self, vector_ids: List[str]):
         """刪除向量"""
         self.index.delete(ids=vector_ids)
 ```
 
 ### 4.3 數據更新策略
+
 ```python
 # 數據更新管理器
 class DataUpdateManager:
     def __init__(self, vector_store: VectorStoreManager):
         self.vector_store = vector_store
         self.update_scheduler = self._setup_scheduler()
-        
+
     def _setup_scheduler(self):
         """設置更新調度器"""
         from apscheduler.schedulers.background import BackgroundScheduler
-        
+
         scheduler = BackgroundScheduler()
-        
+
         # 每日更新
         scheduler.add_job(
             self._daily_update,
@@ -349,59 +360,59 @@ class DataUpdateManager:
             hour=2,  # 凌晨2點
             minute=0
         )
-        
+
         # 每小時檢查
         scheduler.add_job(
             self._hourly_check,
             'interval',
             hours=1
         )
-        
+
         return scheduler
-    
+
     def _daily_update(self):
         """每日數據更新"""
         try:
             # 獲取最新數據
             new_data = self._fetch_latest_data()
-            
+
             # 處理和向量化
             processed_data = self._process_new_data(new_data)
-            
+
             # 更新向量存儲
             self._update_vector_store(processed_data)
-            
+
             # 清理舊數據
             self._cleanup_old_data()
-            
+
             print(f"Daily update completed: {len(processed_data)} documents processed")
-            
+
         except Exception as e:
             print(f"Daily update failed: {str(e)}")
             self._send_alert(f"Daily update failed: {str(e)}")
-    
+
     def _hourly_check(self):
         """每小時檢查數據新鮮度"""
         try:
             # 檢查數據新鮮度
             freshness = self._check_data_freshness()
-            
+
             if freshness < 0.8:  # 數據新鮮度低於80%
                 self._send_alert(f"Data freshness is low: {freshness}")
-                
+
         except Exception as e:
             print(f"Hourly check failed: {str(e)}")
-    
+
     def _fetch_latest_data(self) -> List[Dict[str, Any]]:
         """獲取最新數據"""
         # 實現數據獲取邏輯
         pass
-    
+
     def _process_new_data(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """處理新數據"""
         # 實現數據處理邏輯
         pass
-    
+
     def _update_vector_store(self, data: List[Dict[str, Any]]):
         """更新向量存儲"""
         # 實現向量存儲更新邏輯
@@ -411,6 +422,7 @@ class DataUpdateManager:
 ## 5. 檢索和排序策略
 
 ### 5.1 查詢處理
+
 ```typescript
 // 查詢處理器
 class QueryProcessor {
@@ -457,36 +469,38 @@ class QueryProcessor {
   // 實體提取
   private extractEntities(query: string): Entity[] {
     const entities: Entity[] = [];
-    
+
     // 提取股票代碼
     const stockCodes = query.match(/\d{4,6}/g);
     if (stockCodes) {
-      entities.push(...stockCodes.map(code => ({
-        type: 'STOCK_CODE',
-        value: code,
-        confidence: 0.9
-      })));
+      entities.push(
+        ...stockCodes.map(code => ({
+          type: 'STOCK_CODE',
+          value: code,
+          confidence: 0.9,
+        }))
+      );
     }
-    
+
     // 提取概念名稱
     const conceptPatterns = [
       /(AI|人工智能|機器學習)/,
       /(新能源|電動車|太陽能)/,
       /(半導體|芯片|集成電路)/,
-      /(醫療|生物|製藥)/
+      /(醫療|生物|製藥)/,
     ];
-    
+
     conceptPatterns.forEach(pattern => {
       const match = query.match(pattern);
       if (match) {
         entities.push({
           type: 'CONCEPT',
           value: match[0],
-          confidence: 0.8
+          confidence: 0.8,
         });
       }
     });
-    
+
     return entities;
   }
 }
@@ -495,21 +509,25 @@ class QueryProcessor {
 ## 6. 後續步驟
 
 ### 6.1 立即執行
+
 1. 設置 Gemini API 密鑰和配置
 2. 建立向量數據庫連接
 3. 實現基礎的 RAG 查詢流程
 
 ### 6.2 短期目標 (1-2 週)
+
 1. 完成數據向量化流程
 2. 實現基本的檢索和生成功能
 3. 建立性能監控系統
 
 ### 6.3 中期目標 (3-4 週)
+
 1. 優化檢索策略和排序算法
 2. 實現多層快取系統
 3. 建立完整的錯誤處理機制
 
 ### 6.4 長期目標 (6-8 週)
+
 1. 實現智能查詢優化
 2. 建立自動化數據更新流程
 3. 優化模型性能和準確性
@@ -519,6 +537,7 @@ class QueryProcessor {
 ## 7. 混合檢索和上下文組裝
 
 ### 7.1 混合檢索策略
+
 ```typescript
 // 混合檢索器
 class HybridRetriever {
@@ -537,7 +556,7 @@ class HybridRetriever {
     const [vectorResults, keywordResults, semanticResults] = await Promise.all([
       this.vectorRetriever.retrieve(query, topK),
       this.keywordRetriever.retrieve(query, topK),
-      this.semanticRetriever.retrieve(query, topK)
+      this.semanticRetriever.retrieve(query, topK),
     ]);
 
     // 結果融合和重新排序
@@ -565,7 +584,7 @@ class HybridRetriever {
     vectorResults.forEach(result => {
       resultMap.set(result.id, {
         ...result,
-        score: result.score * 0.4  // 權重40%
+        score: result.score * 0.4, // 權重40%
       });
     });
 
@@ -573,11 +592,11 @@ class HybridRetriever {
     keywordResults.forEach(result => {
       const existing = resultMap.get(result.id);
       if (existing) {
-        existing.score += result.score * 0.3;  // 權重30%
+        existing.score += result.score * 0.3; // 權重30%
       } else {
         resultMap.set(result.id, {
           ...result,
-          score: result.score * 0.3
+          score: result.score * 0.3,
         });
       }
     });
@@ -586,11 +605,11 @@ class HybridRetriever {
     semanticResults.forEach(result => {
       const existing = resultMap.get(result.id);
       if (existing) {
-        existing.score += result.score * 0.3;  // 權重30%
+        existing.score += result.score * 0.3; // 權重30%
       } else {
         resultMap.set(result.id, {
           ...result,
-          score: result.score * 0.3
+          score: result.score * 0.3,
         });
       }
     });
@@ -611,6 +630,7 @@ class HybridRetriever {
 ```
 
 ### 7.2 上下文組裝
+
 ```typescript
 // 上下文組裝器
 class ContextAssembler {
@@ -629,7 +649,7 @@ class ContextAssembler {
 
     for (const result of sortedResults) {
       const estimatedTokens = this.estimateTokens(result.content);
-      
+
       if (currentTokens + estimatedTokens <= maxTokens) {
         selectedResults.push(result);
         contextParts.push(this.formatContextPart(result));
@@ -644,14 +664,14 @@ class ContextAssembler {
       context: contextParts.join('\n\n'),
       sources: selectedResults.map(r => r.metadata),
       totalTokens: currentTokens,
-      coverage: selectedResults.length / results.length
+      coverage: selectedResults.length / results.length,
     };
   }
 
   // 格式化上下文片段
   private formatContextPart(result: RetrievalResult): string {
     const metadata = result.metadata;
-    
+
     return `[來源: ${metadata.source_type} | 標題: ${metadata.title} | 相關性: ${(result.score * 100).toFixed(1)}%]
 
 ${result.content}
@@ -664,7 +684,7 @@ ${result.content}
     // 簡單估算：中文字符約等於1個token，英文單詞約等於1.3個token
     const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
     const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
-    
+
     return chineseChars + Math.ceil(englishWords * 1.3);
   }
 }
@@ -673,6 +693,7 @@ ${result.content}
 ## 8. 快取和性能優化
 
 ### 8.1 多層快取策略
+
 ```typescript
 // 快取管理器
 class CacheManager {
@@ -700,7 +721,7 @@ class CacheManager {
       this.memoryCache.set(key, {
         value: redisResult,
         timestamp: Date.now(),
-        ttl: 300000  // 5分鐘
+        ttl: 300000, // 5分鐘
       });
       return redisResult;
     }
@@ -720,7 +741,7 @@ class CacheManager {
     this.memoryCache.set(key, {
       value,
       timestamp: Date.now(),
-      ttl: Math.min(ttl, 300000)  // 記憶體快取最多5分鐘
+      ttl: Math.min(ttl, 300000), // 記憶體快取最多5分鐘
     });
 
     // 2. 設置 Redis 快取
@@ -739,14 +760,17 @@ class CacheManager {
 
   // 判斷是否應該快取在 CDN
   private shouldCacheInCDN(key: string, value: any): boolean {
-    return key.startsWith('/api/static/') || 
-           key.startsWith('/api/public/') ||
-           typeof value === 'string';
+    return (
+      key.startsWith('/api/static/') ||
+      key.startsWith('/api/public/') ||
+      typeof value === 'string'
+    );
   }
 }
 ```
 
 ### 8.2 查詢優化
+
 ```typescript
 // 查詢優化器
 class QueryOptimizer {
@@ -776,7 +800,7 @@ class QueryOptimizer {
         await this.cacheManager.set(
           `warmup:${this.hashQuery(query)}`,
           result,
-          1800000  // 30分鐘
+          1800000 // 30分鐘
         );
       } catch (error) {
         console.warn(`Warmup failed for query: ${query}`, error);
@@ -788,11 +812,13 @@ class QueryOptimizer {
 
   // 查詢優先級排序
   prioritizeQueries(queries: string[]): PrioritizedQuery[] {
-    return queries.map(query => ({
-      query,
-      priority: this.calculatePriority(query),
-      estimatedTime: this.estimateExecutionTime(query)
-    })).sort((a, b) => b.priority - a.priority);
+    return queries
+      .map(query => ({
+        query,
+        priority: this.calculatePriority(query),
+        estimatedTime: this.estimateExecutionTime(query),
+      }))
+      .sort((a, b) => b.priority - a.priority);
   }
 
   // 計算查詢優先級
@@ -819,7 +845,7 @@ class QueryOptimizer {
 
   // 估算執行時間
   private estimateExecutionTime(query: string): number {
-    let baseTime = 100;  // 基礎時間100ms
+    let baseTime = 100; // 基礎時間100ms
 
     // 查詢長度影響
     baseTime += query.length * 0.5;
@@ -841,6 +867,7 @@ class QueryOptimizer {
 ## 9. 監控和錯誤處理
 
 ### 9.1 性能監控
+
 ```typescript
 // 性能監控器
 class PerformanceMonitor {
@@ -866,7 +893,7 @@ class PerformanceMonitor {
       duration,
       success,
       resultCount,
-      query
+      query,
     });
 
     // 清理舊數據
@@ -883,7 +910,7 @@ class PerformanceMonitor {
       p95ResponseTime: 0,
       p99ResponseTime: 0,
       totalResults: 0,
-      cacheHitRate: 0
+      cacheHitRate: 0,
     };
 
     let totalDuration = 0;
@@ -907,12 +934,12 @@ class PerformanceMonitor {
 
     if (stats.totalQueries > 0) {
       stats.averageResponseTime = totalDuration / stats.totalQueries;
-      
+
       // 計算百分位數
       responseTimes.sort((a, b) => a - b);
       const p95Index = Math.floor(responseTimes.length * 0.95);
       const p99Index = Math.floor(responseTimes.length * 0.99);
-      
+
       stats.p95ResponseTime = responseTimes[p95Index] || 0;
       stats.p99ResponseTime = responseTimes[p99Index] || 0;
     }
@@ -922,13 +949,11 @@ class PerformanceMonitor {
 
   // 清理舊指標
   private cleanupOldMetrics(): void {
-    const cutoffTime = Date.now() - 86400000;  // 24小時前
+    const cutoffTime = Date.now() - 86400000; // 24小時前
 
     this.metrics.forEach((metricList, queryHash) => {
-      const filteredMetrics = metricList.filter(
-        m => m.timestamp > cutoffTime
-      );
-      
+      const filteredMetrics = metricList.filter(m => m.timestamp > cutoffTime);
+
       if (filteredMetrics.length === 0) {
         this.metrics.delete(queryHash);
       } else {
@@ -940,6 +965,7 @@ class PerformanceMonitor {
 ```
 
 ### 9.2 錯誤處理和重試
+
 ```typescript
 // 錯誤處理器
 class ErrorHandler {
@@ -947,7 +973,7 @@ class ErrorHandler {
     maxRetries: 3,
     baseDelay: 1000,
     maxDelay: 10000,
-    backoffMultiplier: 2
+    backoffMultiplier: 2,
   };
 
   // 處理查詢錯誤
@@ -966,16 +992,16 @@ class ErrorHandler {
     switch (errorType) {
       case 'RATE_LIMIT':
         return this.handleRateLimitError(error, query);
-      
+
       case 'TIMEOUT':
         return this.handleTimeoutError(error, query);
-      
+
       case 'AUTHENTICATION':
         return this.handleAuthError(error, query);
-      
+
       case 'NETWORK':
         return this.handleNetworkError(error, query);
-      
+
       default:
         return this.handleGenericError(error, query);
     }
@@ -984,23 +1010,23 @@ class ErrorHandler {
   // 錯誤分類
   private classifyError(error: Error): ErrorType {
     const message = error.message.toLowerCase();
-    
+
     if (message.includes('rate limit') || message.includes('quota')) {
       return 'RATE_LIMIT';
     }
-    
+
     if (message.includes('timeout') || message.includes('timed out')) {
       return 'TIMEOUT';
     }
-    
+
     if (message.includes('unauthorized') || message.includes('invalid key')) {
       return 'AUTHENTICATION';
     }
-    
+
     if (message.includes('network') || message.includes('connection')) {
       return 'NETWORK';
     }
-    
+
     return 'GENERIC';
   }
 
@@ -1011,12 +1037,12 @@ class ErrorHandler {
   ): Promise<ErrorResponse> {
     // 實現指數退避重試
     const retryDelay = this.calculateRetryDelay();
-    
+
     return {
       error: 'RATE_LIMIT_EXCEEDED',
       message: '查詢頻率過高，請稍後再試',
       retryAfter: retryDelay,
-      suggestion: '建議減少查詢頻率或升級服務計劃'
+      suggestion: '建議減少查詢頻率或升級服務計劃',
     };
   }
 
@@ -1031,6 +1057,7 @@ class ErrorHandler {
 ## 10. 測試和驗證
 
 ### 10.1 單元測試
+
 ```typescript
 // RAG 系統測試
 describe('RAG System', () => {
@@ -1041,11 +1068,8 @@ describe('RAG System', () => {
   beforeEach(() => {
     mockGeminiService = createMockGeminiService();
     mockVectorStore = createMockVectorStore();
-    
-    ragSystem = new RAGSystem(
-      mockGeminiService,
-      mockVectorStore
-    );
+
+    ragSystem = new RAGSystem(mockGeminiService, mockVectorStore);
   });
 
   describe('query', () => {
@@ -1054,14 +1078,18 @@ describe('RAG System', () => {
       const query = '找出與AI概念相關的股票';
       const mockResults = [
         { id: '1', content: '台積電是AI芯片製造龍頭', score: 0.95 },
-        { id: '2', content: '聯發科在AI領域有重要佈局', score: 0.88 }
+        { id: '2', content: '聯發科在AI領域有重要佈局', score: 0.88 },
       ];
 
       mockVectorStore.searchSimilar.mockResolvedValue(mockResults);
       mockGeminiService.generateResponse.mockResolvedValue({
         text: '根據檢索結果，推薦以下AI概念股...',
-        usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
-        safetyRatings: []
+        usageMetadata: {
+          promptTokenCount: 100,
+          candidatesTokenCount: 50,
+          totalTokenCount: 150,
+        },
+        safetyRatings: [],
       });
 
       // Act
@@ -1095,7 +1123,7 @@ describe('RAG System', () => {
       const largeResults = Array.from({ length: 50 }, (_, i) => ({
         id: `result-${i}`,
         content: '這是一個很長的內容...'.repeat(100),
-        score: 0.9 - i * 0.01
+        score: 0.9 - i * 0.01,
       }));
 
       mockVectorStore.searchSimilar.mockResolvedValue(largeResults);
@@ -1128,6 +1156,7 @@ describe('RAG System', () => {
 ```
 
 ### 10.2 整合測試
+
 ```typescript
 // 整合測試
 describe('RAG System Integration', () => {
@@ -1137,7 +1166,7 @@ describe('RAG System Integration', () => {
   beforeAll(async () => {
     testServer = new TestServer();
     await testServer.start();
-    
+
     testClient = new TestClient(testServer.url);
   });
 
@@ -1149,7 +1178,7 @@ describe('RAG System Integration', () => {
     // 1. 提交查詢
     const queryResponse = await testClient.submitQuery({
       query: '分析半導體概念股投資機會',
-      userId: 'test-user-123'
+      userId: 'test-user-123',
     });
 
     expect(queryResponse.status).toBe(200);
@@ -1158,15 +1187,15 @@ describe('RAG System Integration', () => {
     // 2. 等待處理完成
     const queryId = queryResponse.data.queryId;
     let result = null;
-    
+
     for (let i = 0; i < 10; i++) {
       const statusResponse = await testClient.getQueryStatus(queryId);
-      
+
       if (statusResponse.data.status === 'COMPLETED') {
         result = statusResponse.data.result;
         break;
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
@@ -1182,7 +1211,7 @@ describe('RAG System Integration', () => {
       '篩選AI概念股',
       '分析新能源趨勢',
       '評估醫療概念股',
-      '預測科技股走勢'
+      '預測科技股走勢',
     ];
 
     const promises = queries.map(query =>
@@ -1190,7 +1219,7 @@ describe('RAG System Integration', () => {
     );
 
     const results = await Promise.all(promises);
-    
+
     results.forEach(result => {
       expect(result.status).toBe(200);
       expect(result.data.queryId).toBeDefined();
@@ -1202,6 +1231,7 @@ describe('RAG System Integration', () => {
 ## 11. 部署和配置
 
 ### 11.1 環境配置
+
 ```yaml
 # docker-compose.yml
 version: '3.8'
@@ -1210,7 +1240,7 @@ services:
   rag-api:
     build: ./apps/api
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - NODE_ENV=production
       - GEMINI_API_KEY=${GEMINI_API_KEY}
@@ -1235,14 +1265,14 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
 
   vector-db:
     image: pinecone/pinecone-server:latest
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - PINECONE_API_KEY=${PINECONE_API_KEY}
       - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT}
@@ -1252,34 +1282,36 @@ volumes:
 ```
 
 ### 11.2 性能配置
+
 ```typescript
 // 性能配置
 interface PerformanceConfig {
   // 向量檢索配置
   vectorSearch: {
-    maxResults: number;        // 最大檢索結果數
+    maxResults: number; // 最大檢索結果數
     similarityThreshold: number; // 相似度閾值
-    maxTokens: number;         // 最大 token 數
+    maxTokens: number; // 最大 token 數
   };
-  
+
   // 快取配置
   cache: {
-    memoryTTL: number;         // 記憶體快取 TTL
-    redisTTL: number;          // Redis 快取 TTL
-    cdnTTL: number;            // CDN 快取 TTL
+    memoryTTL: number; // 記憶體快取 TTL
+    redisTTL: number; // Redis 快取 TTL
+    cdnTTL: number; // CDN 快取 TTL
   };
-  
+
   // 並發配置
   concurrency: {
-    maxConcurrentQueries: number;  // 最大並發查詢數
+    maxConcurrentQueries: number; // 最大並發查詢數
     maxConcurrentEmbeddings: number; // 最大並發向量化數
-    queryTimeout: number;           // 查詢超時時間
+    queryTimeout: number; // 查詢超時時間
   };
-  
+
   // 監控配置
   monitoring: {
-    metricsInterval: number;    // 指標收集間隔
-    alertThresholds: {          // 警報閾值
+    metricsInterval: number; // 指標收集間隔
+    alertThresholds: {
+      // 警報閾值
       responseTime: number;
       errorRate: number;
       cacheHitRate: number;
@@ -1292,43 +1324,46 @@ const DEFAULT_PERFORMANCE_CONFIG: PerformanceConfig = {
   vectorSearch: {
     maxResults: 20,
     similarityThreshold: 0.7,
-    maxTokens: 4000
+    maxTokens: 4000,
   },
   cache: {
-    memoryTTL: 300000,    // 5分鐘
-    redisTTL: 3600000,    // 1小時
-    cdnTTL: 86400000      // 24小時
+    memoryTTL: 300000, // 5分鐘
+    redisTTL: 3600000, // 1小時
+    cdnTTL: 86400000, // 24小時
   },
   concurrency: {
     maxConcurrentQueries: 100,
     maxConcurrentEmbeddings: 50,
-    queryTimeout: 30000   // 30秒
+    queryTimeout: 30000, // 30秒
   },
   monitoring: {
-    metricsInterval: 60000,  // 1分鐘
+    metricsInterval: 60000, // 1分鐘
     alertThresholds: {
-      responseTime: 5000,    // 5秒
-      errorRate: 0.05,       // 5%
-      cacheHitRate: 0.8      // 80%
-    }
-  }
+      responseTime: 5000, // 5秒
+      errorRate: 0.05, // 5%
+      cacheHitRate: 0.8, // 80%
+    },
+  },
 };
 ```
 
 ## 12. 成功標準和 KPI
 
 ### 12.1 性能指標
+
 - **響應時間**：平均 < 2秒，P95 < 5秒
 - **準確率**：檢索相關性 > 85%
 - **召回率**：相關文檔檢索率 > 90%
 - **快取命中率**：> 80%
 
 ### 12.2 品質指標
+
 - **答案相關性**：用戶滿意度 > 90%
 - **事實準確性**：基於真實數據 > 95%
 - **覆蓋範圍**：支持查詢類型 > 95%
 
 ### 12.3 可靠性指標
+
 - **系統可用性**：> 99.9%
 - **錯誤率**：< 1%
 - **數據新鮮度**：< 24小時
@@ -1336,13 +1371,16 @@ const DEFAULT_PERFORMANCE_CONFIG: PerformanceConfig = {
 ## 13. 文檔整合說明
 
 ### 13.1 與第一部分整合
+
 本文檔是 RAG 系統整合完整文檔的第二部分，與第一部分共同構成完整的 RAG 系統設計文檔。
 
 ### 13.2 主要內容對應
+
 - **第一部分**：設計原則、系統架構、Gemini 整合、數據處理、檢索策略
 - **第二部分**：混合檢索、快取優化、監控測試、部署配置、成功標準
 
 ### 13.3 使用建議
+
 1. 先閱讀第一部分了解整體架構
 2. 再閱讀第二部分了解實現細節
 3. 兩部分結合使用進行完整開發

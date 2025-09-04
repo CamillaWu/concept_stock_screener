@@ -3,6 +3,7 @@
 ## 1. 測試環境管理
 
 ### 1.1 測試環境配置
+
 ```yaml
 # test-environments.yml
 environments:
@@ -11,19 +12,19 @@ environments:
     database: in-memory
     external_services: mocked
     configuration: minimal
-    
+
   integration:
     type: docker
     database: test-postgres
     external_services: test-instances
     configuration: test
-    
+
   e2e:
     type: staging
     database: staging-postgres
     external_services: staging
     configuration: staging
-    
+
   performance:
     type: dedicated
     database: performance-postgres
@@ -32,6 +33,7 @@ environments:
 ```
 
 ### 1.2 測試數據管理策略
+
 ```typescript
 // test-data-manager.ts
 class TestDataManager {
@@ -42,7 +44,7 @@ class TestDataManager {
   async setupTestData(testName: string, data: any): Promise<void> {
     const testData = await this.createTestData(data);
     this.testData.set(testName, testData);
-    
+
     // 記錄清理任務
     this.cleanupTasks.push(async () => {
       await this.cleanupTestData(testData);
@@ -74,6 +76,7 @@ class TestDataManager {
 ## 2. 測試自動化增強
 
 ### 2.1 智能測試生成
+
 ```typescript
 // test-generator.ts
 class TestGenerator {
@@ -81,7 +84,7 @@ class TestGenerator {
   generateComponentTests(component: React.ComponentType<any>): string {
     const props = this.extractComponentProps(component);
     const testCases = this.generateTestCases(props);
-    
+
     return this.formatTestFile(component.name, testCases);
   }
 
@@ -106,6 +109,7 @@ class TestGenerator {
 ```
 
 ### 2.2 測試執行優化
+
 ```typescript
 // test-runner.ts
 class OptimizedTestRunner {
@@ -121,7 +125,10 @@ class OptimizedTestRunner {
 
   // 處理測試隊列
   private async processQueue(): Promise<void> {
-    while (this.testQueue.length > 0 && this.runningTests.size < this.maxConcurrentTests) {
+    while (
+      this.testQueue.length > 0 &&
+      this.runningTests.size < this.maxConcurrentTests
+    ) {
       const task = this.testQueue.shift()!;
       await this.executeTest(task);
     }
@@ -130,7 +137,7 @@ class OptimizedTestRunner {
   // 執行測試
   private async executeTest(task: TestTask): Promise<void> {
     this.runningTests.add(task.id);
-    
+
     try {
       await task.execute();
     } finally {
@@ -144,6 +151,7 @@ class OptimizedTestRunner {
 ## 3. 測試工具集成
 
 ### 3.1 測試儀表板
+
 ```typescript
 // test-dashboard.tsx
 import React from 'react';
@@ -159,16 +167,16 @@ export const TestDashboard: React.FC = () => {
           <button onClick={() => generateReport()}>生成報告</button>
         </div>
       </header>
-      
+
       <div className="dashboard-content">
         <div className="metrics-section">
           <TestMetrics />
         </div>
-        
+
         <div className="results-section">
           <TestResults />
         </div>
-        
+
         <div className="trends-section">
           <TestTrends />
         </div>
@@ -179,6 +187,7 @@ export const TestDashboard: React.FC = () => {
 ```
 
 ### 3.2 測試報告生成器
+
 ```typescript
 // test-reporter.ts
 class TestReporter {
@@ -186,7 +195,7 @@ class TestReporter {
   async generateHTMLReport(results: TestResults): Promise<string> {
     const template = await this.loadTemplate('html-report');
     const data = this.processResults(results);
-    
+
     return this.renderTemplate(template, data);
   }
 
@@ -211,6 +220,7 @@ class TestReporter {
 ## 4. 高級測試技術
 
 ### 4.1 契約測試
+
 ```typescript
 // contract-test.ts
 import { Pact } from '@pact-foundation/pact';
@@ -221,7 +231,7 @@ describe('API Contract Tests', () => {
     provider: 'concept-stock-screener-api',
     port: 1234,
     log: 'logs/pact.log',
-    dir: 'pacts'
+    dir: 'pacts',
   });
 
   beforeAll(async () => {
@@ -239,24 +249,24 @@ describe('API Contract Tests', () => {
       withRequest: {
         method: 'GET',
         path: '/api/stocks/search',
-        query: { q: 'AI' }
+        query: { q: 'AI' },
       },
       willRespondWith: {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
         body: {
-          stocks: [
-            { id: '1', name: '台積電', code: '2330' }
-          ],
-          total: 1
-        }
-      }
+          stocks: [{ id: '1', name: '台積電', code: '2330' }],
+          total: 1,
+        },
+      },
     });
 
     // 執行測試
-    const response = await fetch('http://localhost:1234/api/stocks/search?q=AI');
+    const response = await fetch(
+      'http://localhost:1234/api/stocks/search?q=AI'
+    );
     const data = await response.json();
-    
+
     expect(data.stocks).toHaveLength(1);
     expect(data.stocks[0].name).toBe('台積電');
   });
@@ -264,6 +274,7 @@ describe('API Contract Tests', () => {
 ```
 
 ### 4.2 變異測試
+
 ```typescript
 // mutation-test.ts
 import { Stryker } from '@stryker-mutator/core';
@@ -272,55 +283,65 @@ describe('Mutation Testing', () => {
   it('should detect logic mutations', () => {
     // 原始函數
     const originalFunction = (a: number, b: number) => a + b;
-    
+
     // 變異函數 (a - b 而不是 a + b)
     const mutatedFunction = (a: number, b: number) => a - b;
-    
+
     // 測試應該能檢測到這個變異
     expect(originalFunction(2, 3)).toBe(5);
     expect(mutatedFunction(2, 3)).toBe(-1);
-    
+
     // 如果測試沒有檢測到變異，說明測試覆蓋不足
   });
 });
 ```
 
 ### 4.3 模糊測試
+
 ```typescript
 // fuzz-test.ts
 import { fuzz } from 'jest-fuzz';
 
 describe('Fuzz Testing', () => {
-  fuzz('should handle various search queries', (query: string) => {
-    // 生成隨機查詢字符串
-    const result = searchStocks(query);
-    
-    // 驗證結果的有效性
-    expect(result).toBeDefined();
-    expect(Array.isArray(result.stocks)).toBe(true);
-    expect(typeof result.total).toBe('number');
-  }, {
-    maxIterations: 1000,
-    maxErrors: 10
-  });
+  fuzz(
+    'should handle various search queries',
+    (query: string) => {
+      // 生成隨機查詢字符串
+      const result = searchStocks(query);
 
-  fuzz('should handle edge cases in stock data', (stockData: any) => {
-    // 生成邊界情況的股票數據
-    const processed = processStockData(stockData);
-    
-    // 驗證處理結果
-    expect(processed).toBeDefined();
-    expect(processed.id).toBeDefined();
-  }, {
-    maxIterations: 500,
-    maxErrors: 5
-  });
+      // 驗證結果的有效性
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.stocks)).toBe(true);
+      expect(typeof result.total).toBe('number');
+    },
+    {
+      maxIterations: 1000,
+      maxErrors: 10,
+    }
+  );
+
+  fuzz(
+    'should handle edge cases in stock data',
+    (stockData: any) => {
+      // 生成邊界情況的股票數據
+      const processed = processStockData(stockData);
+
+      // 驗證處理結果
+      expect(processed).toBeDefined();
+      expect(processed.id).toBeDefined();
+    },
+    {
+      maxIterations: 500,
+      maxErrors: 5,
+    }
+  );
 });
 ```
 
 ## 5. 測試性能優化
 
 ### 5.1 測試並行化
+
 ```typescript
 // parallel-test-runner.ts
 class ParallelTestRunner {
@@ -341,10 +362,10 @@ class ParallelTestRunner {
   // 並行執行測試
   async runTestsInParallel(tests: TestTask[]): Promise<TestResult[]> {
     const chunks = this.chunkArray(tests, this.maxWorkers);
-    const promises = chunks.map((chunk, index) => 
+    const promises = chunks.map((chunk, index) =>
       this.runTestsOnWorker(chunk, this.workers[index])
     );
-    
+
     const results = await Promise.all(promises);
     return results.flat();
   }
@@ -357,12 +378,15 @@ class ParallelTestRunner {
     return chunks;
   }
 
-  private async runTestsOnWorker(tests: TestTask[], worker: Worker): Promise<TestResult[]> {
-    return new Promise((resolve) => {
-      worker.onmessage = (event) => {
+  private async runTestsOnWorker(
+    tests: TestTask[],
+    worker: Worker
+  ): Promise<TestResult[]> {
+    return new Promise(resolve => {
+      worker.onmessage = event => {
         resolve(event.data);
       };
-      
+
       worker.postMessage({ tests });
     });
   }
@@ -370,6 +394,7 @@ class ParallelTestRunner {
 ```
 
 ### 5.2 測試快取策略
+
 ```typescript
 // test-cache.ts
 class TestCache {
@@ -377,7 +402,7 @@ class TestCache {
   private cacheStats = {
     hits: 0,
     misses: 0,
-    size: 0
+    size: 0,
   };
 
   // 獲取快取的測試結果
@@ -387,7 +412,7 @@ class TestCache {
       this.cacheStats.hits++;
       return cached;
     }
-    
+
     this.cacheStats.misses++;
     return null;
   }
@@ -397,11 +422,11 @@ class TestCache {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
-    
+
     this.cacheStats.size = this.cache.size;
-    
+
     // 清理過期的快取
     this.cleanup();
   }
@@ -427,13 +452,18 @@ class TestCache {
 ## 6. 測試監控和分析
 
 ### 6.1 測試指標收集
+
 ```typescript
 // test-metrics.ts
 class TestMetricsCollector {
   private metrics: Map<string, MetricData[]> = new Map();
 
   // 記錄測試執行指標
-  recordTestExecution(testName: string, duration: number, success: boolean): void {
+  recordTestExecution(
+    testName: string,
+    duration: number,
+    success: boolean
+  ): void {
     if (!this.metrics.has(testName)) {
       this.metrics.set(testName, []);
     }
@@ -442,7 +472,7 @@ class TestMetricsCollector {
       timestamp: Date.now(),
       duration,
       success,
-      testName
+      testName,
     });
   }
 
@@ -454,7 +484,7 @@ class TestMetricsCollector {
       failedTests: 0,
       averageDuration: 0,
       p95Duration: 0,
-      p99Duration: 0
+      p99Duration: 0,
     };
 
     let totalDuration = 0;
@@ -468,7 +498,7 @@ class TestMetricsCollector {
         } else {
           stats.failedTests++;
         }
-        
+
         totalDuration += metric.duration;
         durations.push(metric.duration);
       });
@@ -476,11 +506,11 @@ class TestMetricsCollector {
 
     if (stats.totalTests > 0) {
       stats.averageDuration = totalDuration / stats.totalTests;
-      
+
       durations.sort((a, b) => a - b);
       const p95Index = Math.floor(durations.length * 0.95);
       const p99Index = Math.floor(durations.length * 0.99);
-      
+
       stats.p95Duration = durations[p95Index] || 0;
       stats.p99Duration = durations[p99Index] || 0;
     }
@@ -491,6 +521,7 @@ class TestMetricsCollector {
 ```
 
 ### 6.2 測試趨勢分析
+
 ```typescript
 // test-trends.ts
 class TestTrendsAnalyzer {
@@ -500,7 +531,7 @@ class TestTrendsAnalyzer {
       executionTime: this.analyzeExecutionTimeTrend(timeRange),
       successRate: this.analyzeSuccessRateTrend(timeRange),
       coverage: this.analyzeCoverageTrend(timeRange),
-      flakiness: this.analyzeFlakinessTrend(timeRange)
+      flakiness: this.analyzeFlakinessTrend(timeRange),
     };
 
     return trends;
@@ -535,6 +566,7 @@ class TestTrendsAnalyzer {
 ## 7. 測試文檔和知識管理
 
 ### 7.1 測試文檔生成器
+
 ```typescript
 // test-docs-generator.ts
 class TestDocsGenerator {
@@ -545,7 +577,7 @@ class TestDocsGenerator {
       this.generateTestStructure(),
       this.generateTestCases(),
       this.generateCoverageReport(),
-      this.generateBestPractices()
+      this.generateBestPractices(),
     ];
 
     return sections.join('\n\n');
@@ -650,21 +682,25 @@ tests/
 ## 8. 後續步驟
 
 ### 8.1 立即執行
+
 1. 實現測試環境管理
 2. 建立測試自動化流程
 3. 集成測試工具
 
 ### 8.2 短期目標 (1-2 週)
+
 1. 完成測試儀表板
 2. 實現智能測試生成
 3. 建立測試快取系統
 
 ### 8.3 中期目標 (3-4 週)
+
 1. 實現契約測試
 2. 建立變異測試框架
 3. 優化測試並行執行
 
 ### 8.4 長期目標 (6-8 週)
+
 1. 建立完整的測試生態
 2. 實現 AI 輔助測試
 3. 建立測試預測模型

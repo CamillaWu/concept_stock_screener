@@ -7,16 +7,16 @@ import { corsMiddleware } from './middleware/cors';
 // 建立路由器
 const router = Router();
 
-// 中間件
-router.all('*', corsMiddleware);
+// 中間件 - 使用 any 類型來解決 itty-router 類型兼容性問題
+router.all('*', corsMiddleware as any);
 
-// 路由
+// 路由 - 使用 any 類型來解決 itty-router 類型兼容性問題
 router.get('/api/health', () => new Response('OK', { status: 200 }));
-router.get('/api/stocks', stockHandler.getStocks);
-router.get('/api/stocks/:symbol', stockHandler.getStock);
-router.get('/api/concepts', conceptHandler.getConcepts);
-router.get('/api/concepts/:id', conceptHandler.getConcept);
-router.get('/api/search', searchHandler.search);
+router.get('/api/stocks', stockHandler.getStocks as any);
+router.get('/api/stocks/:symbol', stockHandler.getStock as any);
+router.get('/api/concepts', conceptHandler.getConcepts as any);
+router.get('/api/concepts/:id', conceptHandler.getConcept as any);
+router.get('/api/search', searchHandler.search as any);
 
 // 404 處理
 router.all('*', () => new Response('Not Found', { status: 404 }));
