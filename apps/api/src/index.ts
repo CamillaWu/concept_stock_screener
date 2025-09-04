@@ -1,15 +1,8 @@
-import { Router } from 'itty-router';
+import { Router, RouteHandler } from 'itty-router';
 import { conceptHandler } from './handlers/concept';
 import { searchHandler } from './handlers/search';
 import { stockHandler } from './handlers/stock';
 import { corsMiddleware } from './middleware/cors';
-
-// 定義 RouteHandler 類型，兼容 Cloudflare Workers
-type RouteHandler = (
-  request: Request,
-  env?: Record<string, unknown>,
-  ctx?: { waitUntil: (promise: Promise<unknown>) => void }
-) => Response | Promise<Response>;
 
 // 建立路由器
 const router = Router();
