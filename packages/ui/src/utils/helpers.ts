@@ -152,11 +152,13 @@ export function truncateText(
     return suffix;
   }
 
-  // 如果文本長度小於等於最大長度，直接返回原文本
-  if (text.length <= maxLength) return text;
-
   // 計算可用於文本的長度
   const availableLength = maxLength - suffix.length;
+
+  // 如果文本長度小於等於可用長度，直接返回原文本
+  if (text.length <= availableLength) return text;
+
+  // 截斷文本並添加後綴
   return text.substring(0, availableLength) + suffix;
 }
 
@@ -174,9 +176,5 @@ export function toKebabCase(str: string): string {
   return str
     .replace(/([a-z])([A-Z])/g, '$1-$2')
     .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-    .replace(/([A-Z]+)(?=[A-Z]|$)/g, match => {
-      // 將連續大寫字母分割並用短橫線連接
-      return match.split('').join('-');
-    })
     .toLowerCase();
 }

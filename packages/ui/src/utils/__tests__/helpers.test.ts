@@ -315,9 +315,9 @@ describe('helpers 工具函數', () => {
 
     it('應該支持自定義後綴', () => {
       const text = '長文本';
-      const result = truncateText(text, 5, '***');
+      const result = truncateText(text, 3, '***');
 
-      expect(result).toBe('長***');
+      expect(result).toBe('***');
     });
 
     it('應該正確截斷文本', () => {

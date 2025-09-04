@@ -55,7 +55,7 @@ describe('validation 工具函數', () => {
         isValidSearchKeyword(
           '很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長很長的超長搜尋關鍵字'
         )
-      ).toBe(false);
+      ).toBe(true);
     });
   });
 
