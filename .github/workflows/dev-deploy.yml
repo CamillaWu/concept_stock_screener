@@ -154,10 +154,27 @@ jobs:
       - name: 檢出代碼
         uses: actions/checkout@v4
 
-      - name: 下載部署包
-        uses: actions/download-artifact@v4
-        with:
-          name: deployment-package
+      - name: 準備部署包
+        run: |
+          echo "📦 準備部署包..."
+
+          # 創建部署目錄
+          mkdir -p deployment
+
+          # 複製構建產物
+          cp -r apps/web/.next deployment/web/
+          cp -r apps/api/dist deployment/api/
+          cp -r packages/types/dist deployment/types/
+          cp -r packages/ui/dist deployment/ui/
+
+          # 複製配置文件
+          cp -r config deployment/
+          cp -r scripts deployment/
+          cp package.json deployment/
+          cp pnpm-lock.yaml deployment/
+          cp pnpm-workspace.yaml deployment/
+
+          echo "✅ 部署包準備完成"
 
       - name: 部署前端到 Vercel 開發環境
         uses: amondnet/vercel-action@v25
