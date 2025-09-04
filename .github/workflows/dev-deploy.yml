@@ -111,11 +111,9 @@ jobs:
 
       - name: 上傳測試覆蓋率
         uses: codecov/codecov-action@v3
-        if: ${{ !inputs.skip_tests }}
         with:
           file: ./coverage/lcov.info
-          flags: development
-          name: development-coverage
+        if: ${{ !inputs.skip_tests }}
 
       - name: 創建部署包
         run: |
@@ -129,25 +127,22 @@ jobs:
           cp -r packages/ui/dist deployment/ui/
 
           # 複製配置文件
+          cp -r config deployment/
+          cp -r scripts deployment/
           cp package.json deployment/
           cp pnpm-lock.yaml deployment/
           cp pnpm-workspace.yaml deployment/
-          cp -r config deployment/
-          cp -r scripts deployment/
 
           # 創建部署信息
-          echo "部署時間: $(date)" > deployment/deployment-info.txt
-          echo "Git 提交: ${{ github.sha }}" >> deployment/deployment-info.txt
-          echo "分支: ${{ github.ref_name }}" >> deployment/deployment-info.txt
-          echo "觸發者: ${{ github.actor }}" >> deployment/deployment-info.txt
-          echo "工作流程: ${{ github.workflow }}" >> deployment/deployment-info.txt
+          cat > deployment/deployment-info.txt << EOF
+          部署時間: $(date)
+          Git 提交: ${{ github.sha }}
+          分支: ${{ github.ref_name }}
+          觸發者: ${{ github.actor }}
+          環境: ${{ env.ENVIRONMENT }}
+          EOF
 
-      - name: 上傳部署包
-        uses: actions/upload-artifact@v3
-        with:
-          name: dev-deployment-package
-          path: deployment/
-          retention-days: 7
+          echo "✅ 部署包創建完成"
 
   # 部署到開發環境
   deploy-dev:
@@ -164,40 +159,26 @@ jobs:
       - name: 下載部署包
         uses: actions/download-artifact@v3
         with:
-          name: dev-deployment-package
-          path: deployment/
+          name: build-artifacts
 
-      - name: 設置部署環境
-        run: |
-          echo "🚀 開始部署到開發環境..."
-          echo "環境: ${{ env.ENVIRONMENT }}"
-          echo "部署時間: $(date)"
-          echo "Git 提交: ${{ github.sha }}"
-          echo "分支: ${{ github.ref_name }}"
-          echo "觸發者: ${{ github.actor }}"
+      - name: 部署前端到 Vercel 開發環境
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN_DEV }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID_DEV }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
+          # 開發環境部署到專案的生產環境（穩定版本）
+          vercel-args: '--prod'
+          working-directory: ./apps/web
 
-      - name: 安裝部署依賴
-        run: |
-          cd deployment
-          pnpm install --frozen-lockfile
-
-      - name: 部署 API 服務
-        run: |
-          echo "🔌 部署 API 服務..."
-          cd deployment
-
-          # 這裡可以添加實際的 API 部署邏輯
-          # 例如：部署到 Cloudflare Workers、Vercel Functions 等
-          echo "API 服務部署完成"
-
-      - name: 部署前端應用
-        run: |
-          echo "🌐 部署前端應用..."
-          cd deployment
-
-          # 這裡可以添加實際的前端部署邏輯
-          # 例如：部署到 Vercel、Netlify 等
-          echo "前端應用部署完成"
+      - name: 部署 API 到 Cloudflare 開發環境
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_DEV }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_DEV }}
+          command: deploy
+          environment: development
+          working-directory: ./apps/api
 
       - name: 部署數據管道
         run: |
@@ -248,11 +229,11 @@ jobs:
 
           # 檢查 API 服務
           echo "檢查 API 服務..."
-          # curl -f http://localhost:8787/health || echo "API 服務檢查失敗"
+          # curl -f https://dev-api.concept-stock-screener.com/health || echo "API 服務檢查失敗"
 
           # 檢查前端服務
           echo "檢查前端服務..."
-          # curl -f http://localhost:3000 || echo "前端服務檢查失敗"
+          # curl -f https://dev.concept-stock-screener.com || echo "前端服務檢查失敗"
 
           echo "健康檢查完成"
 
