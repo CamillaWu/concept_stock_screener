@@ -4,6 +4,13 @@ import { searchHandler } from './handlers/search';
 import { stockHandler } from './handlers/stock';
 import { corsMiddleware } from './middleware/cors';
 
+// 定義 RouteHandler 類型
+type RouteHandler = (
+  request: Request,
+  env?: any,
+  ctx?: any
+) => Response | Promise<Response>;
+
 // 建立路由器
 const router = Router();
 
@@ -11,12 +18,15 @@ const router = Router();
 router.all('*', corsMiddleware);
 
 // 路由
-router.get('/api/health', () => new Response('OK', { status: 200 }));
-router.get('/api/stocks', stockHandler.getStocks);
-router.get('/api/stocks/:symbol', stockHandler.getStock);
-router.get('/api/concepts', conceptHandler.getConcepts);
-router.get('/api/concepts/:id', conceptHandler.getConcept);
-router.get('/api/search', searchHandler.search);
+router.get(
+  '/api/health',
+  (() => new Response('OK', { status: 200 })) as RouteHandler
+);
+router.get('/api/stocks', stockHandler.getStocks as RouteHandler);
+router.get('/api/stocks/:symbol', stockHandler.getStock as RouteHandler);
+router.get('/api/concepts', conceptHandler.getConcepts as RouteHandler);
+router.get('/api/concepts/:id', conceptHandler.getConcept as RouteHandler);
+router.get('/api/search', searchHandler.search as RouteHandler);
 
 // 404 處理
 router.all('*', () => new Response('Not Found', { status: 404 }));
