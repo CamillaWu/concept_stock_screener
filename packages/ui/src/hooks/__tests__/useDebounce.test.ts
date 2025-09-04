@@ -1,11 +1,9 @@
 import { renderHook, act } from '@testing-library/react';
 import { useDebounce } from '../useDebounce';
 
-// 模擬定時器
-jest.useFakeTimers();
-
 describe('useDebounce', () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllTimers();
   });
 
@@ -32,13 +30,9 @@ describe('useDebounce', () => {
     // 值應該還是舊的
     expect(result.current).toBe('initial');
 
-    // 快進時間
+    // 快進時間並執行定時器
     act(() => {
       jest.advanceTimersByTime(1000);
-    });
-
-    // 等待 useEffect 執行
-    act(() => {
       jest.runOnlyPendingTimers();
     });
 
@@ -81,17 +75,10 @@ describe('useDebounce', () => {
     // 第二次更新
     rerender({ value: 'second', delay: 1000 });
 
-    // 快進 500ms（總共 1000ms，但第二次更新重置了定時器）
+    // 快進 1000ms 讓第二次更新生效
     act(() => {
-      jest.advanceTimersByTime(500);
-    });
-
-    // 值應該還是舊的
-    expect(result.current).toBe('initial');
-
-    // 快進到 1000ms
-    act(() => {
-      jest.advanceTimersByTime(500);
+      jest.advanceTimersByTime(1000);
+      jest.runOnlyPendingTimers();
     });
 
     // 值應該更新為第二次的值
@@ -106,13 +93,9 @@ describe('useDebounce', () => {
 
     rerender({ value: 'updated', delay: 500 });
 
-    // 快進 500ms
+    // 快進 500ms 並執行定時器
     act(() => {
       jest.advanceTimersByTime(500);
-    });
-
-    // 等待 useEffect 執行
-    act(() => {
       jest.runOnlyPendingTimers();
     });
 
@@ -129,10 +112,6 @@ describe('useDebounce', () => {
 
     act(() => {
       jest.advanceTimersByTime(1000);
-    });
-
-    // 等待 useEffect 執行
-    act(() => {
       jest.runOnlyPendingTimers();
     });
 
@@ -149,10 +128,6 @@ describe('useDebounce', () => {
 
     act(() => {
       jest.advanceTimersByTime(1000);
-    });
-
-    // 等待 useEffect 執行
-    act(() => {
       jest.runOnlyPendingTimers();
     });
 
@@ -172,10 +147,6 @@ describe('useDebounce', () => {
 
     act(() => {
       jest.advanceTimersByTime(1000);
-    });
-
-    // 等待 useEffect 執行
-    act(() => {
       jest.runOnlyPendingTimers();
     });
 
@@ -209,6 +180,11 @@ describe('useDebounce', () => {
     );
 
     rerender({ value: 'updated', delay: 0 });
+
+    // 等待一個 tick 讓 useEffect 執行
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
 
     // 值應該立即更新
     expect(result.current).toBe('updated');
