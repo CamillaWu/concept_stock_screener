@@ -164,10 +164,11 @@ pnpm build
 
 ## 📖 文檔
 
-- [架構設計](docs-new/development/ARCHITECTURE_RESTRUCTURE.md)
-- [API 文檔](docs-new/api/)
-- [部署指南](docs-new/deployment/)
-- [用戶手冊](docs-new/user/)
+- [文檔中心](docs/) - 完整的項目文檔
+- [架構設計](docs/development/ARCHITECTURE_RESTRUCTURE.md)
+- [API 文檔](docs/api/)
+- [部署指南](docs/deployment/)
+- [用戶手冊](docs/user/)
 
 ## 🤝 貢獻
 
