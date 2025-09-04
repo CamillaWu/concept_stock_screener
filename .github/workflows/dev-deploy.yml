@@ -177,25 +177,23 @@ jobs:
           echo "✅ 部署包準備完成"
 
       - name: 部署前端到 Vercel 開發環境
-        run: |
-          echo "🌐 部署前端到 Vercel 開發環境..."
-          echo "⚠️ 暫時跳過 Vercel 部署（需要配置 VERCEL_TOKEN_DEV, VERCEL_ORG_ID_DEV, VERCEL_PROJECT_ID_DEV）"
-          echo "請在 GitHub Secrets 中配置以下變數："
-          echo "- VERCEL_TOKEN_DEV: Vercel API Token"
-          echo "- VERCEL_ORG_ID_DEV: Vercel Organization ID"
-          echo "- VERCEL_PROJECT_ID_DEV: Vercel Project ID"
-          echo "配置完成後，可以重新啟用 Vercel 部署"
-        continue-on-error: true
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN_DEV }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
+          # 開發環境部署到專案的生產環境（穩定版本）
+          vercel-args: '--prod'
+          working-directory: ./apps/web
 
       - name: 部署 API 到 Cloudflare 開發環境
-        run: |
-          echo "🔌 部署 API 到 Cloudflare 開發環境..."
-          echo "⚠️ 暫時跳過 Cloudflare 部署（需要配置 CLOUDFLARE_API_TOKEN_DEV, CLOUDFLARE_ACCOUNT_ID_DEV）"
-          echo "請在 GitHub Secrets 中配置以下變數："
-          echo "- CLOUDFLARE_API_TOKEN_DEV: Cloudflare API Token"
-          echo "- CLOUDFLARE_ACCOUNT_ID_DEV: Cloudflare Account ID"
-          echo "配置完成後，可以重新啟用 Cloudflare 部署"
-        continue-on-error: true
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          environment: development
+          working-directory: ./apps/api
 
       - name: 部署數據管道
         run: |
