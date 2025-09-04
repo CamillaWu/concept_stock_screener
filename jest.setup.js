@@ -16,7 +16,7 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
   info: console.info,
-  debug: console.debug
+  debug: console.debug,
 };
 
 // 模擬 fetch API
@@ -29,7 +29,7 @@ global.localStorage = {
   removeItem: jest.fn(),
   clear: jest.fn(),
   length: 0,
-  key: jest.fn()
+  key: jest.fn(),
 };
 
 // 模擬 sessionStorage
@@ -39,7 +39,7 @@ global.sessionStorage = {
   removeItem: jest.fn(),
   clear: jest.fn(),
   length: 0,
-  key: jest.fn()
+  key: jest.fn(),
 };
 
 // 模擬 matchMedia
@@ -51,7 +51,7 @@ global.matchMedia = jest.fn().mockImplementation(query => ({
   removeListener: jest.fn(),
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
-  dispatchEvent: jest.fn()
+  dispatchEvent: jest.fn(),
 }));
 
 // 創建穩定的 mock observer 類

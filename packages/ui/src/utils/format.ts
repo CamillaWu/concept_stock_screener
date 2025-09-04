@@ -34,7 +34,7 @@ export function formatNumber(value: number, decimals = 0): string {
  */
 export function formatDate(date: Date | string, format = 'YYYY-MM-DD'): string {
   const d = new Date(date);
-  
+
   if (isNaN(d.getTime())) {
     return '無效日期';
   }

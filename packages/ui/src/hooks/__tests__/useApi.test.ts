@@ -14,9 +14,11 @@ describe('useApi Hook', () => {
 
   describe('基本功能', () => {
     it('應該返回正確的初始狀態', () => {
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       expect(result.current.data).toBeNull();
       expect(result.current.loading).toBe(false);
@@ -26,12 +28,14 @@ describe('useApi Hook', () => {
     });
 
     it('應該支援自定義配置', () => {
-      const { result } = renderHook(() => useApi({
-        url: '/api/test',
-        method: 'POST',
-        body: { test: 'data' },
-        headers: { 'Custom-Header': 'value' }
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+          method: 'POST',
+          body: { test: 'data' },
+          headers: { 'Custom-Header': 'value' },
+        })
+      );
 
       expect(result.current.data).toBeNull();
       expect(result.current.loading).toBe(false);
@@ -43,12 +47,14 @@ describe('useApi Hook', () => {
     it('應該在執行時設置 loading 狀態', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: 'test' })
+        json: async () => ({ success: true, data: 'test' }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -61,12 +67,14 @@ describe('useApi Hook', () => {
       const mockData = { id: 1, name: 'test' };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockData })
+        json: async () => ({ success: true, data: mockData }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -82,12 +90,14 @@ describe('useApi Hook', () => {
     it('應該處理 API 錯誤響應', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 500
+        status: 500,
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -104,9 +114,11 @@ describe('useApi Hook', () => {
       const networkError = new Error('Network error');
       mockFetch.mockRejectedValueOnce(networkError);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -124,12 +136,14 @@ describe('useApi Hook', () => {
         ok: true,
         json: async () => {
           throw new Error('Invalid JSON');
-        }
+        },
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -150,13 +164,15 @@ describe('useApi Hook', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockData })
+        json: async () => ({ success: true, data: mockData }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test',
-        onSuccess
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+          onSuccess,
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -173,13 +189,15 @@ describe('useApi Hook', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: false, error: errorMessage })
+        json: async () => ({ success: false, error: errorMessage }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test',
-        onError
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+          onError,
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -195,22 +213,27 @@ describe('useApi Hook', () => {
     it('應該支援 GET 請求', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: 'get-data' })
+        json: async () => ({ success: true, data: 'get-data' }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test',
-        method: 'GET'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+          method: 'GET',
+        })
+      );
 
       act(() => {
         result.current.execute();
       });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/test', expect.objectContaining({
-          method: 'GET'
-        }));
+        expect(mockFetch).toHaveBeenCalledWith(
+          '/api/test',
+          expect.objectContaining({
+            method: 'GET',
+          })
+        );
       });
     });
 
@@ -218,50 +241,60 @@ describe('useApi Hook', () => {
       const postData = { name: 'test' };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: 'post-data' })
+        json: async () => ({ success: true, data: 'post-data' }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test',
-        method: 'POST',
-        body: postData
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+          method: 'POST',
+          body: postData,
+        })
+      );
 
       act(() => {
         result.current.execute();
       });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/test', expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify(postData)
-        }));
+        expect(mockFetch).toHaveBeenCalledWith(
+          '/api/test',
+          expect.objectContaining({
+            method: 'POST',
+            body: JSON.stringify(postData),
+          })
+        );
       });
     });
 
     it('應該支援自定義請求頭', async () => {
-      const customHeaders = { 'Authorization': 'Bearer token' };
+      const customHeaders = { Authorization: 'Bearer token' };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: 'data' })
+        json: async () => ({ success: true, data: 'data' }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test',
-        headers: customHeaders
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+          headers: customHeaders,
+        })
+      );
 
       act(() => {
         result.current.execute();
       });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/test', expect.objectContaining({
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer token'
+        expect(mockFetch).toHaveBeenCalledWith(
+          '/api/test',
+          expect.objectContaining({
+            headers: expect.objectContaining({
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer token',
+            }),
           })
-        }));
+        );
       });
     });
   });
@@ -271,12 +304,14 @@ describe('useApi Hook', () => {
       const mockData = { id: 1, name: 'test' };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockData })
+        json: async () => ({ success: true, data: mockData }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       // 先執行一次成功的請求
       act(() => {
@@ -304,13 +339,15 @@ describe('useApi Hook', () => {
       const mockData = { id: 1, name: 'test' };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true, data: mockData })
+        json: async () => ({ success: true, data: mockData }),
       } as Response);
 
-      renderHook(() => useApi({
-        url: '/api/test',
-        immediate: true
-      }));
+      renderHook(() =>
+        useApi({
+          url: '/api/test',
+          immediate: true,
+        })
+      );
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -318,10 +355,12 @@ describe('useApi Hook', () => {
     });
 
     it('應該在 immediate=false 時不自動執行', () => {
-      renderHook(() => useApi({
-        url: '/api/test',
-        immediate: false
-      }));
+      renderHook(() =>
+        useApi({
+          url: '/api/test',
+          immediate: false,
+        })
+      );
 
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -331,12 +370,14 @@ describe('useApi Hook', () => {
     it('應該處理空的響應數據', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true })
+        json: async () => ({ success: true }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -352,12 +393,14 @@ describe('useApi Hook', () => {
     it('應該處理非標準錯誤響應', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: false })
+        json: async () => ({ success: false }),
       } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       act(() => {
         result.current.execute();
@@ -379,16 +422,18 @@ describe('useApi Hook', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ success: true, data: mockData1 })
+          json: async () => ({ success: true, data: mockData1 }),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ success: true, data: mockData2 })
+          json: async () => ({ success: true, data: mockData2 }),
         } as Response);
 
-      const { result } = renderHook(() => useApi({
-        url: '/api/test'
-      }));
+      const { result } = renderHook(() =>
+        useApi({
+          url: '/api/test',
+        })
+      );
 
       // 發起第一個請求
       act(() => {

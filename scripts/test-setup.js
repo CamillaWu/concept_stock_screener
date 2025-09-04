@@ -24,7 +24,7 @@ global.testUtils = {
       default: {
         id: 'test-id',
         name: 'test-name',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       stock: {
         symbol: '2330',
@@ -35,7 +35,7 @@ global.testUtils = {
         volume: 50000000,
         marketCap: 15000000000000,
         sector: '半導體',
-        industry: '晶圓代工'
+        industry: '晶圓代工',
       },
       concept: {
         id: 'ai-chips',
@@ -44,7 +44,7 @@ global.testUtils = {
         keywords: ['AI', '晶片', '半導體', '人工智慧'],
         stocks: ['2330', '2317', '2454'],
         marketCap: 25000000000000,
-        trend: 'up'
+        trend: 'up',
       },
       search: {
         query: 'AI 晶片',
@@ -53,9 +53,9 @@ global.testUtils = {
           concepts: [],
           total: 0,
           suggestions: ['AI', '晶片', '半導體'],
-          message: '找到 0 個相關結果'
-        }
-      }
+          message: '找到 0 個相關結果',
+        },
+      },
     };
 
     return mockData[type] || mockData.default;
@@ -67,14 +67,14 @@ global.testUtils = {
     data,
     message,
     timestamp: new Date().toISOString(),
-    ...(success ? {} : { error: 'Test error' })
+    ...(success ? {} : { error: 'Test error' }),
   }),
 
   // 創建模擬錯誤
   createMockError: (message = 'Test error', status = 500) => ({
     message,
     status,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   }),
 
   // 創建模擬請求
@@ -84,10 +84,10 @@ global.testUtils = {
     body,
     headers: {
       'content-type': 'application/json',
-      'authorization': 'Bearer test-token'
+      authorization: 'Bearer test-token',
     },
     params: {},
-    query: {}
+    query: {},
   }),
 
   // 創建模擬響應
@@ -97,11 +97,11 @@ global.testUtils = {
       json: jest.fn().mockReturnThis(),
       send: jest.fn().mockReturnThis(),
       setHeader: jest.fn().mockReturnThis(),
-      end: jest.fn().mockReturnThis()
+      end: jest.fn().mockReturnThis(),
     };
 
     // 添加狀態碼檢查
-    res.status.mockImplementation((code) => {
+    res.status.mockImplementation(code => {
       res.statusCode = code;
       return res;
     });
@@ -114,7 +114,7 @@ global.testUtils = {
     GEMINI_API_KEY: 'test-gemini-key',
     PINECONE_API_KEY: 'test-pinecone-key',
     PINECONE_ENVIRONMENT: 'test-env',
-    NODE_ENV: 'test'
+    NODE_ENV: 'test',
   }),
 
   // 創建模擬上下文
@@ -122,8 +122,8 @@ global.testUtils = {
     params: {},
     query: {},
     env: {},
-    waitUntil: jest.fn()
-  })
+    waitUntil: jest.fn(),
+  }),
 };
 
 // 模擬 console 方法
@@ -138,7 +138,7 @@ global.console = {
   // 保留 console.info 用於調試
   info: console.info,
   // 保留 console.debug 用於調試
-  debug: console.debug
+  debug: console.debug,
 };
 
 // 模擬 fetch API
@@ -151,7 +151,7 @@ global.localStorage = {
   removeItem: jest.fn(),
   clear: jest.fn(),
   length: 0,
-  key: jest.fn()
+  key: jest.fn(),
 };
 
 // 模擬 sessionStorage
@@ -161,7 +161,7 @@ global.sessionStorage = {
   removeItem: jest.fn(),
   clear: jest.fn(),
   length: 0,
-  key: jest.fn()
+  key: jest.fn(),
 };
 
 // 模擬 matchMedia
@@ -173,28 +173,28 @@ global.matchMedia = jest.fn().mockImplementation(query => ({
   removeListener: jest.fn(),
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
-  dispatchEvent: jest.fn()
+  dispatchEvent: jest.fn(),
 }));
 
 // 模擬 IntersectionObserver
 global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }));
 
 // 模擬 ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }));
 
 // 模擬 MutationObserver
 global.MutationObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   disconnect: jest.fn(),
-  takeRecords: jest.fn()
+  takeRecords: jest.fn(),
 }));
 
 // 測試後清理
@@ -208,7 +208,11 @@ afterEach(() => {
   }
 
   // 重置 localStorage 模擬
-  if (global.localStorage && global.localStorage.getItem && global.localStorage.getItem.mockClear) {
+  if (
+    global.localStorage &&
+    global.localStorage.getItem &&
+    global.localStorage.getItem.mockClear
+  ) {
     global.localStorage.getItem.mockClear();
     global.localStorage.setItem.mockClear();
     global.localStorage.removeItem.mockClear();
@@ -216,7 +220,11 @@ afterEach(() => {
   }
 
   // 重置 sessionStorage 模擬
-  if (global.sessionStorage && global.sessionStorage.getItem && global.sessionStorage.getItem.mockClear) {
+  if (
+    global.sessionStorage &&
+    global.sessionStorage.getItem &&
+    global.sessionStorage.getItem.mockClear
+  ) {
     global.sessionStorage.getItem.mockClear();
     global.sessionStorage.setItem.mockClear();
     global.sessionStorage.removeItem.mockClear();

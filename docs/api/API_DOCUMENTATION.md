@@ -3,6 +3,7 @@
 ## 1. API 概述
 
 ### 1.1 基本信息
+
 - **基礎 URL**：`https://api.concept-stock-screener.com`
 - **API 版本**：v1
 - **認證方式**：Bearer Token
@@ -10,6 +11,7 @@
 - **字符編碼**：UTF-8
 
 ### 1.2 支持的 HTTP 方法
+
 - `GET`：獲取資源
 - `POST`：創建資源
 - `PUT`：更新資源
@@ -17,6 +19,7 @@
 - `PATCH`：部分更新資源
 
 ### 1.3 響應狀態碼
+
 - `200`：成功
 - `201`：創建成功
 - `400`：請求錯誤
@@ -29,16 +32,19 @@
 ## 2. 認證和授權
 
 ### 2.1 API 密鑰認證
+
 ```http
 Authorization: Bearer YOUR_API_KEY
 ```
 
 ### 2.2 請求限制
+
 - **基礎限制**：100 請求/小時
 - **高級限制**：1000 請求/小時
 - **企業限制**：10000 請求/小時
 
 ### 2.3 速率限制響應
+
 ```json
 {
   "error": "rate_limit_exceeded",
@@ -52,29 +58,33 @@ Authorization: Bearer YOUR_API_KEY
 ## 3. 股票相關 API
 
 ### 3.1 股票搜索
+
 ```http
 GET /api/v1/stocks/search
 ```
 
 #### 請求參數
-| 參數 | 類型 | 必填 | 描述 |
-|------|------|------|------|
-| `q` | string | 是 | 搜索查詢（股票名稱、代碼或概念） |
-| `page` | integer | 否 | 頁碼，默認 1 |
-| `limit` | integer | 否 | 每頁數量，默認 20，最大 100 |
-| `sort` | string | 否 | 排序方式：`relevance`、`price`、`change`、`market_cap` |
-| `order` | string | 否 | 排序順序：`asc`、`desc`，默認 `desc` |
-| `concepts` | string[] | 否 | 概念篩選，多個概念用逗號分隔 |
-| `min_price` | number | 否 | 最低價格 |
-| `max_price` | number | 否 | 最高價格 |
+
+| 參數        | 類型     | 必填 | 描述                                                   |
+| ----------- | -------- | ---- | ------------------------------------------------------ |
+| `q`         | string   | 是   | 搜索查詢（股票名稱、代碼或概念）                       |
+| `page`      | integer  | 否   | 頁碼，默認 1                                           |
+| `limit`     | integer  | 否   | 每頁數量，默認 20，最大 100                            |
+| `sort`      | string   | 否   | 排序方式：`relevance`、`price`、`change`、`market_cap` |
+| `order`     | string   | 否   | 排序順序：`asc`、`desc`，默認 `desc`                   |
+| `concepts`  | string[] | 否   | 概念篩選，多個概念用逗號分隔                           |
+| `min_price` | number   | 否   | 最低價格                                               |
+| `max_price` | number   | 否   | 最高價格                                               |
 
 #### 請求示例
+
 ```bash
 curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/search?q=AI&page=1&limit=20&sort=relevance" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -108,22 +118,26 @@ curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/search?q=AI&pa
 ```
 
 ### 3.2 股票詳情
+
 ```http
 GET /api/v1/stocks/{stock_id}
 ```
 
 #### 路徑參數
-| 參數 | 類型 | 描述 |
-|------|------|------|
+
+| 參數       | 類型   | 描述           |
+| ---------- | ------ | -------------- |
 | `stock_id` | string | 股票 ID 或代碼 |
 
 #### 請求示例
+
 ```bash
 curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/2330" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -166,17 +180,20 @@ curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/2330" \
 ```
 
 ### 3.3 股票概念分析
+
 ```http
 GET /api/v1/stocks/{stock_id}/concepts
 ```
 
 #### 請求示例
+
 ```bash
 curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/2330/concepts" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -209,20 +226,23 @@ curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/2330/concepts"
 ## 4. 概念相關 API
 
 ### 4.1 概念搜索
+
 ```http
 GET /api/v1/concepts/search
 ```
 
 #### 請求參數
-| 參數 | 類型 | 必填 | 描述 |
-|------|------|------|------|
-| `q` | string | 是 | 概念名稱或描述 |
-| `page` | integer | 否 | 頁碼，默認 1 |
-| `limit` | integer | 否 | 每頁數量，默認 20 |
-| `category` | string | 否 | 概念分類 |
-| `trend` | string | 否 | 趨勢：`rising`、`falling`、`stable` |
+
+| 參數       | 類型    | 必填 | 描述                                |
+| ---------- | ------- | ---- | ----------------------------------- |
+| `q`        | string  | 是   | 概念名稱或描述                      |
+| `page`     | integer | 否   | 頁碼，默認 1                        |
+| `limit`    | integer | 否   | 每頁數量，默認 20                   |
+| `category` | string  | 否   | 概念分類                            |
+| `trend`    | string  | 否   | 趨勢：`rising`、`falling`、`stable` |
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -251,11 +271,13 @@ GET /api/v1/concepts/search
 ```
 
 ### 4.2 概念詳情
+
 ```http
 GET /api/v1/concepts/{concept_id}
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -282,16 +304,19 @@ GET /api/v1/concepts/{concept_id}
 ```
 
 ### 4.3 概念趨勢分析
+
 ```http
 GET /api/v1/concepts/{concept_id}/trends
 ```
 
 #### 請求參數
-| 參數 | 類型 | 必填 | 描述 |
-|------|------|------|------|
-| `period` | string | 否 | 時間週期：`1d`、`1w`、`1m`、`3m`、`6m`、`1y`，默認 `1m` |
+
+| 參數     | 類型   | 必填 | 描述                                                    |
+| -------- | ------ | ---- | ------------------------------------------------------- |
+| `period` | string | 否   | 時間週期：`1d`、`1w`、`1m`、`3m`、`6m`、`1y`，默認 `1m` |
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -335,11 +360,13 @@ GET /api/v1/concepts/{concept_id}/trends
 ## 5. 本地收藏 API
 
 ### 5.1 本地收藏管理
+
 ```http
 POST /api/v1/favorites
 ```
 
 #### 請求體
+
 ```json
 {
   "stock_id": "2330",
@@ -348,6 +375,7 @@ POST /api/v1/favorites
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -362,11 +390,13 @@ POST /api/v1/favorites
 ```
 
 ### 5.2 獲取本地收藏
+
 ```http
 GET /api/v1/favorites
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -389,6 +419,7 @@ GET /api/v1/favorites
 ```
 
 ### 5.3 刪除收藏
+
 ```http
 DELETE /api/v1/favorites/{favorite_id}
 ```
@@ -396,11 +427,13 @@ DELETE /api/v1/favorites/{favorite_id}
 ## 6. AI 分析 API
 
 ### 6.1 智能股票分析
+
 ```http
 POST /api/v1/ai/analyze
 ```
 
 #### 請求體
+
 ```json
 {
   "query": "分析台積電在 AI 領域的投資價值",
@@ -411,6 +444,7 @@ POST /api/v1/ai/analyze
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -418,21 +452,9 @@ POST /api/v1/ai/analyze
     "analysis_id": "analysis_123",
     "query": "分析台積電在 AI 領域的投資價值",
     "summary": "台積電作為全球半導體製造龍頭，在 AI 領域具有顯著優勢...",
-    "key_points": [
-      "技術領先優勢明顯",
-      "AI 芯片需求強勁",
-      "產能擴張計劃明確"
-    ],
-    "risks": [
-      "地緣政治風險",
-      "技術迭代風險",
-      "競爭加劇風險"
-    ],
-    "opportunities": [
-      "AI 芯片市場擴張",
-      "先進製程技術突破",
-      "客戶多元化發展"
-    ],
+    "key_points": ["技術領先優勢明顯", "AI 芯片需求強勁", "產能擴張計劃明確"],
+    "risks": ["地緣政治風險", "技術迭代風險", "競爭加劇風險"],
+    "opportunities": ["AI 芯片市場擴張", "先進製程技術突破", "客戶多元化發展"],
     "recommendation": "buy",
     "confidence_score": 0.85,
     "target_price": 580.0,
@@ -443,11 +465,13 @@ POST /api/v1/ai/analyze
 ```
 
 ### 6.2 概念趨勢預測
+
 ```http
 POST /api/v1/ai/predict
 ```
 
 #### 請求體
+
 ```json
 {
   "concept": "AI",
@@ -458,6 +482,7 @@ POST /api/v1/ai/predict
 ```
 
 #### 響應示例
+
 ```json
 {
   "success": true,
@@ -470,11 +495,7 @@ POST /api/v1/ai/predict
       "trend": "bullish",
       "confidence": 0.78,
       "expected_growth": 0.15,
-      "key_factors": [
-        "技術突破",
-        "政策支持",
-        "市場需求"
-      ]
+      "key_factors": ["技術突破", "政策支持", "市場需求"]
     },
     "analysis": {
       "current_state": "穩健增長",
@@ -490,6 +511,7 @@ POST /api/v1/ai/predict
 ## 7. 數據模型定義
 
 ### 7.1 股票模型
+
 ```typescript
 interface Stock {
   id: string;
@@ -527,6 +549,7 @@ interface StockDetail extends Stock {
 ```
 
 ### 7.2 概念模型
+
 ```typescript
 interface Concept {
   id: string;
@@ -554,6 +577,7 @@ interface ConceptDetail extends Concept {
 ```
 
 ### 7.3 本地收藏模型
+
 ```typescript
 interface LocalFavorite {
   id: string;
@@ -568,6 +592,7 @@ interface LocalFavorite {
 ```
 
 ### 7.4 AI 分析模型
+
 ```typescript
 interface AIAnalysis {
   analysis_id: string;
@@ -607,28 +632,31 @@ interface AIPrediction {
 ## 8. 錯誤碼說明
 
 ### 8.1 通用錯誤碼
-| 錯誤碼 | HTTP 狀態碼 | 描述 | 解決方案 |
-|--------|-------------|------|----------|
-| `invalid_request` | 400 | 請求格式錯誤 | 檢查請求參數和格式 |
-| `missing_parameter` | 400 | 缺少必要參數 | 提供所有必要參數 |
-| `invalid_parameter` | 400 | 參數值無效 | 檢查參數值範圍和格式 |
-| `unauthorized` | 401 | 未提供認證信息 | 添加有效的 API 密鑰 |
-| `invalid_token` | 401 | API 密鑰無效 | 檢查 API 密鑰是否正確 |
-| `insufficient_permissions` | 403 | 權限不足 | 聯繫管理員 |
-| `resource_not_found` | 404 | 資源不存在 | 檢查資源 ID 是否正確 |
-| `rate_limit_exceeded` | 429 | 請求頻率過高 | 降低請求頻率或聯繫管理員 |
-| `internal_error` | 500 | 服務器內部錯誤 | 稍後重試或聯繫支持 |
+
+| 錯誤碼                     | HTTP 狀態碼 | 描述           | 解決方案                 |
+| -------------------------- | ----------- | -------------- | ------------------------ |
+| `invalid_request`          | 400         | 請求格式錯誤   | 檢查請求參數和格式       |
+| `missing_parameter`        | 400         | 缺少必要參數   | 提供所有必要參數         |
+| `invalid_parameter`        | 400         | 參數值無效     | 檢查參數值範圍和格式     |
+| `unauthorized`             | 401         | 未提供認證信息 | 添加有效的 API 密鑰      |
+| `invalid_token`            | 401         | API 密鑰無效   | 檢查 API 密鑰是否正確    |
+| `insufficient_permissions` | 403         | 權限不足       | 聯繫管理員               |
+| `resource_not_found`       | 404         | 資源不存在     | 檢查資源 ID 是否正確     |
+| `rate_limit_exceeded`      | 429         | 請求頻率過高   | 降低請求頻率或聯繫管理員 |
+| `internal_error`           | 500         | 服務器內部錯誤 | 稍後重試或聯繫支持       |
 
 ### 8.2 業務錯誤碼
-| 錯誤碼 | HTTP 狀態碼 | 描述 | 解決方案 |
-|--------|-------------|------|----------|
-| `stock_not_found` | 404 | 股票不存在 | 檢查股票代碼是否正確 |
-| `concept_not_found` | 404 | 概念不存在 | 檢查概念名稱是否正確 |
-| `invalid_analysis_request` | 400 | 分析請求無效 | 檢查分析參數 |
-| `analysis_in_progress` | 202 | 分析正在進行中 | 稍後查詢結果 |
-| `insufficient_data` | 400 | 數據不足 | 選擇其他股票或概念 |
+
+| 錯誤碼                     | HTTP 狀態碼 | 描述           | 解決方案             |
+| -------------------------- | ----------- | -------------- | -------------------- |
+| `stock_not_found`          | 404         | 股票不存在     | 檢查股票代碼是否正確 |
+| `concept_not_found`        | 404         | 概念不存在     | 檢查概念名稱是否正確 |
+| `invalid_analysis_request` | 400         | 分析請求無效   | 檢查分析參數         |
+| `analysis_in_progress`     | 202         | 分析正在進行中 | 稍後查詢結果         |
+| `insufficient_data`        | 400         | 數據不足       | 選擇其他股票或概念   |
 
 ### 8.3 錯誤響應格式
+
 ```json
 {
   "success": false,
@@ -652,24 +680,28 @@ interface AIPrediction {
 ## 9. 最佳實踐
 
 ### 9.1 請求優化
+
 - 使用適當的 `limit` 參數，避免一次請求過多數據
 - 利用 `page` 參數進行分頁查詢
 - 使用 `sort` 和 `order` 參數優化結果排序
 - 合理使用篩選參數減少不必要的數據傳輸
 
 ### 9.2 錯誤處理
+
 - 實現指數退避重試機制
 - 處理速率限制錯誤，遵守 `retry_after` 指示
 - 記錄錯誤詳情，包括 `request_id` 和 `timestamp`
 - 實現用戶友好的錯誤提示
 
 ### 9.3 快取策略
+
 - 快取靜態數據（如股票基本信息）
 - 實現適當的快取過期策略
 - 使用 ETag 和 Last-Modified 頭部
 - 避免重複請求相同數據
 
 ### 9.4 監控和日誌
+
 - 監控 API 響應時間和錯誤率
 - 記錄關鍵操作日誌
 - 設置適當的警報閾值
@@ -678,24 +710,26 @@ interface AIPrediction {
 ## 10. SDK 和工具
 
 ### 10.1 官方 SDK
+
 - **JavaScript/TypeScript SDK**：`npm install @concept-stock-screener/sdk`
 - **Python SDK**：`pip install concept-stock-screener`
 - **Go SDK**：`go get github.com/concept-stock-screener/go-sdk`
 
 ### 10.2 SDK 使用示例
+
 ```typescript
 // JavaScript/TypeScript
 import { ConceptStockScreener } from '@concept-stock-screener/sdk';
 
 const client = new ConceptStockScreener({
   apiKey: 'YOUR_API_KEY',
-  baseUrl: 'https://api.concept-stock-screener.com'
+  baseUrl: 'https://api.concept-stock-screener.com',
 });
 
 // 搜索股票
 const stocks = await client.stocks.search({
   query: 'AI',
-  limit: 20
+  limit: 20,
 });
 
 // 獲取股票詳情
@@ -704,7 +738,7 @@ const stock = await client.stocks.get('2330');
 // AI 分析
 const analysis = await client.ai.analyze({
   query: '分析台積電投資價值',
-  stockId: '2330'
+  stockId: '2330',
 });
 ```
 
@@ -730,22 +764,25 @@ analysis = client.ai.analyze(
 ## 11. 後續步驟
 
 ### 11.1 立即開始
+
 1. 獲取 API 密鑰
 2. 閱讀 SDK 文檔
 3. 運行第一個 API 請求
 
 ### 11.2 短期目標 (1-2 週)
+
 1. 集成基本 API 功能
 2. 實現錯誤處理機制
 3. 建立數據快取策略
 
 ### 11.3 中期目標 (3-4 週)
+
 1. 實現完整的 API 集成
 2. 優化請求和響應處理
 3. 建立監控和日誌系統
 
 ### 11.4 長期目標 (6-8 週)
+
 1. 實現高級 AI 分析功能
 2. 建立實時數據更新機制
 3. 優化 API 性能和可靠性
-
