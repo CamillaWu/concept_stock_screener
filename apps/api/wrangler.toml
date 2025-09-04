@@ -8,10 +8,11 @@ name = "concept-stock-screener-api-prod"
 [env.staging]
 name = "concept-stock-screener-api-staging"
 
-[[env.production.kv_namespaces]]
-binding = "STOCK_DATA"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
+# KV namespaces 暫時註釋掉，等實際部署時再配置
+# [[env.production.kv_namespaces]]
+# binding = "STOCK_DATA"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
 
 [[env.production.vars]]
 STAGE = "production"
