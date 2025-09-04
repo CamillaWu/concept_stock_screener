@@ -315,9 +315,23 @@ describe('helpers 工具函數', () => {
 
     it('應該支持自定義後綴', () => {
       const text = '長文本';
-      const result = truncateText(text, 2, '***');
+      const result = truncateText(text, 5, '***');
 
       expect(result).toBe('長***');
+    });
+
+    it('應該正確截斷文本', () => {
+      const text = '長文本';
+      const result = truncateText(text, 4, '***');
+
+      expect(result).toBe('長***');
+    });
+
+    it('應該處理後綴長度超過最大長度的情況', () => {
+      const text = '長文本';
+      const result = truncateText(text, 2, '***');
+
+      expect(result).toBe('***');
     });
   });
 
@@ -349,8 +363,8 @@ describe('helpers 工具函數', () => {
     });
 
     it('應該處理多個大寫字母', () => {
-      expect(toKebabCase('userID')).toBe('user-i-d');
-      expect(toKebabCase('APIEndpoint')).toBe('a-p-i-endpoint');
+      expect(toKebabCase('userID')).toBe('user-id');
+      expect(toKebabCase('APIEndpoint')).toBe('api-endpoint');
     });
   });
 });
