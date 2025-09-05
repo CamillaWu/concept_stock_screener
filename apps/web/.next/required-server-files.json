@@ -69,8 +69,8 @@
       "position": "bottom-left"
     },
     "onDemandEntries": {
-      "maxInactiveAge": 25000,
-      "pagesBufferLength": 2
+      "maxInactiveAge": 60000,
+      "pagesBufferLength": 5
     },
     "amp": {
       "canonicalBase": ""
@@ -93,7 +93,6 @@
     "compiler": {},
     "expireTime": 31536000,
     "staticPageGenerationTimeout": 60,
-    "output": "standalone",
     "modularizeImports": {
       "@mui/icons-material": {
         "transform": "@mui/icons-material/{{member}}"
