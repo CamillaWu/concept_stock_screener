@@ -180,7 +180,7 @@ jobs:
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN_DEV }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-org-id: ${{ vars.VERCEL_ORG_ID_DEV }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
           # 開發環境部署到專案的生產環境（穩定版本）
           vercel-args: '--prod'

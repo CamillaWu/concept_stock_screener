@@ -64,9 +64,9 @@ jobs:
       - name: 部署前端到 Vercel 生產環境
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN_PROD }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PROD }}
           # 生產環境部署到專案的生產環境
           vercel-args: '--prod'
           working-directory: ./deployment/web
