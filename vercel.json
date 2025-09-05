@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd apps/web && pnpm build",
+  "buildCommand": "cd apps/web && cp package-vercel.json package.json && npm install && npm run build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "echo 'Using buildCommand for installation'",
   "framework": "nextjs",
   "functions": {
     "apps/web/.next/server/**/*.js": {
