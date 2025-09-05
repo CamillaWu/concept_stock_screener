@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd apps/web && cp package-vercel.json package.json && npm install && npm run build",
+  "buildCommand": "cd apps/web && npm install && npm run build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "echo 'Using buildCommand for installation'",
+  "installCommand": "cd apps/web && npm install",
   "framework": "nextjs",
   "functions": {
     "apps/web/.next/server/**/*.js": {
