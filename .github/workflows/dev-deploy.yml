@@ -1,4 +1,4 @@
-name: 開發環境 CI/CD
+name: Dev Environment CI/CD
 
 on:
   push:
@@ -8,12 +8,12 @@ on:
   workflow_dispatch:
     inputs:
       force_deploy:
-        description: '強制部署（跳過測試）'
+        description: 'Force deploy (skip tests)'
         required: false
         default: false
         type: boolean
       skip_tests:
-        description: '跳過測試'
+        description: 'Skip tests'
         required: false
         default: false
         type: boolean
@@ -24,193 +24,154 @@ env:
   ENVIRONMENT: 'development'
 
 jobs:
-  # 代碼品質檢查
   code-quality:
     runs-on: ubuntu-latest
-    name: 代碼品質檢查
+    name: Code Quality Checks
     timeout-minutes: 10
 
     steps:
-      - name: 檢出代碼
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 設置 Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 安裝 pnpm
+      - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: 安裝依賴
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 類型檢查
+      - name: Type check
+        if: ${{ !inputs.skip_tests }}
         run: pnpm type-check
-        if: ${{ !inputs.skip_tests }}
 
-      - name: 代碼風格檢查
+      - name: Lint
+        if: ${{ !inputs.skip_tests }}
         run: pnpm lint:check
-        if: ${{ !inputs.skip_tests }}
 
-      - name: 代碼格式化檢查
+      - name: Format check
+        if: ${{ !inputs.skip_tests }}
         run: pnpm format:check
-        if: ${{ !inputs.skip_tests }}
 
-  # 構建和測試
   build-and-test:
     needs: code-quality
     runs-on: ubuntu-latest
-    name: 構建和測試
+    name: Build and Test
     timeout-minutes: 15
 
     steps:
-      - name: 檢出代碼
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 設置 Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 安裝 pnpm
+      - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: 安裝依賴
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 構建基礎包
+      - name: Build shared packages
         run: |
-          echo "🔨 構建基礎包..."
+          echo "Building shared packages"
           pnpm build:types
           pnpm build:ui
 
-      - name: 構建前端
+      - name: Build web app
         run: |
-          echo "🌐 構建前端應用..."
+          echo "Building web app"
           pnpm build:web
 
-      - name: 構建 API
+      - name: Build API
         run: |
-          echo "🔌 構建 API 服務..."
+          echo "Building API"
           pnpm build:api
 
-      - name: 運行測試
-        run: |
-          echo "🧪 運行測試..."
-          pnpm test:ci
+      - name: Run tests
         if: ${{ !inputs.skip_tests }}
+        run: |
+          echo "Running test suite"
+          pnpm test:ci
 
-      - name: 上傳測試覆蓋率
+      - name: Upload coverage to Codecov
+        if: ${{ !inputs.skip_tests }}
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/lcov.info
-        if: ${{ !inputs.skip_tests }}
 
-      - name: 創建部署包
+      - name: Prepare deployment artifact
         run: |
-          echo "📦 創建部署包..."
+          echo "Preparing deployment bundle"
           mkdir -p deployment
-
-          # 複製構建產物
           cp -r apps/web/.next deployment/web/
           cp -r apps/api/dist deployment/api/
           cp -r packages/types/dist deployment/types/
           cp -r packages/ui/dist deployment/ui/
-
-          # 複製配置文件
           cp -r config deployment/
-          cp -r scripts deployment/
           cp package.json deployment/
           cp pnpm-lock.yaml deployment/
           cp pnpm-workspace.yaml deployment/
 
-          # 創建部署信息
-          cat > deployment/deployment-info.txt << EOF
-          部署時間: $(date)
-          Git 提交: ${{ github.sha }}
-          分支: ${{ github.ref_name }}
-          觸發者: ${{ github.actor }}
-          環境: ${{ env.ENVIRONMENT }}
-          EOF
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-deployment-bundle
+          path: deployment/
+          retention-days: 7
 
-          echo "✅ 部署包創建完成"
-
-  # 部署到開發環境
   deploy-dev:
     needs: build-and-test
     runs-on: ubuntu-latest
-    name: 部署到開發環境
+    name: Deploy to Development
     environment: development
     timeout-minutes: 20
 
     steps:
-      - name: 檢出代碼
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 準備部署包
-        run: |
-          echo "📦 準備部署包..."
-
-          # 創建部署目錄
-          mkdir -p deployment
-
-          # 複製構建產物
-          cp -r apps/web/.next deployment/web/
-          cp -r apps/api/dist deployment/api/
-          cp -r packages/types/dist deployment/types/
-          cp -r packages/ui/dist deployment/ui/
-
-          # 複製配置文件
-          cp -r config deployment/
-          cp -r scripts deployment/
-          cp package.json deployment/
-          cp pnpm-lock.yaml deployment/
-          cp pnpm-workspace.yaml deployment/
-
-          echo "✅ 部署包準備完成"
-
-      - name: 部署前端到 Vercel 開發環境
-        uses: amondnet/vercel-action@v25
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN_DEV }}
-          vercel-org-id: ${{ vars.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ vars.VERCEL_PROJECT_ID_DEV }}
-          # 開發環境部署到專案的生產環境（穩定版本）
-          vercel-args: '--prod'
-          working-directory: ./apps/web
+          name: dev-deployment-bundle
+          path: deployment
 
-      - name: 部署 API 到 Cloudflare 開發環境
+      - name: Deploy web app to Vercel
+        uses: BetaHuhn/deploy-to-vercel-action@v1
+        with:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          PRODUCTION: true
+          WORKING_DIRECTORY: ./apps/web
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy API to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
           environment: development
           working-directory: ./apps/api
 
-      - name: 部署數據管道
+      - name: Deployment summary
         run: |
-          echo "📊 部署數據管道..."
-          cd deployment
-
-          # 這裡可以添加實際的數據管道部署邏輯
-          # 例如：部署到 Docker 容器、雲服務等
-          echo "數據管道部署完成"
-
-      - name: 更新部署狀態
-        run: |
-          echo "✅ 開發環境部署完成"
-          echo "部署完成時間: $(date)"
-
-          # 創建部署狀態文件
-          cat > deployment/deployment-status.json << EOF
+          echo "Development deployment complete"
+          echo "Completed at: $(date)"
+          cat > deployment/deployment-status.json <<'EOF'
           {
             "status": "success",
             "environment": "${{ env.ENVIRONMENT }}",
@@ -222,88 +183,42 @@ jobs:
           }
           EOF
 
-  # 部署後驗證
   post-deploy-verification:
     needs: deploy-dev
     runs-on: ubuntu-latest
-    name: 部署後驗證
+    name: Post-deploy Verification
     timeout-minutes: 10
 
     steps:
-      - name: 檢出代碼
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 等待服務啟動
+      - name: Wait for services to stabilize
         run: |
-          echo "⏳ 等待服務啟動..."
+          echo "Waiting for services"
           sleep 30
 
-      - name: 健康檢查
+      - name: Health checks (placeholder)
         run: |
-          echo "🏥 執行健康檢查..."
+          echo "Health checks placeholder"
+          # curl commands can be added here once endpoints are ready
 
-          # 檢查 API 服務
-          echo "檢查 API 服務..."
-          # curl -f https://dev-api.concept-stock-screener.com/health || echo "API 服務檢查失敗"
-
-          # 檢查前端服務
-          echo "檢查前端服務..."
-          # curl -f https://dev.concept-stock-screener.com || echo "前端服務檢查失敗"
-
-          echo "健康檢查完成"
-
-      - name: 基本功能測試
+      - name: Smoke tests (placeholder)
         run: |
-          echo "🧪 執行基本功能測試..."
+          echo "Smoke tests placeholder"
+          # Add API or web smoke tests as needed
 
-          # 這裡可以添加基本的 API 端點測試
-          # 例如：測試搜索、股票詳情等端點
-
-          echo "基本功能測試完成"
-
-      - name: 更新驗證狀態
-        run: |
-          echo "✅ 部署後驗證完成"
-          echo "驗證時間: $(date)"
-
-  # 部署通知
   deployment-notification:
     needs: [deploy-dev, post-deploy-verification]
     runs-on: ubuntu-latest
-    name: 部署通知
+    name: Deployment Summary
     if: always()
 
     steps:
-      - name: 發送部署成功通知
-        if: needs.deploy-dev.result == 'success' && needs.post-deploy-verification.result == 'success'
+      - name: Deployment result
         run: |
-          echo "🎉 開發環境部署成功！"
-          echo "部署時間: $(date)"
-          echo "Git 提交: ${{ github.sha }}"
-          echo "分支: ${{ github.ref_name }}"
-          echo "觸發者: ${{ github.actor }}"
-
-          # 這裡可以添加通知邏輯
-          # 例如：發送 Slack 通知、郵件等
-
-      - name: 發送部署失敗通知
-        if: needs.deploy-dev.result == 'failure' || needs.post-deploy-verification.result == 'failure'
-        run: |
-          echo "❌ 開發環境部署失敗"
-          echo "失敗時間: $(date)"
-          echo "Git 提交: ${{ github.sha }}"
-          echo "分支: ${{ github.ref_name }}"
-          echo "觸發者: ${{ github.actor }}"
-
-          # 這裡可以添加失敗通知邏輯
-          # 例如：發送 Slack 警報、郵件等
-
-      - name: 創建部署摘要
-        run: |
-          echo "📊 部署摘要"
-          echo "================"
-          echo "環境: ${{ env.ENVIRONMENT }}"
-          echo "部署狀態: ${{ needs.deploy-dev.result || 'skipped' }}"
-          echo "驗證狀態: ${{ needs.post-deploy-verification.result || 'skipped' }}"
-          echo "總體結果: ${{ job.status }}"
-          echo "完成時間: $(date)"
+          echo "Deployment summary"
+          echo "Environment: ${{ env.ENVIRONMENT }}"
+          echo "Deployment job: ${{ needs.deploy-dev.result || 'skipped' }}"
+          echo "Verification job: ${{ needs.post-deploy-verification.result || 'skipped' }}"
+          echo "Overall status: ${{ job.status }}"

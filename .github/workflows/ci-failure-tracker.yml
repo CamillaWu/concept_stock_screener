@@ -1,0 +1,166 @@
+name: Record CI Failures
+
+on:
+  workflow_run:
+    workflows:
+      - CI/CD Pipeline
+    types:
+      - completed
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  report:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report failure to tracker issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const run = context.payload.workflow_run;
+            const { owner, repo } = context.repo;
+
+            const labelName = 'ci-failure';
+            const issueTitle = 'CI Failure Tracker';
+
+            async function ensureLabel() {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: labelName });
+              } catch (error) {
+                if (error.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name: labelName,
+                    color: 'd73a4a',
+                    description: 'Auto-generated when CI workflows fail'
+                  });
+                } else {
+                  throw error;
+                }
+              }
+            }
+
+            async function findOrCreateIssue() {
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner,
+                repo,
+                state: 'open',
+                labels: labelName,
+                per_page: 100
+              });
+
+              const match = issues.find((issue) => issue.title === issueTitle);
+              if (match) return match;
+
+              const { data: created } = await github.rest.issues.create({
+                owner,
+                repo,
+                title: issueTitle,
+                labels: [labelName],
+                body: 'This issue collects the latest CI failure details so the team (and automation) can spot problems quickly.'
+              });
+              return created;
+            }
+
+            async function fetchFailedJobs() {
+              try {
+                const { data } = await github.rest.actions.listJobsForWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: run.id,
+                  per_page: 100
+                });
+                return data.jobs
+                  .filter((job) => job.conclusion === 'failure')
+                  .map((job) => ({
+                    name: job.name,
+                    url: job.html_url,
+                    steps: (job.steps || [])
+                      .filter((step) => step.conclusion === 'failure')
+                      .map((step) => step.name)
+                  }));
+              } catch (error) {
+                core.warning(`Unable to fetch job details: ${error.message}`);
+                return [];
+              }
+            }
+
+            await ensureLabel();
+            const trackerIssue = await findOrCreateIssue();
+            const failedJobs = await fetchFailedJobs();
+
+            const branch = run.head_branch || '(no branch)';
+            const actor = run.actor?.login ?? 'unknown';
+            const event = run.event;
+            const updatedAt = run.updated_at;
+            const runUrl = run.html_url;
+            const commit = run.head_sha;
+            const runNumber = run.run_number;
+
+            const summaryLines = [
+              '## Latest Failure',
+              '',
+              `- Workflow: **${run.name}** (#${runNumber})`,
+              `- Event: \`${event}\``,
+              `- Branch: \`${branch}\``,
+              `- Actor: @${actor}`,
+              `- Commit: \`${commit}\``,
+              `- Completed: ${updatedAt}`,
+              `- Run URL: ${runUrl}`,
+              '',
+              '### Failing Jobs'
+            ];
+
+            if (failedJobs.length === 0) {
+              summaryLines.push('- (job details unavailable)');
+            } else {
+              for (const job of failedJobs) {
+                summaryLines.push(`- [${job.name}](${job.url})`);
+                if (job.steps.length > 0) {
+                  summaryLines.push(`  - Failed steps: ${job.steps.join(', ')}`);
+                }
+              }
+            }
+
+            summaryLines.push('', `_Last updated: ${new Date().toISOString()}_`);
+            const summaryBody = summaryLines.join('\n');
+
+            await github.rest.issues.update({
+              owner,
+              repo,
+              issue_number: trackerIssue.number,
+              body: summaryBody
+            });
+
+            const commentLines = [
+              `CI failure detected for run **${run.name}** (#${runNumber})`,
+              '',
+              `- Branch: \`${branch}\``,
+              `- Actor: @${actor}`,
+              `- Event: \`${event}\``,
+              `- Commit: \`${commit}\``,
+              `- Run URL: ${runUrl}`,
+              `- Completed: ${updatedAt}`
+            ];
+
+            if (failedJobs.length > 0) {
+              commentLines.push('', 'Failing jobs:');
+              for (const job of failedJobs) {
+                commentLines.push(`- [${job.name}](${job.url})`);
+                if (job.steps.length > 0) {
+                  commentLines.push(`  - steps: ${job.steps.join(', ')}`);
+                }
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: trackerIssue.number,
+              body: commentLines.join('\n')
+            });
