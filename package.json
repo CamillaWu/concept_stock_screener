@@ -94,5 +94,6 @@
     "screener"
   ],
   "author": "Concept Stock Screener Team",
-  "license": "MIT"
+  "license": "MIT",
+  "packageManager": "pnpm@8.15.8"
 }
