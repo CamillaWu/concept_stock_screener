@@ -1,1 +1,0 @@
-This folder contains the built output assets for the worker "concept-stock-screener-api" generated at 2025-09-03T17:57:47.630Z.
