@@ -170,8 +170,8 @@ jobs:
           VERCEL_PROJECT_SETTINGS: |
             {
               "framework": "nextjs",
-              "installCommand": "pnpm install --frozen-lockfile",
-              "buildCommand": "pnpm run build:web",
+              "installCommand": "cd .. && pnpm install --frozen-lockfile",
+              "buildCommand": "cd .. && pnpm run build:web",
               "outputDirectory": ".next",
               "nodeVersion": "20.x"
             }
