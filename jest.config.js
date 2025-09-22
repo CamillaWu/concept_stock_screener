@@ -1,28 +1,30 @@
-module.exports = {
-  // 測試環境
+﻿module.exports = {
+  // 皜祈岫?啣?
   testEnvironment: 'jsdom',
 
-  // 測試文件匹配模式
+  // 皜祈岫?辣?寥?璅∪?
   testMatch: [
     '**/__tests__/**/*.(ts|tsx|js|jsx)',
     '**/*.(spec|test).(ts|tsx|js|jsx)',
   ],
 
-  // 測試文件擴展名
+  // 皜祈岫?辣?游???
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
 
-  // 轉換器配置 - 使用 Babel 處理所有文件
+  // 頧??券?蝵?- 雿輻 Babel ?????隞?
   transform: {
     '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
+  // Skip compiled output directories so we only run source tests
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 
-  // 模組路徑映射
+  // 璅∠?頝臬???
   moduleNameMapper: {
     '^@concept-stock-screener/(.*)$': '<rootDir>/packages/$1/src',
     '^@/(.*)$': '<rootDir>/apps/web/src/$1',
   },
 
-  // 收集覆蓋率的文件
+  // ?園?閬????辣
   collectCoverageFrom: [
     'packages/**/*.{ts,tsx,js,jsx}',
     'apps/web/src/**/*.{ts,tsx,js,jsx}',
@@ -38,13 +40,13 @@ module.exports = {
     '!**/index.ts',
   ],
 
-  // 覆蓋率目錄
+  // 閬????
   coverageDirectory: 'coverage',
 
-  // 覆蓋率報告器
+  // 閬???
   coverageReporters: ['text', 'lcov', 'html', 'json'],
 
-  // 覆蓋率閾值
+  // 閬????
   coverageThreshold: {
     global: {
       branches: 50,
@@ -54,23 +56,23 @@ module.exports = {
     },
   },
 
-  // 測試設置文件
+  // 皜祈岫閮剔蔭?辣
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
 
-  // 測試超時
+  // 皜祈岫頞?
   testTimeout: 30000,
 
-  // 清除模擬
+  // 皜璅⊥
   clearMocks: true,
 
-  // 收集覆蓋率
+  // ?園?閬???
   collectCoverage: false,
 
-  // 測試環境變數
+  // 皜祈岫?啣?霈
   testEnvironmentOptions: {
     NODE_ENV: 'test',
   },
 
-  // 轉換忽略
+  // 頧?敹賜
   transformIgnorePatterns: ['/node_modules/(?!(@concept-stock-screener)/)'],
 };
