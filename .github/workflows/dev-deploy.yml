@@ -167,6 +167,14 @@ jobs:
           PRODUCTION: true
           WORKING_DIRECTORY: ./apps/web
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERCEL_PROJECT_SETTINGS: |
+            {
+              "framework": "nextjs",
+              "installCommand": "pnpm install --frozen-lockfile",
+              "buildCommand": "pnpm run build:web",
+              "outputDirectory": ".next",
+              "nodeVersion": "20.x"
+            }
 
       - name: Deploy API to Cloudflare
         uses: cloudflare/wrangler-action@v3
