@@ -1,4 +1,4 @@
-name: 生產環境部署
+name: ?�產?��??�署
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       deploy_message:
-        description: '部署說明'
+        description: '?�署說�?'
         required: false
-        default: '手動觸發生產環境部署'
+        default: '?��?觸發?�產?��??�署'
         type: string
 
 env:
@@ -17,85 +17,82 @@ env:
   ENVIRONMENT: 'production'
 
 jobs:
-  # 部署到生產環境
+  # ?�署?��??�環�?
   deploy-production:
     runs-on: ubuntu-latest
-    name: 部署到生產環境
+    name: ?�署?��??�環�?
     environment: production
     timeout-minutes: 30
 
     steps:
-      - name: 檢出代碼
+      - name: 檢出�?��
         uses: actions/checkout@v4
 
-      - name: 構建部署包
+      - name: 構建?�署??
         run: |
-          echo "🔨 構建生產環境部署包..."
+          echo "?�� 構建?�產?��??�署??.."
 
-          # 安裝依賴
+          # 安�?依賴
           pnpm install --frozen-lockfile
 
-          # 構建基礎包
+          # 構建?��???
           pnpm build:types
           pnpm build:ui
 
-          # 構建前端
+          # 構建?�端
           pnpm build:web
 
           # 構建 API
           pnpm build:api
 
-          # 創建部署包
+          # ?�建?�署??
           mkdir -p deployment
           cp -r apps/web/.next deployment/web/
           cp -r apps/api/dist deployment/api/
           cp -r packages/types/dist deployment/types/
           cp -r packages/ui/dist deployment/ui/
 
-          # 複製配置文件
+          # 複製?�置?�件
           cp -r config deployment/
           cp -r scripts deployment/
           cp package.json deployment/
           cp pnpm-lock.yaml deployment/
           cp pnpm-workspace.yaml deployment/
 
-          echo "✅ 生產環境部署包構建完成"
+          echo "???�產?��??�署?��?建�???
 
-      - name: 部署前端到 Vercel 生產環境
+      - name: ?�署?�端??Vercel ?�產?��?
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN_PROD }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PROD }}
-          # 生產環境部署到專案的生產環境
+          # ?�產?��??�署?��?案�??�產?��?
           vercel-args: '--prod'
           working-directory: ./deployment/web
 
-      - name: 部署 API 到 Cloudflare 生產環境
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
-          environment: production
-          working-directory: ./deployment/api
+      - name: ���p API �� Cloudflare �Ͳ�����
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm --filter api deploy -- --env production
 
-      - name: 部署數據管道
+      - name: ?�署?��?管�?
         run: |
-          echo "📊 部署數據管道到生產環境..."
+          echo "?? ?�署?��?管�??��??�環�?.."
           cd deployment
 
-          # 這裡可以添加實際的數據管道部署邏輯
-          # 例如：部署到 Docker 容器、雲服務等
-          echo "數據管道生產環境部署完成"
+          # ?�裡?�以添�?實�??�數?�管?�部署�?�?
+          # 例�?：部署到 Docker 容器?�雲?��?�?
+          echo "?��?管�??�產?��??�署完�?"
 
-      - name: 更新部署狀態
+      - name: ?�新?�署?�??
         run: |
-          echo "✅ 生產環境部署完成"
-          echo "部署完成時間: $(date)"
-          echo "部署說明: ${{ inputs.deploy_message }}"
+          echo "???�產?��??�署完�?"
+          echo "?�署完�??��?: $(date)"
+          echo "?�署說�?: ${{ inputs.deploy_message }}"
 
-          # 創建部署狀態文件
+          # ?�建?�署?�?��?�?
           cat > deployment/production-deployment-status.json << EOF
           {
             "status": "success",
@@ -109,72 +106,72 @@ jobs:
           }
           EOF
 
-  # 生產環境部署後驗證
+  # ?�產?��??�署後�?�?
   post-deploy-verification:
     needs: deploy-production
     runs-on: ubuntu-latest
-    name: 生產環境部署後驗證
+    name: ?�產?��??�署後�?�?
     timeout-minutes: 15
 
     steps:
-      - name: 等待服務啟動
+      - name: 等�??��??��?
         run: |
-          echo "⏳ 等待生產環境服務啟動..."
+          echo "??等�??�產?��??��??��?..."
           sleep 45
 
-      - name: 生產環境健康檢查
+      - name: ?�產?��??�康檢查
         run: |
-          echo "🏥 執行生產環境健康檢查..."
+          echo "?�� ?��??�產?��??�康檢查..."
 
-          # 檢查 API 服務
-          echo "檢查生產環境 API 服務..."
-          # curl -f https://api.concept-stock-screener.com/health || echo "生產環境 API 服務檢查失敗"
+          # 檢查 API ?��?
+          echo "檢查?�產?��? API ?��?..."
+          # curl -f https://api.concept-stock-screener.com/health || echo "?�產?��? API ?��?檢查失�?"
 
-          # 檢查前端服務
-          echo "檢查生產環境前端服務..."
-          # curl -f https://concept-stock-screener.com || echo "生產環境前端服務檢查失敗"
+          # 檢查?�端?��?
+          echo "檢查?�產?��??�端?��?..."
+          # curl -f https://concept-stock-screener.com || echo "?�產?��??�端?��?檢查失�?"
 
-          echo "生產環境健康檢查完成"
+          echo "?�產?��??�康檢查完�?"
 
-      - name: 生產環境功能測試
+      - name: ?�產?��??�能測試
         run: |
-          echo "🧪 執行生產環境功能測試..."
+          echo "?�� ?��??�產?��??�能測試..."
 
-          # 這裡可以添加生產環境的 API 端點測試
-          # 例如：測試搜索、股票詳情等端點
+          # ?�裡?�以添�??�產?��???API 端�?測試
+          # 例�?：測試�?索、股票詳?��?端�?
 
-          echo "生產環境功能測試完成"
+          echo "?�產?��??�能測試完�?"
 
-      - name: 性能測試
+      - name: ?�能測試
         run: |
-          echo "⚡ 執行生產環境性能測試..."
+          echo "???��??�產?��??�能測試..."
 
-          # 這裡可以添加性能測試邏輯
-          # 例如：響應時間、吞吐量等
+          # ?�裡?�以添�??�能測試?�輯
+          # 例�?：響?��??�、�??��?�?
 
-          echo "生產環境性能測試完成"
+          echo "?�產?��??�能測試完�?"
 
-      - name: 更新驗證狀態
+      - name: ?�新驗�??�??
         run: |
-          echo "✅ 生產環境部署後驗證完成"
+          echo "???�產?��??�署後�?證�???
 
-  # 部署通知
+  # ?�署?�知
   deployment-notification:
     needs: [deploy-production, post-deploy-verification]
     runs-on: ubuntu-latest
-    name: 部署通知
+    name: ?�署?�知
     if: always()
 
     steps:
-      - name: 發送部署通知
+      - name: ?�送部署通知
         run: |
           if [ "${{ needs.deploy-production.result }}" == "success" ] && [ "${{ needs.post-deploy-verification.result }}" == "success" ]; then
-            echo "🎉 生產環境部署成功！"
-            echo "部署說明: ${{ inputs.deploy_message }}"
-            echo "部署者: ${{ github.actor }}"
-            echo "部署時間: $(date)"
+            echo "?? ?�產?��??�署?��?�?
+            echo "?�署說�?: ${{ inputs.deploy_message }}"
+            echo "?�署?? ${{ github.actor }}"
+            echo "?�署?��?: $(date)"
           else
-            echo "❌ 生產環境部署失敗"
-            echo "部署狀態: ${{ needs.deploy-production.result }}"
-            echo "驗證狀態: ${{ needs.post-deploy-verification.result }}"
+            echo "???�產?��??�署失�?"
+            echo "?�署?�?? ${{ needs.deploy-production.result }}"
+            echo "驗�??�?? ${{ needs.post-deploy-verification.result }}"
           fi
