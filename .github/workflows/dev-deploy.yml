@@ -50,7 +50,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
 
       - name: Type check
         if: ${{ !inputs.skip_tests }}
@@ -172,7 +172,7 @@ jobs:
         run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }} --cwd ./apps/web
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
 
       - name: Build Next app
         run: pnpm run build:web
