@@ -168,15 +168,8 @@ jobs:
           echo "vercel -> $(which vercel)"
           vercel --version
 
-      - name: Set Vercel project metadata
-        run: |
-          mkdir -p apps/web/.vercel
-          cat <<'EOF' > apps/web/.vercel/project.json
-          {
-            "projectId": "${{ vars.VERCEL_PROJECT_ID }}",
-            "orgId": "${{ vars.VERCEL_ORG_ID }}"
-          }
-          EOF
+      - name: Pull Vercel project settings
+        run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }} --cwd ./apps/web
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
