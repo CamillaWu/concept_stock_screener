@@ -54,7 +54,9 @@
     "coordination:check": "node scripts/coordination-check.js",
     "coordination:check:pre": "node scripts/coordination-check.js --pre",
     "coordination:check:post": "node scripts/coordination-check.js --post",
-    "quality:gate": "pnpm run coordination:check && pnpm run lint:check && pnpm run type-check && pnpm run test:coverage"
+    "quality:gate": "pnpm run coordination:check && pnpm run lint:check && pnpm run type-check && pnpm run test:coverage",
+    "sync:rag": "node scripts/deployment/sync-rag.js",
+    "prebuild:web": "pnpm run sync:rag"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.28.3",
