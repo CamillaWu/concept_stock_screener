@@ -11,3 +11,9 @@ doc_id, type, title, text, source_urls, retrieved_at, language, tags, theme_id, 
 ## note
 
 ASCII filenames to avoid garbled names.
+
+## derived files
+
+- `manifest.json`: dataset metadata produced from docs.jsonl
+- `theme-index.json`: per-theme aggregation with linked stocks
+- `stock-index.json`: per-stock aggregation with linked themes
