@@ -1,0 +1,8 @@
+{
+  "dataset": "rag_seed_pack_v5",
+  "generated_at": "2025-08-28T18:46:09+08:00",
+  "counts": {
+    "theme_overview": 15,
+    "theme_to_stock": 75
+  }
+}
