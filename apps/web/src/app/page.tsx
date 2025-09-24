@@ -1,7 +1,7 @@
 'use client';
 
-import { SearchBox } from '../../../../packages/ui/src/components';
-import { useApi } from '../../../../packages/ui/src/hooks';
+import { SearchBox } from '@ui/components';
+import { useApi } from '@ui/hooks';
 
 interface SearchResponse {
   stocks: Array<{
@@ -33,27 +33,24 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      {/* 英雄區域 */}
       <div className="text-center py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          智能概念股篩選系統
+          Intelligent Concept Stock Screener
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          運用先進的 AI 技術，幫您快速篩選出最具潛力的概念股，
-          提供專業的投資分析工具，助您做出明智的投資決策。
+          Combine workspace research and AI assistance to uncover concept
+          themes, related stocks, and actionable ideas in seconds.
         </p>
 
-        {/* 搜尋框 */}
         <div className="max-w-2xl mx-auto">
           <SearchBox
             onSearch={handleSearch}
-            placeholder="搜尋股票代碼、名稱或概念..."
+            placeholder="Search by stock, concept, or keyword"
             className="w-full"
           />
         </div>
       </div>
 
-      {/* 功能特色 */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="card text-center">
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -71,9 +68,10 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">智能搜尋</h3>
+          <h3 className="text-lg font-semibold mb-2">Intelligent Search</h3>
           <p className="text-gray-600">
-            支援股票代碼、名稱、產業等多維度搜尋，快速找到目標股票
+            Quickly locate candidate stocks by symbol, name, or industry
+            filters.
           </p>
         </div>
 
@@ -93,9 +91,10 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">概念股分析</h3>
+          <h3 className="text-lg font-semibold mb-2">Concept Insights</h3>
           <p className="text-gray-600">
-            深入分析概念股產業鏈，掌握投資機會和風險
+            Understand concept strength, key industries, and supporting data at
+            a glance.
           </p>
         </div>
 
@@ -115,36 +114,36 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">即時數據</h3>
+          <h3 className="text-lg font-semibold mb-2">Realtime Signals</h3>
           <p className="text-gray-600">
-            提供即時股價、成交量、市值等關鍵數據，助您掌握市場動態
+            Stay on top of price action, volume, and market-cap changes with
+            instant feedback.
           </p>
         </div>
       </div>
 
-      {/* 搜尋結果 */}
       {loading && (
         <div className="card text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">搜尋中...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+          <p className="mt-2 text-gray-600">Fetching the latest results�K</p>
         </div>
       )}
 
       {error && (
         <div className="card bg-red-50 border-red-200">
-          <p className="text-red-600">搜尋失敗：{error}</p>
+          <p className="text-red-600">Search failed: {error}</p>
         </div>
       )}
 
       {data && (
         <div className="card">
-          <h2 className="text-xl font-semibold mb-4">搜尋結果</h2>
+          <h2 className="text-xl font-semibold mb-4">Search results</h2>
           <p className="text-gray-600 mb-4">{data.message}</p>
 
           {data.stocks.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-3">
-                股票 ({data.stocks.length})
+                Stocks ({data.stocks.length})
               </h3>
               <div className="space-y-2">
                 {data.stocks.map(
@@ -186,7 +185,7 @@ export default function HomePage() {
           {data.concepts.length > 0 && (
             <div>
               <h3 className="text-lg font-medium mb-3">
-                概念股 ({data.concepts.length})
+                Concepts ({data.concepts.length})
               </h3>
               <div className="space-y-2">
                 {data.concepts.map(

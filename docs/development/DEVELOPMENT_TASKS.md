@@ -1,6 +1,6 @@
 # Development Task Tracker
 
-_Last updated: 2025-09-23_
+_Last updated: 2025-09-24_
 _Project_: Concept Stock Screener\_
 _Owner_: Development Team\_
 
@@ -15,18 +15,21 @@ _Owner_: Development Team\_
 
 ## 2. Active focus items (current sprint)
 
-| ID      | Task                                                                                          | Owner       | Status      | Target     | References                   |
-| ------- | --------------------------------------------------------------------------------------------- | ----------- | ----------- | ---------- | ---------------------------- |
-| P-01    | Theme-to-stock search flow: search bar UX, query handling, results list, tri-pane integration | Web + API   | In progress | 2025-10-02 | PRD 1.3, 7; Feature&Flow 3.1 |
-| P-02    | Stock-to-theme reverse lookup: mode toggle, API handler, explanations panel                   | Web + API   | In progress | 2025-10-02 | PRD 1.3; Feature&Flow 3.2    |
-| P-03    | Trending concepts module with heat bar visualization and quick filter                         | Web         | Planned     | 2025-10-09 | PRD 7; Feature&Flow 3.1.3    |
-| API-01  | `/search` Worker handler wired to Gemini service, structured errors, rate limiting            | API         | In progress | 2025-10-02 | PRD 6.3; RAG 3               |
-| API-02  | Concept detail endpoint (description, heat, top stocks, citations) for detail panel           | API         | Planned     | 2025-10-09 | Feature&Flow 3.1.2           |
-| DATA-01 | Ingest TWSE filings/news into Pinecone namespace (chunking + metadata)                        | Data        | In progress | 2025-10-15 | PRD 6.5; RAG 2               |
-| DATA-02 | Persist RAG source trails for the citation drawer                                             | Data        | Planned     | 2025-10-15 | Feature&Flow 3.1.2           |
-| OPS-01  | Cloudflare token rotation SOP + dashboard                                                     | DevOps      | In progress | 2025-09-30 | Progress tracker; CI docs    |
-| OPS-02  | Deployment notifications (Slack / email) wired into Actions workflows                         | DevOps + PM | Discovery   | 2025-10-07 | CI docs                      |
-| QA-01   | Dev deploy smoke tests embedded in `dev-deploy.yml`                                           | QA          | Planned     | 2025-10-15 | CI docs                      |
+| ID      | Task                                                                                          | Owner         | Status      | Target     | References                           |
+| ------- | --------------------------------------------------------------------------------------------- | ------------- | ----------- | ---------- | ------------------------------------ |
+| P-01    | Theme-to-stock search flow: search bar UX, query handling, results list, tri-pane integration | Web + API     | In progress | 2025-10-02 | PRD 1.3, 7; Feature&Flow 3.1         |
+| P-02    | Stock-to-theme reverse lookup: mode toggle, API handler, explanations panel                   | Web + API     | In progress | 2025-10-02 | PRD 1.3; Feature&Flow 3.2            |
+| P-03    | Trending concepts module with heat bar visualization and quick filter                         | Web           | Planned     | 2025-10-09 | PRD 7; Feature&Flow 3.1.3            |
+| API-01  | `/search` Worker handler wired to Gemini service, structured errors, rate limiting            | API           | In progress | 2025-10-02 | PRD 6.3; RAG 3                       |
+| API-02  | Concept detail endpoint (description, heat, top stocks, citations) for detail panel           | API           | Planned     | 2025-10-09 | Feature&Flow 3.1.2                   |
+| DATA-01 | Ingest TWSE filings/news into Pinecone namespace (chunking + metadata)                        | Data          | In progress | 2025-10-15 | PRD 6.5; RAG 2                       |
+| DATA-02 | Persist RAG source trails for the citation drawer                                             | Data          | Planned     | 2025-10-15 | Feature&Flow 3.1.2                   |
+| OPS-01  | Cloudflare token rotation SOP + dashboard                                                     | DevOps        | In progress | 2025-09-30 | Progress tracker; CI docs            |
+| OPS-02  | Deployment notifications (Slack / email) wired into Actions workflows                         | DevOps + PM   | In progress | 2025-10-07 | CI docs                              |
+| T-01    | Restore deterministic `pnpm type-check` runs by fixing React workspace linker configuration   | Platform + UI | Complete    | 2025-09-24 | Progress tracker; packages/ui README |
+| QA-02   | Add tests for apps/api/src/handlers and apps/web/src/app/page.tsx to lift coverage above 70%  | QA + Web      | In progress | 2025-10-09 | Progress tracker; testing strategy   |
+| OPS-03  | Finalize deployment notifications and monitoring hooks for dev/prod workflows                 | DevOps + PM   | Planned     | 2025-10-15 | CI docs; Progress tracker            |
+| QA-01   | Dev deploy smoke tests embedded in `dev-deploy.yml`                                           | QA            | Planned     | 2025-10-15 | CI docs                              |
 
 ## 3. Near-term backlog (next 4 weeks)
 
@@ -67,14 +70,14 @@ _Owner_: Development Team\_
 
 ### UI component library (`packages/ui`)
 
-- U-01 Resolve React typings by adjusting pnpm linker or package exports; restore `pnpm type-check`.
+- U-01 Codify pnpm hoisted linker usage (docs + scripts) to keep React typings resolvable.
 - U-02 Strongly typed table sorting utilities/tests (remove `unknown`).
 - U-03 Storybook or equivalent visual regression coverage for core components.
 - U-04 Reusable primitives: `Toast`, `Skeleton`, `HeatBar` per Feature&Flow guidance.
 
 ### Platform and operations
 
-- T-01 Fix pnpm workspace linking so React typings resolve without manual junctions (progress tracker risk).
+- T-01 Document and enforce pnpm hoisted linker usage so React typings stay resolvable across environments.
 - T-02 Validate Husky and lint-staged on fresh Windows/macOS environments with troubleshooting notes (PRD 6.4 scaling plan).
 - T-03 MCP watchdog GitHub Action for Pinecone / Cloudflare / Vercel servers.
 - T-04 Staging environment configuration and secrets inventory ahead of production rollout.
