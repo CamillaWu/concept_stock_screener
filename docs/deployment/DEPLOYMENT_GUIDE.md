@@ -1,5 +1,7 @@
 # 部署指南完整文檔
 
+> See `docs/deployment/CI_CD_NOTES.md` for GitHub Actions configuration.
+
 ## 1. 部署概述
 
 ### 1.1 部署架構
