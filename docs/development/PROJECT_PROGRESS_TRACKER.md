@@ -1,159 +1,79 @@
-# 概念股篩選系統 - 統一進度追蹤
+# Project Progress Tracker
 
-## 🎯 項目概覽
+_Last updated: 2025-09-23_
+_Project_: Concept Stock Screener\_
+_Owner_: Platform & CI working group\_
 
-**項目名稱**: 概念股自動化篩選系統
-**項目類型**: Monorepo 架構的 AI 驅動股票篩選應用
-**技術棧**: React + Next.js + TypeScript + Cloudflare Workers + Google Gemini
-**開發狀態**: ESLint 問題全部解決，準備進入 CI/CD 階段
-**最後更新**: 2024-12-19
-**負責人**: 您一個人
+## Executive Summary
 
-## 📊 整體進度概覽
+- Repository foundations, build tooling, and linting baselines remain stable after the 2025-09-23 validation run.
+- GitHub Actions pipelines (`ci.yml`, `dev-deploy.yml`, `production-deploy.yml`) are live; dry runs succeed and artefact publishing is in place.
+- `pnpm lint:check` is green, but `pnpm type-check` still fails when it reaches `packages/ui` because React typings are not resolved under pnpm's current linking strategy.
+- Jest coverage on 2025-09-23: 69.02% statements, 61.99% branches, 70.19% functions, 68.73% lines. Gaps stem from the Cloudflare Worker handlers and the Next.js entry points that remain untested.
+- Feature delivery is in the early phase (web UI ~15%, API ~20%, AI integration 0%). More product work is required before we can schedule a beta.
 
-| 階段             | 完成度   | 狀態          | 完成時間        |
-| ---------------- | -------- | ------------- | --------------- |
-| 架構重構         | 100%     | ✅ 完成       | 2024-09-03      |
-| 跨平台腳本       | 100%     | ✅ 完成       | 2024-09-03      |
-| 測試流程         | 100%     | ✅ 完成       | 2024-09-03      |
-| 開發環境配置     | 100%     | ✅ 完成       | 2024-09-03      |
-| **代碼質量修復** | **100%** | **✅ 完成**   | **2024-12-19**  |
-| **CI/CD 流程**   | **0%**   | **⏳ 待開始** | **預計 1 週**   |
-| **部署配置**     | **0%**   | **⏳ 待開始** | **預計 2-4 週** |
+## Phase Status Overview
 
-## 🏗️ 已完成的核心功能
+| Phase                               | Status      | Notes                                                        | Completion     |
+| ----------------------------------- | ----------- | ------------------------------------------------------------ | -------------- |
+| Repository bootstrap                | Complete    | Workspace structure, shared tsconfig, lint/format scripts    | 2024-09-03     |
+| Cross-platform tooling              | Complete    | Windows PowerShell and macOS shell scripts verified          | 2024-09-03     |
+| Test harness setup                  | Complete    | Jest + Testing Library, coverage collection, CI wiring       | 2024-09-03     |
+| Developer environment configuration | Complete    | ESLint, Prettier, Husky, lint-staged in place                | 2024-09-03     |
+| Quality debt remediation            | Complete    | ESLint/TypeScript issues reduced from 57 to 0                | 2024-12-19     |
+| CI/CD pipelines                     | Complete    | Actions workflows for CI, dev deploy, prod deploy            | 2024-12-19     |
+| Deployment automation hardening     | In progress | Need end-to-end credential validation and staging smoke jobs | Target Q4 2025 |
+| Feature implementation              | In progress | Web UI ~15%, API ~20%, AI features 0%                        | Target TBD     |
+| Production rollout                  | Not started | Blocked until feature and quality KPIs are met               | --             |
 
-### 1. 架構重構 (100% ✅)
+## Completed Highlights
 
-- **Monorepo 結構**: 使用 pnpm workspace 管理多包項目
-- **包結構**: types, ui, web, api, data-pipeline
-- **依賴管理**: 統一的依賴版本和構建流程
-- **TypeScript 配置**: 統一的類型檢查和編譯配置
+- Locked ESLint and TypeScript baselines: repository now blocks regressions through lint-staged and CI gates.
+- Added cross-platform deployment scripts (`scripts/deployment/*.sh`, `.ps1`) with health-check and monitoring helpers.
+- Established multi-environment configuration under `config/environments/`, including dev-ready defaults.
+- Delivered MCP tooling package with Pinecone, Cloudflare KV, and Vercel servers (`packages/mcp-tools`) and verified stdio startup.
+- Documented CI/CD flows, deployment runbooks, and coordination procedures across the `/docs/development` tree.
 
-### 2. 跨平台開發腳本 (100% ✅)
+## Active Workstreams
 
-- **Windows 支持**: PowerShell 腳本
-- **macOS 支持**: Bash 腳本
-- **跨平台腳本**: Node.js 腳本
-- **功能覆蓋**: 環境檢查、依賴安裝、項目構建、測試執行
+### High priority
 
-### 3. 測試流程建立 (100% ✅)
+- [ ] T-01 Close out Cloudflare token rotation SOP and dashboard (target 2025-09-30).
+- [ ] T-02 Decide on deployment notifications (Slack/email) and wire them into workflows (target 2025-10-07).
+- [ ] T-03 Automate post-deploy health checks inside CI (`dev-deploy.yml`) (target 2025-10-15).
 
-- **測試框架**: Jest 30.1.2 + Testing Library
-- **測試配置**: Babel 轉換器、JSX 支持、TypeScript 支持
-- **測試覆蓋**: 70 個測試用例全部通過
-- **測試組件**: Button、Input、useApi Hook、LoadingSpinner、SearchBox、Table
+### Medium priority
 
-### 4. 開發環境配置 (100% ✅)
+- [ ] Validate Husky + lint-staged pre-commit flow on fresh Windows/macOS environments.
+- [ ] Raise unit/integration coverage to 70%+ by covering API handlers and Next.js pages.
+- [ ] Define and enforce quality gates for staging deployments (coverage, smoke tests, rollback plan).
 
-- **代碼質量**: ESLint 8.57.1 + TypeScript 支持
-- **代碼格式化**: Prettier 3.6.2
-- **Git Hooks**: Husky 9.1.7 + lint-staged 16.1.6
-- **開發腳本**: 完整的開發、構建、測試、檢查腳本
+## Quality and Test Metrics (2025-09-23)
 
-### 5. 代碼質量修復 (100% ✅) - **新完成**
+| Check                   | Result                                                 | Target                  | Notes                                                          |
+| ----------------------- | ------------------------------------------------------ | ----------------------- | -------------------------------------------------------------- |
+| `pnpm lint:check`       | Pass                                                   | Green on every PR       | Baseline enforced by CI and pre-commit hook                    |
+| `pnpm type-check:types` | Pass                                                   | 0 errors                | `packages/types` clean                                         |
+| `pnpm type-check:ui`    | Fail                                                   | 0 errors                | React typings not resolved; investigate pnpm workspace linking |
+| Jest coverage           | 69.02% stmts / 61.99% br / 70.19% fn / 68.73% lines    | >= 80% across the board | Cloudflare Workers and Next.js routes untested                 |
+| MCP server smoke        | Pass (manual `pnpm --filter mcp-tools start:pinecone`) | Automated heartbeat     | Needs watchdog + GitHub Actions job                            |
 
-- **ESLint 問題**: 從 34 個問題減少到 0 個
-- **代碼類型**: 修復了 `any` 類型、未使用變量、原型內建方法等問題
-- **腳本優化**: 移除了未使用的函數和導入
-- **類型安全**: 提升了整體代碼的類型安全性
+## Risks and Mitigations
 
-## 🔄 當前進行中的任務
+- **UI type check failures**: Without resolving React module/type resolution, `pnpm type-check` cannot gate merges. Owners: UI + Tooling. Action: investigate pnpm node-linker configuration or add local symlink similar to `packages/mcp-tools` workaround.
+- **Coverage gap in API handlers**: All Cloudflare Worker handlers sit at 0% coverage. Risk of silent breakage. Action: add unit tests backed by mocked KV/REST calls before enabling deploy gates.
+- **Secrets management**: Cloudflare token rotation SOP (T-01) is still open. Until closed, production deployments stay manual-only.
 
-### 高優先級任務
+## Next Steps
 
-- [x] **修復 ESLint 錯誤** (57 個問題) ✅ **已完成**
-  - 錯誤: 0 個
-  - 警告: 0 個
-  - 完成時間: 2024-12-19
+1. Restore deterministic `pnpm type-check` runs by fixing workspace dependency resolution for React packages.
+2. Add high-value tests for `apps/api/src/handlers/*.ts` and `apps/web/src/app/page.tsx` to lift coverage above 70%.
+3. Finalise notification and monitoring hooks so dev/prod deploy workflows provide actionable alerts.
 
-- [ ] **建立 CI/CD 流程**
-  - GitHub Actions 配置
-  - 自動化測試流程
-  - 代碼質量檢查
-  - 預計完成: 1 週
+## References
 
-### 中優先級任務
-
-- [ ] **測試 Git Hooks 功能**
-  - 驗證 pre-commit 鉤子
-  - 測試 lint-staged 配置
-  - 預計完成: 2-3 天
-
-- [ ] **代碼質量門檻設置**
-  - ESLint 錯誤門檻 ✅ **已達成**
-  - 測試覆蓋率門檻
-  - 預計完成: 1 週
-
-## 📈 進度監控
-
-### 功能完成度
-
-- **前端功能**: 15% (基礎組件開發中)
-- **後端功能**: 20% (API 架構設計中)
-- **AI 功能**: 0% (未開始)
-- **測試覆蓋**: 70% (基礎測試完成)
-- **代碼質量**: 100% ✅ **已達成**
-- **部署配置**: 0% (未開始)
-
-### 代碼質量指標
-
-- **代碼覆蓋率**: 70% (基礎測試完成)
-- **代碼審查通過率**: 100% ✅ **已達成**
-- **ESLint 錯誤**: 0 個 ✅ **已達成**
-- **構建成功率**: 90% (偶有失敗)
-- **部署成功率**: 0% (未部署)
-
-### 測試覆蓋率詳情
-
-- **整體語句覆蓋率**: 69.62% ✅ (目標：70%+，接近達成)
-- **分支覆蓋率**: 74.86% ✅ (目標：70%+，已達成)
-- **函數覆蓋率**: 76.74% ✅ (目標：70%+，已達成)
-- **行覆蓋率**: 68.35% ⚠️ (目標：70%+，接近達成)
-
-## 🚨 風險監控
-
-### 高風險項目
-
-| 風險項目                | 風險等級  | 影響             | 緩解措施                                     |
-| ----------------------- | --------- | ---------------- | -------------------------------------------- |
-| ~~ESLint 錯誤修復延遲~~ | ~~🔴 高~~ | ~~代碼質量下降~~ | ~~分配專人負責，每日進度追蹤~~ ✅ **已解決** |
-| CI/CD 流程建立延遲      | 🟡 中     | 部署效率低       | 提前研究，外部專家支持                       |
-| 團隊技能不足            | 🟡 中     | 開發效率低       | 培訓計劃，外部專家支持                       |
-
-### 進度風險
-
-| 風險項目     | 風險等級 | 影響     | 緩解措施           |
-| ------------ | -------- | -------- | ------------------ |
-| 需求變更頻繁 | 🔴 高    | 開發延期 | 需求凍結，變更控制 |
-| 技術難點攻關 | 🟡 中    | 功能延期 | 提前研究，外部支持 |
-
-## 🎯 下一步行動計劃
-
-### 立即執行 (今天)
-
-1. ~~**修復 ESLint 錯誤**: 分配錯誤修復任務，設置每日修復目標~~ ✅ **已完成**
-2. **開始 CI/CD 流程設計**: 研究 GitHub Actions 最佳實踐，設計工作流程架構
-
-### 短期目標 (1 週)
-
-1. ~~**完成 ESLint 錯誤修復**: 修復 57 個問題，重點修復 34 個錯誤~~ ✅ **已完成**
-2. **建立 CI/CD 流程**: GitHub Actions 配置，自動化測試流程，代碼質量檢查
-3. **測試 Git Hooks 功能**: 驗證 pre-commit 鉤子，測試 lint-staged 配置
-
-### 中期目標 (2-4 週)
-
-1. **生產環境部署**: 環境配置管理，部署腳本創建，監控系統建立
-2. **性能優化**: 構建時間優化，運行時性能優化，用戶體驗改進
-
-## 📚 相關文檔
-
-- **項目里程碑**: [PROJECT_MILESTONES.md](./PROJECT_MILESTONES.md) - 完整的里程碑規劃和階段目標
-- **開發任務**: [DEVELOPMENT_TASKS.md](./DEVELOPMENT_TASKS.md) - 詳細的待辦事項和任務清單
-- **技術問題**: [TECHNICAL_ISSUES.md](./TECHNICAL_ISSUES.md) - 已解決的技術問題和經驗教訓
-
----
-
-_最後更新: 2024-12-19_
-_狀態: ESLint 問題全部解決，準備進入 CI/CD 階段_
-_維護者: 您一個人_
+- `docs/development/DEVELOPMENT_TASKS.md`
+- `docs/development/ci-cd/CI_CD_PROGRESS_SUMMARY.md`
+- `docs/development/ci-cd/CI_CD_TODO.md`
+- `docs/development/testing/TESTING_STRATEGY.md`
+- `.github/workflows/ci.yml`

@@ -1,5 +1,7 @@
 # 開發環境部署指南
 
+> See `docs/deployment/CI_CD_NOTES.md` for GitHub Actions configuration.
+
 ## 🎯 概述
 
 本文檔描述如何部署和管理概念股篩選系統的開發環境。
