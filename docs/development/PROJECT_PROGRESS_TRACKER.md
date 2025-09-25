@@ -9,7 +9,7 @@ _Owner_: Platform & CI working group\_
 - Repository foundations, build tooling, and linting baselines remain stable after the 2025-09-23 validation run.
 - GitHub Actions pipelines (`ci.yml`, `dev-deploy.yml`, `production-deploy.yml`) are live; dry runs succeed and artefact publishing is in place.
 - `pnpm lint:check` and `pnpm type-check` are green; enabling pnpm's hoisted linker resolved the React workspace typing gap.
-- Latest Jest coverage snapshot (2025-09-23) sits at 69% stmts / 62% br / 70% fn / 69% lines; new handler and homepage suites are in review, so expect the next run to trend upward.
+- Latest Jest coverage snapshot (2025-09-24) sits at 84.63% stmts / 76.92% br / 84.61% fn / 84.75% lines; Table utilities remain the main branch coverage outlier.
 - Feature delivery is in the early phase (web UI ~15%, API ~20%, AI integration 0%). More product work is required before we can schedule a beta.
 
 ## Phase Status Overview
@@ -37,6 +37,8 @@ _Owner_: Platform & CI working group\_
 - Resolved the workspace React typing failure by switching to pnpm's hoisted linker and updating local configuration.
 - Added Jest coverage for Cloudflare Worker handlers and the Next.js home page, exercising current mock data flows.
 
+- Added cross-platform helper scripts (`scripts/setup/configure-pnpm-linker.*`) to enforce the hoisted pnpm node-linker across environments.
+
 ## Active Workstreams
 
 ### High priority
@@ -51,7 +53,7 @@ _Owner_: Platform & CI working group\_
 - [ ] Raise unit/integration coverage to 70%+ by covering API handlers and Next.js pages.
 - [ ] Define and enforce quality gates for staging deployments (coverage, smoke tests, rollback plan).
 
-## Quality and Test Metrics (2025-09-23)
+## Quality and Test Metrics (2025-09-24)
 
 | Check                   | Result                                                 | Target                  | Notes                                                                |
 | ----------------------- | ------------------------------------------------------ | ----------------------- | -------------------------------------------------------------------- |
@@ -69,8 +71,8 @@ _Owner_: Platform & CI working group\_
 
 ## Next Steps
 
-1. Document and enforce the hoisted `pnpm` linker across onboarding scripts and local setup guides.
-2. Re-run coverage and update baselines now that API handler and homepage suites are in place.
+1. Wire the new `scripts/setup/configure-pnpm-linker.*` helper into quick-start flows (macOS + Windows).
+2. Extend tests for `packages/ui/src/components/Table.tsx` to lift branch coverage to target.
 3. Finalise notification and monitoring hooks so dev/prod deploy workflows provide actionable alerts.
 
 ## References
