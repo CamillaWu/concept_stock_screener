@@ -50,6 +50,8 @@ brew install git
 
 # 安裝 pnpm
 npm install -g pnpm
+# 設定 pnpm node-linker (必跑一次)
+bash ./scripts/setup/configure-pnpm-linker.sh
 
 # 安裝 VS Code
 brew install --cask visual-studio-code
@@ -75,6 +77,8 @@ choco install git
 
 # 安裝 pnpm
 npm install -g pnpm
+# 設定 pnpm node-linker (必跑一次)
+bash ./scripts/setup/configure-pnpm-linker.sh
 
 # 安裝 VS Code
 choco install vscode
