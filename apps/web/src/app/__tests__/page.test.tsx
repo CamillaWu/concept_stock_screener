@@ -1,5 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { SearchResponse } from '../types/search';
 import HomePage from '../page';
+
+type ApiState<TData> = {
+  data: TData | null;
+  loading: boolean;
+  error: string | null;
+  execute: jest.Mock<Promise<void>, []>;
+  reset: jest.Mock;
+};
 
 const mockUseApi = jest.fn();
 
@@ -17,15 +26,9 @@ jest.mock('@ui/hooks', () => ({
   useApi: (...args: unknown[]) => mockUseApi(...(args as never)),
 }));
 
-type ApiState = {
-  data: any;
-  loading: boolean;
-  error: string | null;
-  execute: jest.Mock<Promise<void>, []>;
-  reset: jest.Mock;
-};
-
-const createApiState = (override: Partial<ApiState> = {}): ApiState => ({
+const createApiState = <TData,>(
+  override: Partial<ApiState<TData>> = {}
+): ApiState<TData> => ({
   data: null,
   loading: false,
   error: null,
@@ -40,7 +43,7 @@ beforeEach(() => {
 
 describe('HomePage', () => {
   it('triggers execute when SearchBox is used', () => {
-    const state = createApiState();
+    const state = createApiState<SearchResponse>();
     mockUseApi.mockReturnValue(state);
 
     render(<HomePage />);
@@ -51,7 +54,9 @@ describe('HomePage', () => {
   });
 
   it('renders loading state when request is in-flight', () => {
-    mockUseApi.mockReturnValue(createApiState({ loading: true }));
+    mockUseApi.mockReturnValue(
+      createApiState<SearchResponse>({ loading: true })
+    );
 
     const { container } = render(<HomePage />);
 
@@ -60,7 +65,9 @@ describe('HomePage', () => {
 
   it('renders error state when request fails', () => {
     const errorMessage = 'Network error';
-    mockUseApi.mockReturnValue(createApiState({ error: errorMessage }));
+    mockUseApi.mockReturnValue(
+      createApiState<SearchResponse>({ error: errorMessage })
+    );
 
     render(<HomePage />);
 
@@ -68,9 +75,9 @@ describe('HomePage', () => {
   });
 
   it('renders data when present', () => {
-    const state = createApiState({
+    const state = createApiState<SearchResponse>({
       data: {
-        message: '搜尋完成',
+        message: 'Search complete',
         stocks: [
           {
             name: 'Taiwan Semiconductor',
@@ -95,7 +102,7 @@ describe('HomePage', () => {
 
     render(<HomePage />);
 
-    expect(screen.getByText('搜尋完成')).toBeInTheDocument();
+    expect(screen.getByText('Search complete')).toBeInTheDocument();
     expect(screen.getByText('Taiwan Semiconductor')).toBeInTheDocument();
     expect(screen.getByText('AI Chips')).toBeInTheDocument();
   });

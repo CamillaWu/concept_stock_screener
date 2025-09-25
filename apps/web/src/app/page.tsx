@@ -2,24 +2,7 @@
 
 import { SearchBox } from '@ui/components';
 import { useApi } from '@ui/hooks';
-
-interface SearchResponse {
-  stocks: Array<{
-    name: string;
-    symbol: string;
-    price: number;
-    change: number;
-    changePercent: number;
-  }>;
-  concepts: Array<{
-    name: string;
-    description: string;
-    keywords: string[];
-  }>;
-  total: number;
-  suggestions: string[];
-  message: string;
-}
+import type { SearchResponse } from './types/search';
 
 export default function HomePage() {
   const { data, loading, error, execute } = useApi<SearchResponse>({
