@@ -1,13 +1,19 @@
+import { describe, expect, it } from '@jest/globals';
+import { ApiResponse, StockData } from '@concept-stock-screener/types';
 import { stockHandler } from '../stock';
 
 const createRequest = (url: string) => ({ url }) as Request;
+
+const parseJson = async <T>(response: Response): Promise<ApiResponse<T>> => {
+  return (await response.json()) as ApiResponse<T>;
+};
 
 describe('stockHandler', () => {
   it('returns all stocks', async () => {
     const response = await stockHandler.getStocks(
       createRequest('https://example.com/api/stocks')
     );
-    const body = await response.json();
+    const body = await parseJson<StockData[]>(response);
 
     expect(response.status).toBe(200);
     expect(body).toEqual(
@@ -22,7 +28,7 @@ describe('stockHandler', () => {
     const response = await stockHandler.getStock(
       createRequest('https://example.com/api/stock')
     );
-    const body = await response.json();
+    const body = await parseJson(response);
 
     expect(response.status).toBe(400);
     expect(body.success).toBe(false);
@@ -32,7 +38,7 @@ describe('stockHandler', () => {
     const response = await stockHandler.getStock(
       createRequest('https://example.com/api/stock?symbol=9999')
     );
-    const body = await response.json();
+    const body = await parseJson(response);
 
     expect(response.status).toBe(404);
     expect(body.success).toBe(false);
@@ -42,7 +48,7 @@ describe('stockHandler', () => {
     const response = await stockHandler.getStock(
       createRequest('https://example.com/api/stock?symbol=2330')
     );
-    const body = await response.json();
+    const body = await parseJson<StockData>(response);
 
     expect(response.status).toBe(200);
     expect(body).toEqual(
