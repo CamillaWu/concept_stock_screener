@@ -1,70 +1,129 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Table } from '../Table';
 
-// 測試數據類型
-interface TestData {
+interface BasicRow {
   id: number;
   name: string;
   price: number;
   category: string;
 }
 
-// 測試數據
-const mockData: TestData[] = [
-  { id: 1, name: '台積電', price: 500, category: '半導體' },
-  { id: 2, name: '聯發科', price: 800, category: '半導體' },
-  { id: 3, name: '鴻海', price: 100, category: '電子製造' },
+const basicData: BasicRow[] = [
+  { id: 1, name: 'Alpha', price: 500, category: 'Semiconductor' },
+  { id: 2, name: 'Bravo', price: 800, category: 'Electronics' },
+  { id: 3, name: 'Charlie', price: 100, category: 'Manufacturing' },
 ];
 
-// 測試列配置
-const mockColumns = [
+const basicColumns = [
   { key: 'id', title: 'ID' },
-  { key: 'name', title: '名稱' },
-  { key: 'price', title: '價格' },
-  { key: 'category', title: '類別' },
+  { key: 'name', title: 'Name' },
+  { key: 'price', title: 'Price' },
+  { key: 'category', title: 'Category' },
 ];
 
 describe('Table', () => {
-  it('應該渲染表格標題行', () => {
-    render(<Table data={mockData} columns={mockColumns} />);
+  it('renders headers and rows', () => {
+    render(<Table data={basicData} columns={basicColumns} />);
 
     expect(screen.getByText('ID')).toBeInTheDocument();
-    expect(screen.getByText('名稱')).toBeInTheDocument();
-    expect(screen.getByText('價格')).toBeInTheDocument();
-    expect(screen.getByText('類別')).toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('Price')).toBeInTheDocument();
+    expect(screen.getByText('Category')).toBeInTheDocument();
+
+    expect(screen.getByText('Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Bravo')).toBeInTheDocument();
+    expect(screen.getByText('Charlie')).toBeInTheDocument();
   });
 
-  it('應該渲染所有數據行', () => {
-    render(<Table data={mockData} columns={mockColumns} />);
+  it('filters rows when searchable input is used', async () => {
+    const user = userEvent.setup();
+    render(<Table data={basicData} columns={basicColumns} searchable />);
 
-    expect(screen.getByText('台積電')).toBeInTheDocument();
-    expect(screen.getByText('聯發科')).toBeInTheDocument();
-    expect(screen.getByText('鴻海')).toBeInTheDocument();
+    const searchInput = screen.getByRole('textbox');
+    await user.type(searchInput, 'Bravo');
+
+    expect(screen.getByText('Bravo')).toBeInTheDocument();
+    expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
+    expect(screen.queryByText('Charlie')).not.toBeInTheDocument();
   });
 
-  it('應該應用自定義樣式類', () => {
+  it('sorts rows and toggles sort order on repeated clicks', async () => {
+    const sortableColumns = [
+      { key: 'name', title: 'Name', sortable: true },
+      { key: 'price', title: 'Price', sortable: true },
+    ];
+
+    const sortableData = [
+      { name: 'Charlie', price: 75 },
+      { name: 'Bravo', price: 90 },
+      { name: 'Alpha', price: 60 },
+    ];
+
+    const user = userEvent.setup();
+    render(<Table data={sortableData} columns={sortableColumns} sortable />);
+
+    const header = screen.getByText('Name');
+
+    // Ascending
+    await user.click(header);
+    let firstRowCells = within(screen.getAllByRole('row')[1]).getAllByRole(
+      'cell'
+    );
+    expect(firstRowCells[0]).toHaveTextContent('Alpha');
+
+    // Descending
+    await user.click(header);
+    firstRowCells = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
+    expect(firstRowCells[0]).toHaveTextContent('Charlie');
+  });
+
+  it('honours custom render functions', () => {
+    const columnsWithRender = [
+      { key: 'name', title: 'Name' },
+      {
+        key: 'price',
+        title: 'Price',
+        render: (value: BasicRow['price']) => `$${value.toFixed(2)}`,
+      },
+    ];
+
+    render(<Table data={basicData.slice(0, 1)} columns={columnsWithRender} />);
+
+    expect(screen.getByText('$500.00')).toBeInTheDocument();
+  });
+
+  it('paginates data and navigates between pages', async () => {
+    const user = userEvent.setup();
+    const paginatedData = Array.from({ length: 12 }, (_, index) => ({
+      id: index + 1,
+      name: `Item ${index + 1}`,
+      price: index * 10,
+      category: 'Category',
+    }));
+
     render(
-      <Table data={mockData} columns={mockColumns} className="custom-table" />
+      <Table data={paginatedData} columns={basicColumns} pagination sortable />
     );
 
-    const tableContainer = screen.getByRole('table').closest('div');
-    expect(tableContainer?.parentElement).toHaveClass('custom-table');
-  });
+    // First page shows Item 1 but not Item 11
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+    expect(screen.queryByText('Item 11')).not.toBeInTheDocument();
 
-  it('應該處理空數據', () => {
-    render(<Table data={[]} columns={mockColumns} />);
+    const buttons = screen.getAllByRole('button');
+    const prevButton = buttons[0];
+    const nextButton = buttons[1];
 
-    // 應該只顯示標題行
-    expect(screen.getByText('ID')).toBeInTheDocument();
-    expect(screen.queryByText('台積電')).not.toBeInTheDocument();
-  });
+    expect(prevButton).toBeDisabled();
+    expect(nextButton).not.toBeDisabled();
 
-  it('應該處理單一數據行', () => {
-    const singleData = [mockData[0]];
-    render(<Table data={singleData} columns={mockColumns} />);
+    await user.click(nextButton);
 
-    expect(screen.getByText('台積電')).toBeInTheDocument();
-    expect(screen.queryByText('聯發科')).not.toBeInTheDocument();
+    expect(prevButton).not.toBeDisabled();
+    expect(screen.getByText('Item 11')).toBeInTheDocument();
+    expect(screen.queryByText('Item 1')).not.toBeInTheDocument();
+
+    expect(nextButton).toBeDisabled();
   });
 });
