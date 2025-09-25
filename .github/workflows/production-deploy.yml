@@ -46,7 +46,28 @@ jobs:
           pnpm build:api
 
           # ?�建?�署??
-          mkdir -p deployment
+          mkdir -p deployment/web deployment/api deployment/types deployment/ui
+
+          if [ ! -d "apps/web/.next" ]; then
+            echo "Next.js build output not found at apps/web/.next"
+            exit 1
+          fi
+
+          if [ ! -d "apps/api/dist" ]; then
+            echo "API build output not found at apps/api/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/types/dist" ]; then
+            echo "Type build output not found at packages/types/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/ui/dist" ]; then
+            echo "UI build output not found at packages/ui/dist"
+            exit 1
+          fi
+
           cp -r apps/web/.next deployment/web/
           cp -r apps/api/dist deployment/api/
           cp -r packages/types/dist deployment/types/
