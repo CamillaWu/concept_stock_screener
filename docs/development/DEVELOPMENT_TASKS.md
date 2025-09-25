@@ -27,7 +27,7 @@ _Owner_: Development Team\_
 | OPS-01  | Cloudflare token rotation SOP + dashboard                                                     | DevOps        | In progress | 2025-09-30 | Progress tracker; CI docs            |
 | OPS-02  | Deployment notifications (Slack / email) wired into Actions workflows                         | DevOps + PM   | In progress | 2025-10-07 | CI docs                              |
 | T-01    | Restore deterministic `pnpm type-check` runs by fixing React workspace linker configuration   | Platform + UI | Complete    | 2025-09-24 | Progress tracker; packages/ui README |
-| QA-02   | Add tests for apps/api/src/handlers and apps/web/src/app/page.tsx to lift coverage above 70%  | QA + Web      | In progress | 2025-10-09 | Progress tracker; testing strategy   |
+| QA-02   | Add tests for apps/api/src/handlers and apps/web/src/app/page.tsx to lift coverage above 70%  | QA + Web      | Complete    | 2025-09-24 | Progress tracker; testing strategy   |
 | OPS-03  | Finalize deployment notifications and monitoring hooks for dev/prod workflows                 | DevOps + PM   | Planned     | 2025-10-15 | CI docs; Progress tracker            |
 | QA-01   | Dev deploy smoke tests embedded in `dev-deploy.yml`                                           | QA            | Planned     | 2025-10-15 | CI docs                              |
 
@@ -77,7 +77,7 @@ _Owner_: Development Team\_
 
 ### Platform and operations
 
-- T-01 Document and enforce pnpm hoisted linker usage so React typings stay resolvable across environments.
+- T-01 Integrate the pnpm hoisted linker helper (`scripts/setup/configure-pnpm-linker.*`) into setup scripts.
 - T-02 Validate Husky and lint-staged on fresh Windows/macOS environments with troubleshooting notes (PRD 6.4 scaling plan).
 - T-03 MCP watchdog GitHub Action for Pinecone / Cloudflare / Vercel servers.
 - T-04 Staging environment configuration and secrets inventory ahead of production rollout.
