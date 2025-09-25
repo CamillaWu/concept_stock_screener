@@ -224,7 +224,7 @@ jobs:
 
     steps:
       - name: 發送 Slack 通知 (開發環境)
-        if: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL_DEV != '' }}
         uses: slackapi/slack-github-action@v1.27.0
         with:
           payload: |
@@ -257,7 +257,7 @@ jobs:
 
     steps:
       - name: 發送 Slack 通知 (產線環境)
-        if: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL_PROD != '' }}
         uses: slackapi/slack-github-action@v1.27.0
         with:
           payload: |

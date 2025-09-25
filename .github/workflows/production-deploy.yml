@@ -164,7 +164,7 @@ jobs:
 
     steps:
       - name: 發送 Slack 通知
-        if: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
+        if: ${{ secrets.SLACK_WEBHOOK_URL_PROD != '' }}
         uses: slackapi/slack-github-action@v1.27.0
         with:
           payload: |
