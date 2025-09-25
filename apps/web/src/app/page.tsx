@@ -35,17 +35,17 @@ export default function HomePage() {
     <div className="space-y-8">
       <div className="text-center py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Intelligent Concept Stock Screener
+          智能概念股篩選平台
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Combine workspace research and AI assistance to uncover concept
-          themes, related stocks, and actionable ideas in seconds.
+          結合研究資料與 AI
+          助理，數秒內找到概念主題、相關個股與可執行的投資想法。
         </p>
 
         <div className="max-w-2xl mx-auto">
           <SearchBox
             onSearch={handleSearch}
-            placeholder="Search by stock, concept, or keyword"
+            placeholder="輸入股票、概念或關鍵字"
             className="w-full"
           />
         </div>
@@ -68,10 +68,9 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Intelligent Search</h3>
+          <h3 className="text-lg font-semibold mb-2">智慧搜尋</h3>
           <p className="text-gray-600">
-            Quickly locate candidate stocks by symbol, name, or industry
-            filters.
+            依代碼、名稱或產業條件快速鎖定潛在個股。
           </p>
         </div>
 
@@ -91,10 +90,9 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Concept Insights</h3>
+          <h3 className="text-lg font-semibold mb-2">概念洞察</h3>
           <p className="text-gray-600">
-            Understand concept strength, key industries, and supporting data at
-            a glance.
+            掌握概念熱度、關鍵產業與支撐數據，一眼看懂。
           </p>
         </div>
 
@@ -114,10 +112,9 @@ export default function HomePage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Realtime Signals</h3>
+          <h3 className="text-lg font-semibold mb-2">即時訊號</h3>
           <p className="text-gray-600">
-            Stay on top of price action, volume, and market-cap changes with
-            instant feedback.
+            即時追蹤價格、成交量與市值變化，掌握市場節奏。
           </p>
         </div>
       </div>
@@ -125,25 +122,25 @@ export default function HomePage() {
       {loading && (
         <div className="card text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-2 text-gray-600">Fetching the latest results�K</p>
+          <p className="mt-2 text-gray-600">讀取最新結果...</p>
         </div>
       )}
 
       {error && (
         <div className="card bg-red-50 border-red-200">
-          <p className="text-red-600">Search failed: {error}</p>
+          <p className="text-red-600">搜尋失敗: {error}</p>
         </div>
       )}
 
       {data && (
         <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Search results</h2>
+          <h2 className="text-xl font-semibold mb-4">搜尋結果</h2>
           <p className="text-gray-600 mb-4">{data.message}</p>
 
           {data.stocks.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-3">
-                Stocks ({data.stocks.length})
+                個股（{data.stocks.length}）
               </h3>
               <div className="space-y-2">
                 {data.stocks.map(
@@ -185,7 +182,7 @@ export default function HomePage() {
           {data.concepts.length > 0 && (
             <div>
               <h3 className="text-lg font-medium mb-3">
-                Concepts ({data.concepts.length})
+                概念（{data.concepts.length}）
               </h3>
               <div className="space-y-2">
                 {data.concepts.map(
