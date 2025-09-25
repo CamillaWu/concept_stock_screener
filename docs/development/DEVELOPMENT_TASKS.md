@@ -77,7 +77,7 @@ _Owner_: Development Team\_
 
 ### Platform and operations
 
-- T-01 Integrate the pnpm hoisted linker helper (`scripts/setup/configure-pnpm-linker.*`) into setup scripts.
+- T-01 Document and validate the new pnpm hoisted linker helper across macOS/Windows quick-start flows.
 - T-02 Validate Husky and lint-staged on fresh Windows/macOS environments with troubleshooting notes (PRD 6.4 scaling plan).
 - T-03 MCP watchdog GitHub Action for Pinecone / Cloudflare / Vercel servers.
 - T-04 Staging environment configuration and secrets inventory ahead of production rollout.

@@ -1,6 +1,6 @@
 # Project Progress Tracker
 
-_Last updated: 2025-09-24_
+_Last updated: 2025-09-25_
 _Project_: Concept Stock Screener\_
 _Owner_: Platform & CI working group\_
 
@@ -9,7 +9,7 @@ _Owner_: Platform & CI working group\_
 - Repository foundations, build tooling, and linting baselines remain stable after the 2025-09-23 validation run.
 - GitHub Actions pipelines (`ci.yml`, `dev-deploy.yml`, `production-deploy.yml`) are live; dry runs succeed and artefact publishing is in place.
 - `pnpm lint:check` and `pnpm type-check` are green; enabling pnpm's hoisted linker resolved the React workspace typing gap.
-- Latest Jest coverage snapshot (2025-09-24) sits at 84.63% stmts / 76.92% br / 84.61% fn / 84.75% lines; Table utilities remain the main branch coverage outlier.
+- Latest Jest coverage snapshot (2025-09-25) sits at 88.78% stmts / 87.78% br / 91.34% fn / 88.88% lines; branch gaps now only surface inside the table renderer helpers.
 - Feature delivery is in the early phase (web UI ~15%, API ~20%, AI integration 0%). More product work is required before we can schedule a beta.
 
 ## Phase Status Overview
@@ -53,7 +53,7 @@ _Owner_: Platform & CI working group\_
 - [ ] Raise unit/integration coverage to 70%+ by covering API handlers and Next.js pages.
 - [ ] Define and enforce quality gates for staging deployments (coverage, smoke tests, rollback plan).
 
-## Quality and Test Metrics (2025-09-24)
+## Quality and Test Metrics (2025-09-25)
 
 | Check                   | Result                                                 | Target                  | Notes                                                                |
 | ----------------------- | ------------------------------------------------------ | ----------------------- | -------------------------------------------------------------------- |
@@ -71,8 +71,8 @@ _Owner_: Platform & CI working group\_
 
 ## Next Steps
 
-1. Wire the new `scripts/setup/configure-pnpm-linker.*` helper into quick-start flows (macOS + Windows).
-2. Extend tests for `packages/ui/src/components/Table.tsx` to lift branch coverage to target.
+1. Document and announce the new `scripts/setup/configure-pnpm-linker.*` helper across quick-start guides.
+2. Decide whether to chase the remaining Table renderer branches or codify the current coverage threshold.
 3. Finalise notification and monitoring hooks so dev/prod deploy workflows provide actionable alerts.
 
 ## References
