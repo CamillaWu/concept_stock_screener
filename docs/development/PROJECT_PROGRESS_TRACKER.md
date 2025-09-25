@@ -38,13 +38,14 @@ _Owner_: Platform & CI working group\_
 - Added Jest coverage for Cloudflare Worker handlers and the Next.js home page, exercising current mock data flows.
 
 - Added cross-platform helper scripts (`scripts/setup/configure-pnpm-linker.*`) to enforce the hoisted pnpm node-linker across environments.
+- Wired Slack webhook notifications into CI and deploy workflows (gated by new `SLACK_WEBHOOK_URL_*` secrets).
 
 ## Active Workstreams
 
 ### High priority
 
 - [ ] T-01 Close out Cloudflare token rotation SOP and dashboard (target 2025-09-30).
-- [ ] T-02 Decide on deployment notifications (Slack/email) and wire them into workflows (target 2025-10-07).
+- [x] T-02 Decide on deployment notifications (Slack/email) and wire them into workflows (target 2025-10-07).
 - [ ] T-03 Automate post-deploy health checks inside CI (`dev-deploy.yml`) (target 2025-10-15).
 
 ### Medium priority
@@ -55,13 +56,13 @@ _Owner_: Platform & CI working group\_
 
 ## Quality and Test Metrics (2025-09-25)
 
-| Check                   | Result                                                 | Target                  | Notes                                                                |
-| ----------------------- | ------------------------------------------------------ | ----------------------- | -------------------------------------------------------------------- |
-| `pnpm lint:check`       | Pass                                                   | Green on every PR       | Baseline enforced by CI and pre-commit hook                          |
-| `pnpm type-check:types` | Pass                                                   | 0 errors                | `packages/types` clean                                               |
-| `pnpm type-check:ui`    | Pass                                                   | 0 errors                | Hoisted pnpm linker restores React typings across the workspace      |
-| Jest coverage           | 69.02% stmts / 61.99% br / 70.19% fn / 68.73% lines    | >= 80% across the board | New handler + homepage tests landed; rerun coverage to capture gains |
-| MCP server smoke        | Pass (manual `pnpm --filter mcp-tools start:pinecone`) | Automated heartbeat     | Needs watchdog + GitHub Actions job                                  |
+| Check                   | Result                                                 | Target                  | Notes                                                                                        |
+| ----------------------- | ------------------------------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm lint:check`       | Pass                                                   | Green on every PR       | Baseline enforced by CI and pre-commit hook                                                  |
+| `pnpm type-check:types` | Pass                                                   | 0 errors                | `packages/types` clean                                                                       |
+| `pnpm type-check:ui`    | Pass                                                   | 0 errors                | Hoisted pnpm linker restores React typings across the workspace                              |
+| Jest coverage           | 88.78% stmts / 87.78% br / 91.34% fn / 88.88% lines    | >= 80% across the board | Branch coverage gap now isolated to table renderer helpers; monitor before next release gate |
+| MCP server smoke        | Pass (manual `pnpm --filter mcp-tools start:pinecone`) | Automated heartbeat     | Needs watchdog + GitHub Actions job                                                          |
 
 ## Risks and Mitigations
 
@@ -73,7 +74,7 @@ _Owner_: Platform & CI working group\_
 
 1. Document and announce the new `scripts/setup/configure-pnpm-linker.*` helper across quick-start guides.
 2. Decide whether to chase the remaining Table renderer branches or codify the current coverage threshold.
-3. Finalise notification and monitoring hooks so dev/prod deploy workflows provide actionable alerts.
+3. Monitor Slack webhook adoption, capture staging channel requirements, and extend alerts to staging once secrets are provisioned.
 
 ## References
 

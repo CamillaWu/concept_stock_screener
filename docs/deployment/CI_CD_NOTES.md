@@ -4,15 +4,17 @@ This note summarizes the configuration required by the GitHub Actions workflows 
 
 ## 1. Required secrets and variables
 
-| Name                     | Type              | Purpose                                                                |
-| ------------------------ | ----------------- | ---------------------------------------------------------------------- |
-| `VERCEL_TOKEN`           | Secret            | Vercel token for the development deployment                            |
-| `VERCEL_TOKEN_PROD`      | Secret            | Vercel token for the production deployment                             |
-| `VERCEL_ORG_ID`          | Secret / Variable | Shared Vercel organisation id                                          |
-| `VERCEL_PROJECT_ID`      | Secret / Variable | Development Vercel project id                                          |
-| `VERCEL_PROJECT_ID_PROD` | Secret / Variable | Production Vercel project id                                           |
-| `CLOUDFLARE_API_TOKEN`   | Secret            | Custom Cloudflare API token with Workers scopes                        |
-| `CLOUDFLARE_ACCOUNT_ID`  | Secret / Variable | Cloudflare account id (for example `99cf07b95d45a17d7518ef8d87a9e831`) |
+| Name                     | Type              | Purpose                                                                  |
+| ------------------------ | ----------------- | ------------------------------------------------------------------------ |
+| `VERCEL_TOKEN`           | Secret            | Vercel token for the development deployment                              |
+| `VERCEL_TOKEN_PROD`      | Secret            | Vercel token for the production deployment                               |
+| `VERCEL_ORG_ID`          | Secret / Variable | Shared Vercel organisation id                                            |
+| `VERCEL_PROJECT_ID`      | Secret / Variable | Development Vercel project id                                            |
+| `VERCEL_PROJECT_ID_PROD` | Secret / Variable | Production Vercel project id                                             |
+| `CLOUDFLARE_API_TOKEN`   | Secret            | Custom Cloudflare API token with Workers scopes                          |
+| `CLOUDFLARE_ACCOUNT_ID`  | Secret / Variable | Cloudflare account id (for example `99cf07b95d45a17d7518ef8d87a9e831`)   |
+| `SLACK_WEBHOOK_URL_DEV`  | Secret            | Slack webhook for dev CI/deploy notifications (optional but recommended) |
+| `SLACK_WEBHOOK_URL_PROD` | Secret            | Slack webhook for production deploy notifications                        |
 
 > The workflows first read the repository variable `CLOUDFLARE_ACCOUNT_ID`. If it is not present, the secret with the same name is used instead.
 
@@ -49,6 +51,7 @@ If Wrangler prints `Authentication error [code: 10000]`, the token scopes are in
   3. Upload/download the deployment artifact.
   4. Deploy the Next.js app through Vercel (`--prod`).
   5. Deploy the Cloudflare Worker via `pnpm --filter api exec wrangler deploy --env development`.
+  6. Post Slack summary if `SLACK_WEBHOOK_URL_DEV` is configured.
 - To redeploy without rebuilding, manually run the workflow and enable the `force_deploy` input.
 
 ### 2.2 `production-deploy.yml`
@@ -58,6 +61,7 @@ If Wrangler prints `Authentication error [code: 10000]`, the token scopes are in
   1. Full workspace build and packaging into `deployment/`.
   2. Deploy the web app to Vercel (`--prod`).
   3. Deploy the Worker with `pnpm --filter api exec wrangler deploy --env production`.
+  4. Post Slack summary if `SLACK_WEBHOOK_URL_PROD` is configured.
 
 ## 3. Troubleshooting
 
@@ -69,4 +73,4 @@ If Wrangler prints `Authentication error [code: 10000]`, the token scopes are in
 
 ---
 
-Last updated: 2025-09-22
+Last updated: 2025-09-25
