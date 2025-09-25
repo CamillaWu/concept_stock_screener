@@ -70,7 +70,7 @@ describe('HomePage', () => {
   it('renders data when present', () => {
     const state = createApiState({
       data: {
-        message: 'Found results',
+        message: '搜尋完成',
         stocks: [
           {
             name: 'Taiwan Semiconductor',
@@ -95,7 +95,7 @@ describe('HomePage', () => {
 
     render(<HomePage />);
 
-    expect(screen.getByText('Found results')).toBeInTheDocument();
+    expect(screen.getByText('搜尋完成')).toBeInTheDocument();
     expect(screen.getByText('Taiwan Semiconductor')).toBeInTheDocument();
     expect(screen.getByText('AI Chips')).toBeInTheDocument();
   });
