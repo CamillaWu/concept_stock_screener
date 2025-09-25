@@ -1,5 +1,5 @@
-# 概念股篩選系統 - Windows 快速啟動腳本
-# 適用於 Windows 10/11 + PowerShell 5.1+
+# 概念?�篩?�系�?- Windows 快速�??�腳??
+# ?�用??Windows 10/11 + PowerShell 5.1+
 
 param(
     [switch]$SkipChecks,
@@ -12,22 +12,22 @@ param(
 # 顯示幫助信息
 if ($Help) {
     Write-Host @"
-概念股篩選系統 - Windows 快速啟動腳本
+概念?�篩?�系�?- Windows 快速�??�腳??
 
-用法:
-    .\quick-start-windows.ps1 [選項]
+?��?:
+    .\quick-start-windows.ps1 [?��?]
 
-選項:
-    -SkipChecks    跳過環境檢查
-    -SkipInstall   跳過依賴安裝
-    -SkipBuild     跳過專案構建
-    -SkipTest      跳過測試執行
-    -Help          顯示此幫助信息
+?��?:
+    -SkipChecks    跳�??��?檢查
+    -SkipInstall   跳�?依賴安�?
+    -SkipBuild     跳�?專�?構建
+    -SkipTest      跳�?測試?��?
+    -Help          顯示此幫?�信??
 
-示例:
-    .\quick-start-windows.ps1                    # 完整流程
-    .\quick-start-windows.ps1 -SkipChecks        # 跳過環境檢查
-    .\quick-start-windows.ps1 -SkipInstall       # 跳過依賴安裝
+示�?:
+    .\quick-start-windows.ps1                    # 完整流�?
+    .\quick-start-windows.ps1 -SkipChecks        # 跳�??��?檢查
+    .\quick-start-windows.ps1 -SkipInstall       # 跳�?依賴安�?
 "@
     exit 0
 }
@@ -40,7 +40,7 @@ $Colors = @{
     Error = "Red"
 }
 
-# 日誌函數
+# ?��??�數
 function Write-Log {
     param(
         [string]$Message,
@@ -52,24 +52,24 @@ function Write-Log {
     Write-Host "[$timestamp] $Message" -ForegroundColor $color
 }
 
-# 檢查執行策略
+# 檢查?��?策略
 function Test-ExecutionPolicy {
-    Write-Log "檢查 PowerShell 執行策略..." "Info"
+    Write-Log "檢查 PowerShell ?��?策略..." "Info"
     
     $policy = Get-ExecutionPolicy
     if ($policy -eq "Restricted") {
-        Write-Log "執行策略過於嚴格，嘗試設置為 RemoteSigned..." "Warning"
+        Write-Log "?��?策略?�於?�格，�?試設置為 RemoteSigned..." "Warning"
         try {
             Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-            Write-Log "執行策略已設置為 RemoteSigned" "Success"
+            Write-Log "?��?策略已設置為 RemoteSigned" "Success"
         }
         catch {
-            Write-Log "無法設置執行策略，請手動執行: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser" "Error"
+            Write-Log "?��?設置?��?策略，�??��??��?: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser" "Error"
             return $false
         }
     }
     else {
-        Write-Log "執行策略: $policy" "Success"
+        Write-Log "?��?策略: $policy" "Success"
     }
     return $true
 }
@@ -81,13 +81,13 @@ function Test-NodeJS {
     try {
         $nodeVersion = node --version
         $npmVersion = npm --version
-        Write-Log "Node.js 版本: $nodeVersion" "Success"
-        Write-Log "npm 版本: $npmVersion" "Success"
+        Write-Log "Node.js ?�本: $nodeVersion" "Success"
+        Write-Log "npm ?�本: $npmVersion" "Success"
         return $true
     }
     catch {
-        Write-Log "Node.js 未安裝或不在 PATH 中" "Error"
-        Write-Log "請從 https://nodejs.org/ 下載並安裝 Node.js" "Error"
+        Write-Log "Node.js ?��?裝�?不在 PATH �? "Error"
+        Write-Log "請�? https://nodejs.org/ 下�?並�?�?Node.js" "Error"
         return $false
     }
 }
@@ -98,18 +98,18 @@ function Test-Pnpm {
     
     try {
         $pnpmVersion = pnpm --version
-        Write-Log "pnpm 版本: $pnpmVersion" "Success"
+        Write-Log "pnpm ?�本: $pnpmVersion" "Success"
         return $true
     }
     catch {
-        Write-Log "pnpm 未安裝，正在安裝..." "Warning"
+        Write-Log "pnpm ?��?裝�?�?��安�?..." "Warning"
         try {
             npm install -g pnpm
-            Write-Log "pnpm 安裝成功" "Success"
+            Write-Log "pnpm 安�??��?" "Success"
             return $true
         }
         catch {
-            Write-Log "pnpm 安裝失敗" "Error"
+            Write-Log "pnpm 安�?失�?" "Error"
             return $false
         }
     }
@@ -121,27 +121,27 @@ function Test-Git {
     
     try {
         $gitVersion = git --version
-        Write-Log "Git 版本: $gitVersion" "Success"
+        Write-Log "Git ?�本: $gitVersion" "Success"
         return $true
     }
     catch {
-        Write-Log "Git 未安裝或不在 PATH 中" "Warning"
-        Write-Log "建議從 https://git-scm.com/ 下載並安裝 Git" "Warning"
+        Write-Log "Git ?��?裝�?不在 PATH �? "Warning"
+        Write-Log "建議�?https://git-scm.com/ 下�?並�?�?Git" "Warning"
         return $false
     }
 }
 
-# 環境檢查
+# ?��?檢查
 function Start-EnvironmentCheck {
     if ($SkipChecks) {
-        Write-Log "跳過環境檢查" "Warning"
+        Write-Log "跳�??��?檢查" "Warning"
         return $true
     }
     
-    Write-Log "開始環境檢查..." "Info"
+    Write-Log "?��??��?檢查..." "Info"
     
     $checks = @(
-        @{ Name = "PowerShell 執行策略"; Function = "Test-ExecutionPolicy" },
+        @{ Name = "PowerShell ?��?策略"; Function = "Test-ExecutionPolicy" },
         @{ Name = "Node.js"; Function = "Test-NodeJS" },
         @{ Name = "pnpm"; Function = "Test-Pnpm" },
         @{ Name = "Git"; Function = "Test-Git" }
@@ -158,33 +158,33 @@ function Start-EnvironmentCheck {
     }
     
     if ($allPassed) {
-        Write-Log "所有環境檢查通過！" "Success"
+        Write-Log "?�?�環境檢?�通�?�? "Success"
     }
     else {
-        Write-Log "部分環境檢查失敗，請解決問題後重試" "Error"
+        Write-Log "?��??��?檢查失�?，�?�?��?��?後�?�? "Error"
     }
     
     return $allPassed
 }
 
-# 安裝依賴
+# 安�?依賴
 function Start-DependencyInstall {
     if ($SkipInstall) {
-        Write-Log "跳過依賴安裝" "Warning"
+        Write-Log "跳�?依賴安�?" "Warning"
         return $true
     }
     
-    Write-Log "開始安裝依賴..." "Info"
+    Write-Log "?��?安�?依賴..." "Info"
     
     try {
-        # 清理舊的依賴
+        # 清�??��?依賴
         if (Test-Path "node_modules") {
-            Write-Log "清理舊的依賴..." "Info"
+            Write-Log "清�??��?依賴..." "Info"
             Remove-Item -Recurse -Force "node_modules" -ErrorAction SilentlyContinue
         }
         
         if (Test-Path "packages/*/node_modules") {
-            Write-Log "清理包的依賴..." "Info"
+            Write-Log "清�??��?依賴..." "Info"
             Get-ChildItem "packages" -Directory | ForEach-Object {
                 if (Test-Path "$($_.FullName)/node_modules") {
                     Remove-Item -Recurse -Force "$($_.FullName)/node_modules" -ErrorAction SilentlyContinue
@@ -192,40 +192,41 @@ function Start-DependencyInstall {
             }
         }
         
-        # 安裝依賴
-        Write-Log "安裝專案依賴..." "Info"
+        # 安�?依賴
+        Write-Log "安�?專�?依賴..." "Info"
+        & "$PSScriptRoot/setup/configure-pnpm-linker.ps1"
         pnpm install
         
         if ($LASTEXITCODE -eq 0) {
-            Write-Log "依賴安裝成功！" "Success"
+            Write-Log "依賴安�??��?�? "Success"
             return $true
         }
         else {
-            Write-Log "依賴安裝失敗" "Error"
+            Write-Log "依賴安�?失�?" "Error"
             return $false
         }
     }
     catch {
-        Write-Log "依賴安裝過程中發生錯誤: $($_.Exception.Message)" "Error"
+        Write-Log "依賴安�??��?中發?�錯�? $($_.Exception.Message)" "Error"
         return $false
     }
 }
 
-# 構建專案
+# 構建專�?
 function Start-ProjectBuild {
     if ($SkipBuild) {
-        Write-Log "跳過專案構建" "Warning"
+        Write-Log "跳�?專�?構建" "Warning"
         return $true
     }
     
-    Write-Log "開始構建專案..." "Info"
+    Write-Log "?��?構建專�?..." "Info"
     
     try {
-        # 構建類型定義
-        Write-Log "構建類型定義..." "Info"
+        # 構建類�?定義
+        Write-Log "構建類�?定義..." "Info"
         pnpm build:types
         if ($LASTEXITCODE -ne 0) {
-            Write-Log "類型定義構建失敗" "Error"
+            Write-Log "類�?定義構建失�?" "Error"
             return $false
         }
         
@@ -233,15 +234,15 @@ function Start-ProjectBuild {
         Write-Log "構建 UI 組件..." "Info"
         pnpm build:ui
         if ($LASTEXITCODE -ne 0) {
-            Write-Log "UI 組件構建失敗" "Error"
+            Write-Log "UI 組件構建失�?" "Error"
             return $false
         }
         
-        # 構建前端
-        Write-Log "構建前端..." "Info"
+        # 構建?�端
+        Write-Log "構建?�端..." "Info"
         pnpm build:web
         if ($LASTEXITCODE -ne 0) {
-            Write-Log "前端構建失敗" "Error"
+            Write-Log "?�端構建失�?" "Error"
             return $false
         }
         
@@ -249,81 +250,81 @@ function Start-ProjectBuild {
         Write-Log "構建 API..." "Info"
         pnpm build:api
         if ($LASTEXITCODE -ne 0) {
-            Write-Log "API 構建失敗" "Error"
+            Write-Log "API 構建失�?" "Error"
             return $false
         }
         
-        Write-Log "專案構建成功！" "Success"
+        Write-Log "專�?構建?��?�? "Success"
         return $true
     }
     catch {
-        Write-Log "專案構建過程中發生錯誤: $($_.Exception.Message)" "Error"
+        Write-Log "專�?構建?��?中發?�錯�? $($_.Exception.Message)" "Error"
         return $false
     }
 }
 
-# 運行測試
+# ?��?測試
 function Start-Testing {
     if ($SkipTest) {
-        Write-Log "跳過測試執行" "Warning"
+        Write-Log "跳�?測試?��?" "Warning"
         return $true
     }
     
-    Write-Log "開始運行測試..." "Info"
+    Write-Log "?��??��?測試..." "Info"
     
     try {
-        # 類型檢查
-        Write-Log "運行類型檢查..." "Info"
+        # 類�?檢查
+        Write-Log "?��?類�?檢查..." "Info"
         pnpm type-check:types
         pnpm type-check:ui
         pnpm type-check:web
         
-        # 基礎測試
-        Write-Log "運行基礎測試..." "Info"
+        # ?��?測試
+        Write-Log "?��??��?測試..." "Info"
         pnpm test:basic
         
-        Write-Log "測試完成！" "Success"
+        Write-Log "測試完�?�? "Success"
         return $true
     }
     catch {
-        Write-Log "測試過程中發生錯誤: $($_.Exception.Message)" "Error"
+        Write-Log "測試?��?中發?�錯�? $($_.Exception.Message)" "Error"
         return $false
     }
 }
 
-# 顯示完成信息
+# 顯示完�?信息
 function Show-CompletionMessage {
     Write-Host ""
-    Write-Log "🎉 概念股篩選系統設置完成！" "Success"
+    Write-Log "?? 概念?�篩?�系統設置�??��?" "Success"
     Write-Host ""
-    Write-Log "下一步操作:" "Info"
-    Write-Log "1. 啟動開發環境: pnpm start" "Info"
-    Write-Log "2. 運行完整測試: pnpm test" "Info"
-    Write-Log "3. 查看專案狀態: .\scripts\maintenance\status-check.ps1" "Info"
+    Write-Log "下�?步�?�?" "Info"
+    Write-Log "1. ?��??�發?��?: pnpm start" "Info"
+    Write-Log "2. ?��?完整測試: pnpm test" "Info"
+    Write-Log "3. ?��?專�??�?? .\scripts\maintenance\status-check.ps1" "Info"
     Write-Host ""
-    Write-Log "專案文檔位於 docs/ 目錄" "Info"
-    Write-Log "快速開始指南: docs/quick-start/QUICK_START_GUIDE.md" "Info"
+    Write-Log "專�??��?位於 docs/ ?��?" "Info"
+    Write-Log "快速�?始�??? docs/quick-start/QUICK_START_GUIDE.md" "Info"
 }
 
-# 主函數
+# 主函??
 function Main {
     Write-Host ""
-    Write-Log "🚀 概念股篩選系統 - Windows 快速啟動" "Info"
-    Write-Log "開始時間: $(Get-Date)" "Info"
+    Write-Log "?? 概念?�篩?�系�?- Windows 快速�??? "Info"
+    Write-Log "?��??��?: $(Get-Date)" "Info"
     Write-Host ""
     
-    # 檢查工作目錄
+    # 檢查工�??��?
     if (-not (Test-Path "package.json")) {
-        Write-Log "錯誤：請在專案根目錄執行此腳本" "Error"
+        Write-Log "?�誤：�??��?案根?��??��?此腳?? "Error"
         exit 1
     }
     
-    # 執行各階段
+    # ?��??��?�?
     $stages = @(
-        @{ Name = "環境檢查"; Function = "Start-EnvironmentCheck" },
-        @{ Name = "依賴安裝"; Function = "Start-DependencyInstall" },
-        @{ Name = "專案構建"; Function = "Start-ProjectBuild" },
-        @{ Name = "測試執行"; Function = "Start-Testing" }
+        @{ Name = "?��?檢查"; Function = "Start-EnvironmentCheck" },
+        @{ Name = "依賴安�?"; Function = "Start-DependencyInstall" },
+        @{ Name = "專�?構建"; Function = "Start-ProjectBuild" },
+        @{ Name = "測試?��?"; Function = "Start-Testing" }
     )
     
     foreach ($stage in $stages) {
@@ -331,23 +332,25 @@ function Main {
         $result = & $stage.Function
         
         if (-not $result) {
-            Write-Log "$($stage.Name) 失敗，停止執行" "Error"
+            Write-Log "$($stage.Name) 失�?，�?止執�? "Error"
             exit 1
         }
         
         Write-Host ""
     }
     
-    # 顯示完成信息
+    # 顯示完�?信息
     Show-CompletionMessage
 }
 
-# 執行主函數
+# ?��?主函??
 try {
     Main
 }
 catch {
-    Write-Log "腳本執行過程中發生未預期的錯誤: $($_.Exception.Message)" "Error"
-    Write-Log "請檢查錯誤信息並重試" "Error"
+    Write-Log "?�本?��??��?中發?�未?��??�錯�? $($_.Exception.Message)" "Error"
+    Write-Log "請檢?�錯誤信?�並?�試" "Error"
     exit 1
 }
+
+
