@@ -48,6 +48,18 @@ jobs:
           # ?�建?�署??
           mkdir -p deployment/web deployment/api deployment/types deployment/ui
 
+          echo "Listing apps/web contents"
+          ls -al apps/web || true
+
+          echo "Listing apps/api contents"
+          ls -al apps/api || true
+
+          echo "Listing packages/types contents"
+          ls -al packages/types || true
+
+          echo "Listing packages/ui contents"
+          ls -al packages/ui || true
+
           if [ ! -d "apps/web/.next" ]; then
             echo "Next.js build output not found at apps/web/.next"
             exit 1
