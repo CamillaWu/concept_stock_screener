@@ -40,6 +40,8 @@ pnpm dev:api      # API (http://localhost:8787)
 pnpm dev:pipeline # 數據管道 (http://localhost:8000)
 ```
 
+> **注意**：首次在每台機器上安裝依賴後，請執行 scripts/setup/configure-pnpm-linker.sh (macOS/Linux) 或 scripts/setup/configure-pnpm-linker.ps1 (Windows) 讓 pnpm 使用 hoisted node-linker，避免 React 類型解析問題。
+
 ## 🏗️ 專案架構
 
 ```

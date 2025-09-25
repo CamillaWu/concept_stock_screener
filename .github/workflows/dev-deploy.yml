@@ -245,6 +245,16 @@ jobs:
     if: always()
 
     steps:
+      - name: 發送 Slack 通知
+        if: ${{ secrets.SLACK_WEBHOOK_URL_DEV != '' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": ":rocket: 開發環境部署結果\n• 部署：${{ needs.deploy-dev.result }}\n• 驗證：${{ needs.post-deploy-verification.result }}\n• 狀態：${{ job.status }}\n• 分支：${{ github.ref_name }}\n• Commit：${{ github.sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
       - name: Deployment result
         run: |
           echo "Deployment summary"

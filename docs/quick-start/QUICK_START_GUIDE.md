@@ -78,7 +78,9 @@ choco install git
 # 安裝 pnpm
 npm install -g pnpm
 # 設定 pnpm node-linker (必跑一次)
-bash ./scripts/setup/configure-pnpm-linker.sh
+PowerShell -ExecutionPolicy Bypass -File .\scripts\setup\configure-pnpm-linker.ps1
+# 如遇權限錯誤，先執行
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 # 安裝 VS Code
 choco install vscode
@@ -96,6 +98,8 @@ cd concept_stock_screener
 
 # 安裝依賴
 pnpm install
+
+> **注意**：安裝依賴後請執行 scripts/setup/configure-pnpm-linker.sh (macOS/Linux) 或 scripts/setup/configure-pnpm-linker.ps1 (Windows) 以啟用 hoisted node-linker，避免 React 類型解析問題。
 
 # 設置環境變數
 cp env.example .env.local

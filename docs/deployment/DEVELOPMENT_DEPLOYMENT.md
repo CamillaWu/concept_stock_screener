@@ -32,6 +32,9 @@ pnpm health:check
 
 # 啟動監控
 pnpm monitor:dev
+
+> **通知**：配置 `SLACK_WEBHOOK_URL_DEV` 後，GitHub Actions 會自動將開發部署結果推送到 Slack；產線工作流程請使用 `SLACK_WEBHOOK_URL_PROD`。
+
 ```
 
 ### 方法 2: 直接執行腳本

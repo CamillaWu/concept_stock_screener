@@ -223,25 +223,63 @@ jobs:
     name: 開發環境部署通知
 
     steps:
-      - name: 通知開發環境部署
+      - name: 發送 Slack 通知 (開發環境)
+        if: ${{ secrets.SLACK_WEBHOOK_URL_DEV != '' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": ":rocket: 開發環境部署待執行",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":rocket: *開發環境部署待執行*\n• 分支：${{ github.ref_name }}\n• 工作流程：${{ github.workflow }}\n• Commit：${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_DEV }}
+      - name: 控制台提醒 (開發環境)
         run: |
-          echo "🚀 開發環境部署觸發"
+          echo "✅ 開發環境部署觸發"
           echo "分支: ${{ github.ref_name }}"
-          echo "請使用 dev-deploy.yml 工作流程進行開發環境部署"
+          echo "請使用 dev-deploy.yml 工作流程進行部署"
 
   # 生產環境部署通知
   production-notification:
     if: github.ref == 'refs/heads/main'
     needs: [upload-artifacts]
     runs-on: ubuntu-latest
-    name: 生產環境部署通知
+    name: 產線環境部署通知
 
     steps:
-      - name: 通知生產環境部署
+      - name: 發送 Slack 通知 (產線環境)
+        if: ${{ secrets.SLACK_WEBHOOK_URL_PROD != '' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": ":rocket: 產線部署待執行",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":rocket: *產線部署待執行*\n• 分支：${{ github.ref_name }}\n• 工作流程：${{ github.workflow }}\n• Commit：${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_PROD }}
+      - name: 控制台提醒 (產線環境)
         run: |
-          echo "🚀 生產環境部署觸發"
+          echo "✅ 產線環境部署觸發"
           echo "分支: ${{ github.ref_name }}"
-          echo "請使用 production-deploy.yml 工作流程進行生產環境部署"
+          echo "請使用 production-deploy.yml 工作流程進行部署"
 
   # 構建完成總結
   build-summary:

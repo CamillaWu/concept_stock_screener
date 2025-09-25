@@ -25,7 +25,7 @@ _Owner_: Development Team\_
 | DATA-01 | Ingest TWSE filings/news into Pinecone namespace (chunking + metadata)                        | Data          | In progress | 2025-10-15 | PRD 6.5; RAG 2                       |
 | DATA-02 | Persist RAG source trails for the citation drawer                                             | Data          | Planned     | 2025-10-15 | Feature&Flow 3.1.2                   |
 | OPS-01  | Cloudflare token rotation SOP + dashboard                                                     | DevOps        | In progress | 2025-09-30 | Progress tracker; CI docs            |
-| OPS-02  | Deployment notifications (Slack / email) wired into Actions workflows                         | DevOps + PM   | In progress | 2025-10-07 | CI docs                              |
+| OPS-02  | Deployment notifications (Slack / email) wired into Actions workflows                         | DevOps + PM   | Complete    | 2025-09-25 | CI docs                              |
 | T-01    | Restore deterministic `pnpm type-check` runs by fixing React workspace linker configuration   | Platform + UI | Complete    | 2025-09-24 | Progress tracker; packages/ui README |
 | QA-02   | Add tests for apps/api/src/handlers and apps/web/src/app/page.tsx to lift coverage above 70%  | QA + Web      | Complete    | 2025-09-24 | Progress tracker; testing strategy   |
 | OPS-03  | Finalize deployment notifications and monitoring hooks for dev/prod workflows                 | DevOps + PM   | Planned     | 2025-10-15 | CI docs; Progress tracker            |
