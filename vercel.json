@@ -4,11 +4,6 @@
   "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install --frozen-lockfile --config.node-linker=hoisted",
   "framework": "nextjs",
-  "functions": {
-    "apps/web/.next/server/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
     "NODE_ENV": "production",
     "VERCEL_ENV": "production"
