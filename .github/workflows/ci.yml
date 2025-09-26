@@ -190,6 +190,29 @@ jobs:
       - name: 檢出代碼
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: |
+          pnpm build:types
+          pnpm build:ui
+
+      - name: Build web and API
+        run: |
+          pnpm build:web
+          pnpm build:api
+
       - name: Prepare deployment artifact
         run: |
           echo "Preparing deployment bundle..."
