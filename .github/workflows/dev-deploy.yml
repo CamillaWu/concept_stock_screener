@@ -118,7 +118,40 @@ jobs:
       - name: Prepare deployment artifact
         run: |
           echo "Preparing deployment bundle"
-          mkdir -p deployment
+          mkdir -p deployment/web deployment/api deployment/types deployment/ui
+
+          echo "Listing apps/web contents"
+          ls -al apps/web || true
+
+          echo "Listing apps/api contents"
+          ls -al apps/api || true
+
+          echo "Listing packages/types contents"
+          ls -al packages/types || true
+
+          echo "Listing packages/ui contents"
+          ls -al packages/ui || true
+
+          if [ ! -d "apps/web/.next" ]; then
+            echo "Next.js build output not found at apps/web/.next"
+            exit 1
+          fi
+
+          if [ ! -d "apps/api/dist" ]; then
+            echo "API build output not found at apps/api/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/types/dist" ]; then
+            echo "Types build output not found at packages/types/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/ui/dist" ]; then
+            echo "UI build output not found at packages/ui/dist"
+            exit 1
+          fi
+
           cp -r apps/web/.next deployment/web/
           cp -r apps/api/dist deployment/api/
           cp -r packages/types/dist deployment/types/
