@@ -190,10 +190,27 @@ jobs:
       - name: 檢出代碼
         uses: actions/checkout@v4
 
-      - name: 創建部署包
+      - name: Prepare deployment artifact
         run: |
-          echo "📦 創建部署包..."
-          mkdir -p deployment
+          echo "Preparing deployment bundle..."
+          mkdir -p deployment/web deployment/api
+
+          echo "Listing apps/web contents"
+          ls -al apps/web || true
+
+          echo "Listing apps/api contents"
+          ls -al apps/api || true
+
+          if [ ! -d "apps/web/.next" ]; then
+            echo "Next.js build output not found at apps/web/.next"
+            exit 1
+          fi
+
+          if [ ! -d "apps/api/dist" ]; then
+            echo "API build output not found at apps/api/dist"
+            exit 1
+          fi
+
           cp -r apps/web/.next deployment/web/
           cp -r apps/api/dist deployment/api/
           cp package.json deployment/
