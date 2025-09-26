@@ -80,7 +80,6 @@
     "jest-environment-jsdom": "^30.1.2",
     "lint-staged": "^16.1.6",
     "prettier": "^3.6.2",
-    "styled-jsx": "5.1.1",
     "ts-jest": "^29.4.1",
     "typescript": "^5.5.3"
   },
@@ -98,5 +97,8 @@
   ],
   "author": "Concept Stock Screener Team",
   "license": "MIT",
-  "packageManager": "pnpm@10.0.0"
+  "packageManager": "pnpm@10.0.0",
+  "dependencies": {
+    "styled-jsx": "5.1.1"
+  }
 }
