@@ -207,6 +207,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --config.node-linker=hoisted
 
+      - name: Install web node modules
+        working-directory: apps/web
+        run: npm install --no-save --package-lock=false
+
       - name: Build Next app
         run: pnpm run build:web
 
@@ -214,6 +218,12 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: npx vercel build --prod --cwd ./apps/web --token $VERCEL_TOKEN
+
+      - name: Verify prebuilt output
+        run: |
+          ls -al apps/web/.vercel || true
+          test -d apps/web/node_modules/styled-jsx || (echo 'styled-jsx missing after install' && exit 1)
+          test -d apps/web/.vercel/output || (echo 'prebuilt output missing after vercel build' && exit 1)
 
       - name: Deploy web app to Vercel
         env:
