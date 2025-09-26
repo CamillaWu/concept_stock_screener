@@ -216,15 +216,9 @@ jobs:
         run: npx vercel build --prod --cwd ./apps/web --token $VERCEL_TOKEN
 
       - name: Deploy web app to Vercel
-        uses: BetaHuhn/deploy-to-vercel-action@v1
-        with:
+        env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-          PRODUCTION: true
-          WORKING_DIRECTORY: ./apps/web
-          PREBUILT: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx vercel deploy --prebuilt --prod --yes --cwd ./apps/web --token $VERCEL_TOKEN
 
       - name: Deploy API to Cloudflare
         env:
