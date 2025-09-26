@@ -210,6 +210,11 @@ jobs:
       - name: Build Next app
         run: pnpm run build:web
 
+      - name: Generate Vercel prebuilt output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build --cwd ./apps/web --token $VERCEL_TOKEN
+
       - name: Deploy web app to Vercel
         uses: BetaHuhn/deploy-to-vercel-action@v1
         with:
@@ -218,6 +223,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           PRODUCTION: true
           WORKING_DIRECTORY: ./apps/web
+          PREBUILT: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy API to Cloudflare
