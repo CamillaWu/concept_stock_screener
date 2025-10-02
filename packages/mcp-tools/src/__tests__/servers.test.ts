@@ -222,4 +222,51 @@ describe('MCP server entrypoints', () => {
       { id: 'id2', values: [0.2], metadata: { numbers: ['1'] } },
     ]);
   });
+
+  it('registers GitHub tools and proxies API calls', async () => {
+    process.env.GITHUB_TOKEN = 'ghs_xxx';
+
+    await import('../github');
+
+    expect(mockMcpConstructor).toHaveBeenCalledWith({
+      name: 'mcp-github',
+      version: '0.1.0',
+    });
+    expect(mockTool).toHaveBeenCalledTimes(2);
+
+    const repoHandler = mockTool.mock.calls[0][3];
+    const issuesHandler = mockTool.mock.calls[1][3];
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ full_name: 'owner/repo' }),
+    });
+    await repoHandler({ owner: 'owner', repo: 'repo' });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.github.com/repos/owner/repo'
+    );
+    expect(fetchMock.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: expect.stringMatching(/^Bearer /),
+          'User-Agent': 'concept-mcp-tools/0.1.0',
+        }),
+      })
+    );
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ number: 42 }],
+    });
+    await issuesHandler({
+      owner: 'owner',
+      repo: 'repo',
+      state: 'open',
+      labels: ['bug'],
+      limit: 10,
+    });
+    expect(fetchMock.mock.calls[1][0]).toContain('/repos/owner/repo/issues?');
+    expect(fetchMock.mock.calls[1][0]).toContain('per_page=10');
+    expect(fetchMock.mock.calls[1][0]).toContain('labels=bug');
+  });
 });

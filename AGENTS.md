@@ -2,44 +2,50 @@
 
 ## Project Structure & Module Organization
 
-- Apps: `apps/web` (Next.js), `apps/api` (Cloudflare Workers), `apps/data-pipeline` (FastAPI).
-- Packages: `packages/ui` (React components), `packages/types` (shared TS types).
-- Tests live beside code under `__tests__` (e.g., `packages/ui/src/.../__tests__`).
-- Config: root scripts in `scripts/`, env template `env.example`, dev config in `config/environments/`.
+- `apps/web` – Next.js front-end served via Vercel; primary entry `src/app`.
+- `apps/api` – Cloudflare Workers API, request handlers under `src/handlers`.
+- `apps/data-pipeline` – FastAPI ingestion service (`src/main.py`, `requirements.txt`).
+- `packages/ui` – Shared React components and hooks; `packages/types` – reusable TypeScript types; `packages/mcp-tools` – MCP integration helpers.
+- `config/` stores runtime presets; `docs/` holds architecture notes; `scripts/` centralizes deployment and QA utilities; seed data lives in `data/`.
+- Jest specs sit beside source in `__tests__` folders (e.g., `packages/ui/src/components/__tests__`).
 
 ## Build, Test, and Development Commands
 
-- Install: `pnpm install` (Node >= 18, pnpm >= 8).
-- Dev (web/api): `pnpm dev`, or `pnpm dev:web`, `pnpm dev:api`.
-- Build all: `pnpm build` (types → ui → web → api).
-- Lint/Format: `pnpm lint:check`, `pnpm lint:fix`, `pnpm format:check`, `pnpm format:fix`.
-- Tests: `pnpm test`, `pnpm test:watch`, coverage `pnpm test:coverage`.
-- Data pipeline (Python): `pip install -r apps/data-pipeline/requirements.txt` then `uvicorn main:app --reload --app-dir apps/data-pipeline/src`.
+- `pnpm install` – install Node dependencies (Node 18+, pnpm 8+).
+- `pnpm dev` – boot web app; run `pnpm dev:api` for Workers emulator or `pnpm dev:all` to launch both.
+- `pnpm build` – orchestrated build of types → UI → web → API for CI and Vercel.
+- `pnpm lint:check`, `pnpm format:check`, `pnpm type-check` – static analysis gate.
+- `pnpm test`, `pnpm test:unit`, `pnpm test:integration`, `pnpm test:e2e`, `pnpm test:coverage` – layered Jest suites (unit targets UI/components, integration/e2e search for matching directories via `--testPathPatterns`).
+- Data pipeline: `python -m venv .venv && pip install -r apps/data-pipeline/requirements.txt`, then `uvicorn main:app --app-dir apps/data-pipeline/src --reload`.
 
 ## Coding Style & Naming Conventions
 
-- TypeScript/React with 2-space indent; prefer ES modules.
-- Components: PascalCase (e.g., `Button.tsx`); hooks `useX.ts`.
-- Utilities/types: lowerCamelCase files; exported names are camelCase/PascalCase appropriately.
-- Use ESLint (`.ts,.tsx,.js,.jsx`) and Prettier via scripts above.
+- TypeScript, React, and Worker code use 2-space indentation with ES modules and strict typing.
+- Components and pages use PascalCase (`SearchBox.tsx`); hooks `useX.ts`; utility modules camelCase.
+- Share enums and contracts through `packages/types`; keep UI tokens in `packages/ui/src/theme`.
+- Enforce linting with ESLint (React, JSX a11y, hooks) and formatting with Prettier; apply fixes via `pnpm lint:fix` / `pnpm format:fix`.
 
 ## Testing Guidelines
 
-- Framework: Jest + Testing Library (jsdom for React).
-- Test files: `*.test.ts(x)` inside `__tests__` next to source.
-- Run unit tests locally with `pnpm test:unit`; full suite with `pnpm test`.
-- Aim for meaningful coverage; check with `pnpm test:coverage`.
+- Jest + Testing Library (`jest.setup.js`) cover UI hooks/components; API handlers tested under `apps/api/src/handlers/__tests__`.
+- Place new specs as `*.test.ts` or `*.test.tsx` adjacent to implementation; group broader flows in folders named `integration` or `e2e` for the dedicated suites.
+- Maintain meaningful coverage; review HTML reports after `pnpm test:coverage`.
 
 ## Commit & Pull Request Guidelines
 
-- Commits: clear, imperative subject; optional scope (e.g., `ui:`). Example: `fix(ui): prevent table overflow on mobile`.
-- PRs: include purpose, linked issues, screenshots for UI, and test notes. Ensure `pnpm run quality:gate` passes (lint, types, coverage).
+- Follow conventional commits (`type(scope): summary`); recent history uses `ci:` and `docs(ci):` scopes.
+- Keep subjects imperative and scoped to a single change; squash fix-ups locally before pushing.
+- Run `pnpm run quality:gate` pre-PR and note outcomes (lint, type-check, coverage) in the description.
+- PRs should link issues, explain context, attach UI screenshots when relevant, and confirm deployment steps.
+- Never commit `.env` or secrets; seed credentials from `env.example` and `config/environments`.
 
-## Security & Configuration Tips
+## Development Workflow Notes
 
-- Copy `env.example` to `.env` (do not commit secrets). Verify `config/environments/development.json` as needed.
-- API uses Wrangler; ensure Cloudflare creds are configured locally before `pnpm --filter api deploy`.
-
-## Agent-Specific Notes
-
-- Respect this guide for any edits. Keep changes scoped, minimal, and consistent. Prefer existing scripts and directory patterns.
+- Close each task with a concise summary paragraph in the PR or issue to capture context before moving on.
+- Run the relevant test suites (`pnpm test`, targeted `pnpm test:*`, or data-pipeline checks) right after finishing the task to ensure no regressions.
+- Commit promptly once tests pass, keeping commits focused and referencing the completed task.
+- Review `docs/` for affected topics and update any architecture or runbooks so they stay in sync with code changes.
+- Refresh the shared TODO or ticket backlog (e.g., issue tracker, `docs/todo.md`) to mark completed work and note follow-ups.
+- Surface new risks or follow-on ideas during the wrap-up so they can be scheduled before momentum is lost.
+- Keep all developer-facing replies and documentation updates in Traditional Chinese to stay consistent with team communication.
+- Double-check file encodings (prefer UTF-8 without BOM) whenever editing config or localization assets to avoid unexpected character issues.
