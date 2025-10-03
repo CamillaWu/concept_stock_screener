@@ -1,4 +1,4 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 .pnp
 .pnp.js
@@ -32,6 +32,7 @@ pnpm-debug.log*
 .env.production.local
 .env*.local
 .env.local.backup
+.env.backup
 
 # Vercel
 .vercel
