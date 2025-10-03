@@ -80,6 +80,6 @@ _Owner_: Platform & CI working group\_
 
 - `docs/development/DEVELOPMENT_TASKS.md`
 - `docs/development/ci-cd/CI_CD_PROGRESS_SUMMARY.md`
-- `docs/development/ci-cd/CI_CD_TODO.md`
+- `docs/deployment/CI_CD_NOTES.md`
 - `docs/development/testing/TESTING_STRATEGY.md`
 - `.github/workflows/ci.yml`

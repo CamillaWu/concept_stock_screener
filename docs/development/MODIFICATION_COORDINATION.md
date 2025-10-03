@@ -34,7 +34,7 @@ pnpm build
 
 Additional context:
 
-- If a temporary downgrade or `as any` cast is required, document follow-up work in `docs/development/ci-cd/CI_CD_TODO.md`.
+- If a temporary downgrade or `as any` cast is required, document follow-up work in `docs/development/DEVELOPMENT_TASKS.md` so the backlog captures the cleanup.
 - Capture before/after screenshots for UI-impacting changes.
 
 ## 4. Coordination workflow
@@ -68,11 +68,11 @@ Use this structure for stand-up notes, Slack announcements, and PR descriptions.
 
 ## 7. Related documents
 
-- `docs/deployment/CI_CD_NOTES.md` – secrets & troubleshooting
-- `docs/development/ci-cd/CI_CD_TODO.md` – backlog tracker
-- `docs/development/ci-cd/CI_CD_PROGRESS_SUMMARY.md` – status overview
-- `docs/deployment/DEPLOYMENT_GUIDE.md` – production runbook
-- `docs/deployment/DEVELOPMENT_DEPLOYMENT.md` – dev/local deployment guide
+- `docs/deployment/CI_CD_NOTES.md` - secrets & troubleshooting
+- `docs/development/DEVELOPMENT_TASKS.md` - backlog tracker
+- `docs/development/ci-cd/CI_CD_PROGRESS_SUMMARY.md` - status overview
+- `docs/deployment/DEPLOYMENT_GUIDE.md` - production runbook
+- `docs/deployment/DEVELOPMENT_DEPLOYMENT.md` - dev/local deployment guide
 
 ---
 

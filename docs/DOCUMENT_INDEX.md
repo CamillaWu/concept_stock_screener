@@ -36,13 +36,13 @@
 
 ### 1.5 CI/CD 與部署
 
-| 文件名稱               | 路徑                                               | 說明                              | 更新日期   |
-| ---------------------- | -------------------------------------------------- | --------------------------------- | ---------- |
-| CI/CD 流程設計         | `development/ci-cd/CI_CD_PIPELINE_DESIGN.md`       | GitHub Actions 工作流程與環境配置 | 2024-12-19 |
-| CI/CD 進度總結         | `development/ci-cd/CI_CD_PROGRESS_SUMMARY.md`      | 建置里程碑與未來待辦追蹤          | 2024-12-19 |
-| 部署指南（生產）       | `deployment/DEPLOYMENT_GUIDE.md`                   | 生產環境部署腳本與故障排除        | 2024-12-19 |
-| 部署指南（開發）       | `deployment/DEVELOPMENT_DEPLOYMENT.md`             | 開發/測試環境部署流程             | 2024-12-19 |
-| CI/CD 歷史待辦（封存） | `development/ci-cd/archive/CI_CD_TODO_20250922.md` | 舊版 TODO 備查（已封存）          | 2025-09-22 |
+| 文件名稱         | 路徑                                          | 說明                              | 更新日期   |
+| ---------------- | --------------------------------------------- | --------------------------------- | ---------- |
+| CI/CD 流程設計   | `development/ci-cd/CI_CD_PIPELINE_DESIGN.md`  | GitHub Actions 工作流程與環境配置 | 2024-12-19 |
+| CI/CD 進度總結   | `development/ci-cd/CI_CD_PROGRESS_SUMMARY.md` | 建置里程碑與未來待辦追蹤          | 2024-12-19 |
+| 部署指南（生產） | `deployment/DEPLOYMENT_GUIDE.md`              | 生產環境部署腳本與故障排除        | 2024-12-19 |
+| 部署指南（開發） | `deployment/DEVELOPMENT_DEPLOYMENT.md`        | 開發/測試環境部署流程             | 2024-12-19 |
+| CI/CD 注意事項   | `deployment/CI_CD_NOTES.md`                   | GitHub Actions 密鑰設定與疑難排解 | 2025-09-25 |
 
 ## 2. 其他參考
 

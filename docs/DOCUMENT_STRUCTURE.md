@@ -20,6 +20,7 @@ docs/
 │
 ├── deployment/                                 # 🚢 部署文檔
 │   ├── DEPLOYMENT_GUIDE.md                    # 生產環境部署指南
+│   ├── CI_CD_NOTES.md                         # GitHub Actions 密鑰設定與疑難排解
 │   └── DEVELOPMENT_DEPLOYMENT.md              # 開發環境部署指南
 │
 ├── development/                                # 🏗️ 開發文檔
@@ -47,13 +48,10 @@ docs/
 │   │   ├── TECHNICAL_ISSUES.md                # 技術問題記錄
 │   │   └── ESLINT_FIX_SUMMARY.md             # ESLint 修復總結
 │   │
-│   ├── PROJECT_MILESTONES.md                  # 📊 項目里程碑
 │   ├── PROJECT_PROGRESS_TRACKER.md            # 📈 項目進度追蹤
 │   ├── DEVELOPMENT_TASKS.md                   # 📋 開發任務清單
 │   └── MODIFICATION_COORDINATION.md           # 🔀 修改協調流程
 │
-└── archive/                                    # 📦 歸檔文檔
-    └── [功能&流程]概念股自動化篩選系統.md      # 功能規格書（已歸檔）
 ```
 
 ## 🎯 文檔分類說明

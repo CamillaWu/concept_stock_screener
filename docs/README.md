@@ -30,6 +30,7 @@
 
 - **[CI/CD 流程設計](development/ci-cd/CI_CD_PIPELINE_DESIGN.md)** - 持續整合和部署流程
 - **[CI/CD 進度總結](development/ci-cd/CI_CD_PROGRESS_SUMMARY.md)** - 建制進度和完成狀態
+- **[CI/CD 工作注意事項](deployment/CI_CD_NOTES.md)** - GitHub Actions 密鑰設定與疑難排解筆記
 - **[部署指南](deployment/DEPLOYMENT_GUIDE.md)** - 生產環境部署說明
 - **[開發環境部署](deployment/DEVELOPMENT_DEPLOYMENT.md)** - 本地開發環境部署
 
@@ -39,8 +40,8 @@
 
 ### 📊 項目管理
 
-- **[項目里程碑](development/PROJECT_MILESTONES.md)** - 項目發展階段和目標
 - **[進度追蹤](development/PROJECT_PROGRESS_TRACKER.md)** - 開發進度追蹤
+- **[任務追蹤](development/DEVELOPMENT_TASKS.md)** - 開發任務清單和進度
 - **[修改協調](development/MODIFICATION_COORDINATION.md)** - 代碼修改協調流程
 
 ### 🐛 問題和修復
@@ -53,9 +54,9 @@
 為了避免進度信息散落在多個文件中，我們已經將所有進度追蹤相關的內容整合到以下文件中：
 
 1. **PROJECT_PROGRESS_TRACKER.md** - 主要進度概覽和監控
-2. **PROJECT_MILESTONES.md** - 完整的里程碑規劃
-3. **DEVELOPMENT_TASKS.md** - 詳細的開發任務清單
-4. **TECHNICAL_ISSUES.md** - 技術問題記錄
+2. **DEVELOPMENT_TASKS.md** - 詳細的開發任務清單
+3. **TECHNICAL_ISSUES.md** - 技術問題追蹤
+4. **MODIFICATION_COORDINATION.md** - 團隊變更協調流程
 
 這樣的分拆結構讓每個文件都有明確的職責，便於維護和查找信息。
 
@@ -71,8 +72,8 @@
 ### 🔍 查找特定信息
 
 - **進度狀態**: 查看 **PROJECT_PROGRESS_TRACKER.md**
-- **里程碑規劃**: 查看 **PROJECT_MILESTONES.md**
-- **待辦事項**: 查看 **DEVELOPMENT_TASKS.md**
+- **任務清單**: 查看 **DEVELOPMENT_TASKS.md**
+- **變更協調**: 查看 **MODIFICATION_COORDINATION.md**
 - **技術問題**: 查看 **TECHNICAL_ISSUES.md**
 - **API 文檔**: 查看 **API_DOCUMENTATION.md**
 

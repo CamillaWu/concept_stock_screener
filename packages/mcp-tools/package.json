@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "@concept/mcp-tools",
   "version": "0.1.0",
   "private": true,
@@ -13,11 +13,13 @@
     "start:pinecone": "node dist/pinecone.js",
     "start:cloudflare": "node dist/cloudflare.js",
     "start:vercel": "node dist/vercel.js",
+    "start:github": "node dist/github.js",
     "dev:pinecone": "tsx src/pinecone.ts",
     "dev:cloudflare": "tsx src/cloudflare.ts",
     "dev:vercel": "tsx src/vercel.ts",
-    "dev:all": "pnpm run --parallel dev:pinecone dev:cloudflare dev:vercel",
-    "start:all": "pnpm run --parallel start:pinecone start:cloudflare start:vercel"
+    "dev:github": "tsx src/github.ts",
+    "dev:all": "pnpm run --parallel dev:pinecone dev:cloudflare dev:vercel dev:github",
+    "start:all": "pnpm run --parallel start:pinecone start:cloudflare start:vercel start:github"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.2.0",

@@ -102,6 +102,6 @@ _Owner_: Development Team\_
 - `docs/development/features/CORE_FEATURES_DEVELOPMENT.md`
 - `docs/development/features/RAG_SYSTEM_INTEGRATION.md`
 - `docs/development/ci-cd/CI_CD_PROGRESS_SUMMARY.md`
-- `docs/development/ci-cd/archive/CI_CD_TODO_20250922.md`
+- `docs/deployment/CI_CD_NOTES.md`
 - `docs/development/testing/TESTING_STRATEGY.md`
 - `.github/workflows/*.yml`
