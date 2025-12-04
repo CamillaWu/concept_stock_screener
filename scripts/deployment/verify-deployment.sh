@@ -43,6 +43,12 @@ check_url() {
             return 0
         fi
 
+        # Handle Vercel/Cloudflare protection (401 Unauthorized)
+        if [[ "$status_code" == "401" ]]; then
+            log_warning "$name is protected (Status: 401). Skipping health check."
+            return 0
+        fi
+
         log_warning "Attempt $attempt/$MAX_RETRIES failed (Status: $status_code). Retrying in ${RETRY_DELAY}s..."
         sleep $RETRY_DELAY
         attempt=$((attempt + 1))
