@@ -226,19 +226,41 @@ jobs:
           test -d apps/web/.vercel/output || (echo 'prebuilt output missing after vercel build' && exit 1)
 
       - name: Deploy web app to Vercel
+        id: deploy-web
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx vercel deploy --prebuilt --prod --yes --cwd ./apps/web --token $VERCEL_TOKEN
+        run: |
+          DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --yes --cwd ./apps/web --token $VERCEL_TOKEN)
+          echo "Deployed to: $DEPLOY_URL"
+          echo "web_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
 
       - name: Deploy API to Cloudflare
+        id: deploy-api
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID != '' && vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm --filter api exec wrangler deploy --env development
+        run: |
+          # Deploy and capture output
+          OUTPUT=$(pnpm --filter api exec wrangler deploy --env development)
+          echo "$OUTPUT"
+
+          # Extract URL from output (assuming standard wrangler output format)
+          # Example output: "https://api-dev.concept-stock-screener.workers.dev"
+          API_URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.workers\.dev' | head -n 1)
+
+          # Fallback if not found (e.g. custom domain)
+          if [ -z "$API_URL" ]; then
+             API_URL="https://dev-api.concept-stock-screener.com"
+          fi
+
+          echo "Deployed API to: $API_URL"
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
 
       - name: Deployment summary
         run: |
           echo "Development deployment complete"
+          echo "Web URL: ${{ steps.deploy-web.outputs.web_url }}"
+          echo "API URL: ${{ steps.deploy-api.outputs.api_url }}"
           echo "Completed at: $(date)"
           cat > deployment/deployment-status.json <<'EOF'
           {
@@ -248,9 +270,15 @@ jobs:
             "git_commit": "${{ github.sha }}",
             "git_branch": "${{ github.ref_name }}",
             "triggered_by": "${{ github.actor }}",
-            "workflow": "${{ github.workflow }}"
+            "workflow": "${{ github.workflow }}",
+            "web_url": "${{ steps.deploy-web.outputs.web_url }}",
+            "api_url": "${{ steps.deploy-api.outputs.api_url }}"
           }
           EOF
+
+    outputs:
+      web_url: ${{ steps.deploy-web.outputs.web_url }}
+      api_url: ${{ steps.deploy-api.outputs.api_url }}
 
   post-deploy-verification:
     needs: deploy-dev
@@ -271,11 +299,7 @@ jobs:
         run: chmod +x scripts/deployment/verify-deployment.sh
 
       - name: Run verification script
-        run: ./scripts/deployment/verify-deployment.sh "${{ vars.DEV_WEB_URL }}" "${{ vars.DEV_API_URL }}"
-        env:
-          # Fallback to hardcoded URLs if vars are not set in GitHub
-          WEB_URL: ${{ vars.DEV_WEB_URL || 'https://dev-web.concept-stock-screener.com' }}
-          API_URL: ${{ vars.DEV_API_URL || 'https://dev-api.concept-stock-screener.com' }}
+        run: ./scripts/deployment/verify-deployment.sh "${{ needs.deploy-dev.outputs.web_url }}" "${{ needs.deploy-dev.outputs.api_url }}"
 
   deployment-notification:
     needs: [deploy-dev, post-deploy-verification]
