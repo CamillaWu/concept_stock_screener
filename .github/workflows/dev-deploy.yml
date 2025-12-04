@@ -267,15 +267,15 @@ jobs:
           echo "Waiting for services"
           sleep 30
 
-      - name: Health checks (placeholder)
-        run: |
-          echo "Health checks placeholder"
-          # curl commands can be added here once endpoints are ready
+      - name: Make verification script executable
+        run: chmod +x scripts/deployment/verify-deployment.sh
 
-      - name: Smoke tests (placeholder)
-        run: |
-          echo "Smoke tests placeholder"
-          # Add API or web smoke tests as needed
+      - name: Run verification script
+        run: ./scripts/deployment/verify-deployment.sh "${{ vars.DEV_WEB_URL }}" "${{ vars.DEV_API_URL }}"
+        env:
+          # Fallback to hardcoded URLs if vars are not set in GitHub
+          WEB_URL: ${{ vars.DEV_WEB_URL || 'https://dev-web.concept-stock-screener.com' }}
+          API_URL: ${{ vars.DEV_API_URL || 'https://dev-api.concept-stock-screener.com' }}
 
   deployment-notification:
     needs: [deploy-dev, post-deploy-verification]

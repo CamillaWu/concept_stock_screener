@@ -169,37 +169,15 @@ jobs:
           echo "Waiting for services to stabilize..."
           sleep 45
 
-      - name: Health checks
-        run: |
-          echo "Running health checks..."
+      - name: Make verification script executable
+        run: chmod +x scripts/deployment/verify-deployment.sh
 
-          # Check API availability
-          echo "Checking API health..."
-          # curl -f https://api.concept-stock-screener.com/health || echo "API health check failed"
-
-          # Check web availability
-          echo "Checking web availability..."
-          # curl -f https://concept-stock-screener.com || echo "Web availability check failed"
-
-          echo "Health checks complete"
-
-      - name: Functional tests
-        run: |
-          echo "Running functional tests..."
-
-          # Add API or UI functional tests here
-          # Example: run smoke tests for search or detail pages
-
-          echo "Functional tests complete"
-
-      - name: Performance checks
-        run: |
-          echo "Running performance checks..."
-
-          # Add performance validation logic here
-          # Example: measure latency or responsiveness
-
-          echo "Performance checks complete"
+      - name: Run verification script
+        run: ./scripts/deployment/verify-deployment.sh "${{ vars.PROD_WEB_URL }}" "${{ vars.PROD_API_URL }}"
+        env:
+          # Fallback to hardcoded URLs if vars are not set in GitHub
+          WEB_URL: ${{ vars.PROD_WEB_URL || 'https://concept-stock-screener.com' }}
+          API_URL: ${{ vars.PROD_API_URL || 'https://api.concept-stock-screener.com' }}
 
       - name: Verification summary
         run: |
