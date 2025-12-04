@@ -55,7 +55,8 @@ check_url() {
 EXIT_CODE=0
 
 if [ -n "$WEB_URL" ]; then
-    if ! check_url "$WEB_URL" "Web App"; then
+    WEB_URL=${WEB_URL%/}
+    if ! check_url "$WEB_URL/api/health" "Web App"; then
         EXIT_CODE=1
     fi
 fi
