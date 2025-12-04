@@ -17,6 +17,7 @@ node_modules/
 # Misc
 .DS_Store
 *.pem
+package-lock.json
 
 # Debug
 npm-debug.log*
@@ -94,7 +95,7 @@ coverage/
 
 # Gatsby files
 .cache/
-public
+/public/
 
 # Storybook build outputs
 .out
@@ -141,3 +142,11 @@ data/rag/embeddings/
 # Cache
 .cache/
 cache/
+
+# MCP build artifacts
+packages/mcp-tools/dist/
+
+apps/web/.next/
+packages/ui/dist/
+packages/types/dist/
+apps/web/public/rag/

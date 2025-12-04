@@ -18,7 +18,7 @@ class CrossPlatformTester {
   // 檢測測試環境
   detectTestEnvironment() {
     console.log('🔍 檢測測試環境...');
-    
+
     const env = {
       platform: this.platform,
       nodeVersion: process.version,
@@ -28,7 +28,7 @@ class CrossPlatformTester {
       availableMemory: Math.round(os.totalmem() / 1024 / 1024 / 1024),
       cpuCores: os.cpus().length,
       tempDir: os.tmpdir(),
-      homeDir: os.homedir()
+      homeDir: os.homedir(),
     };
 
     Object.entries(env).forEach(([key, value]) => {
@@ -50,22 +50,23 @@ class CrossPlatformTester {
   // 檢查測試依賴
   checkTestDependencies() {
     console.log('\n📦 檢查測試依賴...');
-    
+
     const dependencies = [
       'jest',
       '@types/jest',
       'ts-jest',
       'supertest',
-      'playwright'
+      'playwright',
     ];
 
     const missing = [];
-    
+
     dependencies.forEach(dep => {
       try {
         const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        const hasDep = packageJson.devDependencies && packageJson.devDependencies[dep];
-        
+        const hasDep =
+          packageJson.devDependencies && packageJson.devDependencies[dep];
+
         if (hasDep) {
           console.log(`✅ ${dep}: 已安裝`);
         } else {
@@ -88,7 +89,7 @@ class CrossPlatformTester {
   // 安裝測試依賴
   installTestDependencies(dependencies) {
     console.log('\n📥 安裝測試依賴...');
-    
+
     try {
       execSync(`pnpm add -D ${dependencies.join(' ')}`, { stdio: 'inherit' });
       console.log('✅ 測試依賴安裝完成');
@@ -100,32 +101,32 @@ class CrossPlatformTester {
   // 創建測試配置
   createTestConfig() {
     console.log('\n⚙️  創建測試配置...');
-    
+
     const jestConfig = {
       preset: 'ts-jest',
       testEnvironment: 'node',
       roots: ['<rootDir>/apps', '<rootDir>/packages'],
-      testMatch: [
-        '**/__tests__/**/*.ts',
-        '**/?(*.)+(spec|test).ts'
-      ],
+      testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
       transform: {
-        '^.+\\.ts$': 'ts-jest'
+        '^.+\\.ts$': 'ts-jest',
       },
       collectCoverageFrom: [
         'apps/**/*.ts',
         'packages/**/*.ts',
         '!**/*.d.ts',
-        '!**/node_modules/**'
+        '!**/node_modules/**',
       ],
       coverageDirectory: 'coverage',
       coverageReporters: ['text', 'lcov', 'html'],
-      setupFilesAfterEnv: ['<rootDir>/scripts/test-setup.js']
+      setupFilesAfterEnv: ['<rootDir>/scripts/test-setup.js'],
     };
 
     const configPath = path.join(this.projectRoot, 'jest.config.js');
-    fs.writeFileSync(configPath, `module.exports = ${JSON.stringify(jestConfig, null, 2)};`);
-    
+    fs.writeFileSync(
+      configPath,
+      `module.exports = ${JSON.stringify(jestConfig, null, 2)};`
+    );
+
     console.log('✅ Jest 配置創建完成');
     return configPath;
   }
@@ -133,7 +134,7 @@ class CrossPlatformTester {
   // 創建測試設置文件
   createTestSetup() {
     console.log('\n🔧 創建測試設置...');
-    
+
     const setupContent = `
 // 測試環境設置
 process.env.NODE_ENV = 'test';
@@ -158,7 +159,7 @@ global.testUtils = {
     name: 'test-name',
     timestamp: new Date().toISOString()
   }),
-  
+
   createMockApiResponse: (data) => ({
     success: true,
     data,
@@ -169,7 +170,7 @@ global.testUtils = {
 
     const setupPath = path.join(this.projectRoot, 'scripts', 'test-setup.js');
     fs.writeFileSync(setupPath, setupContent);
-    
+
     console.log('✅ 測試設置文件創建完成');
     return setupPath;
   }
@@ -177,13 +178,17 @@ global.testUtils = {
   // 運行單元測試
   async runUnitTests() {
     console.log('\n🧪 運行單元測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=unit']);
       this.testResults.push({ type: 'unit', status: 'passed' });
       console.log('✅ 單元測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'unit', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'unit',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ 單元測試失敗:', error.message);
     }
   }
@@ -191,13 +196,17 @@ global.testUtils = {
   // 運行整合測試
   async runIntegrationTests() {
     console.log('\n🔗 運行整合測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=integration']);
       this.testResults.push({ type: 'integration', status: 'passed' });
       console.log('✅ 整合測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'integration', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'integration',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ 整合測試失敗:', error.message);
     }
   }
@@ -205,13 +214,17 @@ global.testUtils = {
   // 運行 E2E 測試
   async runE2ETests() {
     console.log('\n🌐 運行 E2E 測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=e2e']);
       this.testResults.push({ type: 'e2e', status: 'passed' });
       console.log('✅ E2E 測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'e2e', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'e2e',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ E2E 測試失敗:', error.message);
     }
   }
@@ -219,13 +232,17 @@ global.testUtils = {
   // 運行性能測試
   async runPerformanceTests() {
     console.log('\n⚡ 運行性能測試...');
-    
+
     try {
       await this.runCommand('pnpm', ['test', '--testPathPattern=performance']);
       this.testResults.push({ type: 'performance', status: 'passed' });
       console.log('✅ 性能測試通過');
     } catch (error) {
-      this.testResults.push({ type: 'performance', status: 'failed', error: error.message });
+      this.testResults.push({
+        type: 'performance',
+        status: 'failed',
+        error: error.message,
+      });
       console.log('❌ 性能測試失敗:', error.message);
     }
   }
@@ -233,12 +250,12 @@ global.testUtils = {
   // 運行所有測試
   async runAllTests() {
     console.log('\n🚀 運行所有測試...');
-    
+
     await this.runUnitTests();
     await this.runIntegrationTests();
     await this.runE2ETests();
     await this.runPerformanceTests();
-    
+
     this.generateTestReport();
   }
 
@@ -248,10 +265,10 @@ global.testUtils = {
       const child = spawn(command, args, {
         stdio: 'inherit',
         shell: this.isWindows,
-        ...options
+        ...options,
       });
 
-      child.on('close', (code) => {
+      child.on('close', code => {
         if (code === 0) {
           resolve(code);
         } else {
@@ -259,7 +276,7 @@ global.testUtils = {
         }
       });
 
-      child.on('error', (error) => {
+      child.on('error', error => {
         reject(error);
       });
     });
@@ -268,15 +285,15 @@ global.testUtils = {
   // 生成測試報告
   generateTestReport() {
     console.log('\n📊 測試結果報告:');
-    
+
     const passed = this.testResults.filter(r => r.status === 'passed').length;
     const failed = this.testResults.filter(r => r.status === 'failed').length;
     const total = this.testResults.length;
-    
+
     console.log(`總計: ${total} 項測試`);
     console.log(`通過: ${passed} 項`);
     console.log(`失敗: ${failed} 項`);
-    
+
     this.testResults.forEach(result => {
       const status = result.status === 'passed' ? '✅' : '❌';
       console.log(`${status} ${result.type}: ${result.status}`);
@@ -287,12 +304,19 @@ global.testUtils = {
 
     // 保存測試報告
     const reportPath = path.join(this.projectRoot, 'test-report.json');
-    fs.writeFileSync(reportPath, JSON.stringify({
-      platform: this.platform,
-      timestamp: new Date().toISOString(),
-      results: this.testResults,
-      summary: { total, passed, failed }
-    }, null, 2));
+    fs.writeFileSync(
+      reportPath,
+      JSON.stringify(
+        {
+          platform: this.platform,
+          timestamp: new Date().toISOString(),
+          results: this.testResults,
+          summary: { total, passed, failed },
+        },
+        null,
+        2
+      )
+    );
 
     console.log(`\n📝 測試報告已保存到: ${reportPath}`);
   }

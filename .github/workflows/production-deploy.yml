@@ -1,0 +1,230 @@
+name: Production Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_message:
+        description: 'Deployment message'
+        required: false
+        default: 'Manual production deployment'
+        type: string
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+  ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
+jobs:
+  # Deploy web and API services
+  deploy-production:
+    runs-on: ubuntu-latest
+    name: Production Deployment
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure deployment environment
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            echo "DEPLOY_ENV=production" >> $GITHUB_ENV
+            echo "VERCEL_ARGS=--prod" >> $GITHUB_ENV
+            echo "CLOUDFLARE_ENV=production" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_ENV=development" >> $GITHUB_ENV
+            echo "VERCEL_ARGS=" >> $GITHUB_ENV
+            echo "CLOUDFLARE_ENV=development" >> $GITHUB_ENV
+          fi
+          echo "VERCEL_TOKEN=${{ secrets.VERCEL_TOKEN }}" >> $GITHUB_ENV
+          echo "VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}" >> $GITHUB_ENV
+
+      - name: Build deployment bundle
+        run: |
+          echo "Building deployment bundle..."
+
+          # Install dependencies
+          pnpm install --frozen-lockfile
+
+          # Build shared packages
+          pnpm build:types
+          pnpm build:ui
+
+          # Build web application
+          pnpm build:web
+
+          # Build API service
+          pnpm build:api
+
+          # Prepare deployment directories
+          mkdir -p deployment/web deployment/api deployment/types deployment/ui
+
+          echo "Listing apps/web contents"
+          ls -al apps/web || true
+
+          echo "Listing apps/api contents"
+          ls -al apps/api || true
+
+          echo "Listing packages/types contents"
+          ls -al packages/types || true
+
+          echo "Listing packages/ui contents"
+          ls -al packages/ui || true
+
+          if [ ! -d "apps/web/.next" ]; then
+            echo "Next.js build output not found at apps/web/.next"
+            exit 1
+          fi
+
+          if [ ! -d "apps/api/dist" ]; then
+            echo "API build output not found at apps/api/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/types/dist" ]; then
+            echo "Type build output not found at packages/types/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/ui/dist" ]; then
+            echo "UI build output not found at packages/ui/dist"
+            exit 1
+          fi
+
+          cp -r apps/web/.next deployment/web/
+          cp -r apps/api/dist deployment/api/
+          cp -r packages/types/dist deployment/types/
+          cp -r packages/ui/dist deployment/ui/
+
+          # Copy configuration files
+          cp -r config deployment/
+          cp -r scripts deployment/
+          cp package.json deployment/
+          cp pnpm-lock.yaml deployment/
+          cp pnpm-workspace.yaml deployment/
+
+          echo "Deployment bundle ready"
+
+      - name: Deploy web app to Vercel
+        if: env.VERCEL_TOKEN != ''
+        id: deploy-web
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ env.VERCEL_TOKEN }}
+          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
+          # Deploy with production flag when on main
+          vercel-args: ${{ env.VERCEL_ARGS }}
+          working-directory: ./deployment/web
+
+      - name: Deploy API to Cloudflare Workers
+        id: deploy-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Deploy and capture output
+          OUTPUT=$(pnpm --filter api exec wrangler deploy --env ${{ env.CLOUDFLARE_ENV }})
+          echo "$OUTPUT"
+
+          # Extract URL from output
+          API_URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.workers\.dev' | head -n 1)
+
+          # Fallback if not found
+          if [ -z "$API_URL" ]; then
+             API_URL="https://api.concept-stock-screener.com"
+          fi
+
+          echo "Deployed API to: $API_URL"
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+
+      - name: Coordinate deployment artifacts
+        run: |
+          echo "Coordinating deployment artifacts..."
+          cd deployment
+
+          # Add any extra deployment orchestration commands here
+          # Example: push artifacts to Docker or other services
+          echo "Deployment coordination complete"
+
+      - name: Publish deployment summary
+        run: |
+          echo "Deployment complete"
+          echo "Web URL: ${{ steps.deploy-web.outputs.preview-url }}"
+          echo "API URL: ${{ steps.deploy-api.outputs.api_url }}"
+          echo "Finished at: $(date)"
+          echo "Deploy message: ${{ inputs.deploy_message }}"
+
+          # Write deployment status metadata
+          cat > deployment/production-deployment-status.json << EOF
+          {
+            "status": "success",
+            "environment": "${{ env.DEPLOY_ENV }}",
+            "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "git_commit": "${{ github.sha }}",
+            "git_branch": "${{ github.ref_name }}",
+            "triggered_by": "${{ github.actor }}",
+            "workflow": "${{ github.workflow }}",
+            "deploy_message": "${{ inputs.deploy_message }}",
+            "web_url": "${{ steps.deploy-web.outputs.preview-url }}",
+            "api_url": "${{ steps.deploy-api.outputs.api_url }}"
+          }
+          EOF
+
+    outputs:
+      web_url: ${{ steps.deploy-web.outputs.preview-url }}
+      api_url: ${{ steps.deploy-api.outputs.api_url }}
+
+  # Post-deployment verification
+  post-deploy-verification:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    name: Post-deployment verification
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for services to stabilize..."
+          sleep 45
+
+      - name: Make verification script executable
+        run: chmod +x scripts/deployment/verify-deployment.sh
+
+      - name: Run verification script
+        run: ./scripts/deployment/verify-deployment.sh "${{ needs.deploy-production.outputs.web_url }}" "${{ needs.deploy-production.outputs.api_url }}"
+
+      - name: Verification summary
+        run: |
+          echo "Generating post-deployment summary..."
+
+  # Deployment notification
+  deployment-notification:
+    needs: [deploy-production, post-deploy-verification]
+    runs-on: ubuntu-latest
+    name: Deployment notification
+    if: always()
+    env:
+      DEPLOY_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
+    steps:
+      - name: Print deployment notification
+        run: |
+          if [ "${{ needs.deploy-production.result }}" == "success" ] && [ "${{ needs.post-deploy-verification.result }}" == "success" ]; then
+            echo "Deployment succeeded"
+            echo "Message: ${{ inputs.deploy_message }}"
+            echo "Triggered by: ${{ github.actor }}"
+            echo "Timestamp: $(date)"
+          else
+            echo "Deployment failed"
+            echo "Deploy job result: ${{ needs.deploy-production.result }}"
+            echo "Verification result: ${{ needs.post-deploy-verification.result }}"
+          fi

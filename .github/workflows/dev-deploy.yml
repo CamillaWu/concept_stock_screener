@@ -1,0 +1,317 @@
+name: Dev Environment CI/CD
+
+on:
+  push:
+    branches: [develop, feature/*]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deploy (skip tests)'
+        required: false
+        default: false
+        type: boolean
+      skip_tests:
+        description: 'Skip tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+  ENVIRONMENT: 'development'
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    name: Code Quality Checks
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+
+      - name: Type check
+        if: ${{ !inputs.skip_tests }}
+        run: pnpm type-check
+
+      - name: Lint
+        if: ${{ !inputs.skip_tests }}
+        run: pnpm lint:check
+
+      - name: Format check
+        if: ${{ !inputs.skip_tests }}
+        run: pnpm format:check
+
+  build-and-test:
+    needs: code-quality
+    runs-on: ubuntu-latest
+    name: Build and Test
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: |
+          echo "Building shared packages"
+          pnpm build:types
+          pnpm build:ui
+
+      - name: Build web app
+        run: |
+          echo "Building web app"
+          pnpm build:web
+
+      - name: Build API
+        run: |
+          echo "Building API"
+          pnpm build:api
+
+      - name: Run tests
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          echo "Running test suite"
+          pnpm test:ci
+
+      - name: Upload coverage to Codecov
+        if: ${{ !inputs.skip_tests }}
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+
+      - name: Prepare deployment artifact
+        run: |
+          echo "Preparing deployment bundle"
+          mkdir -p deployment/web deployment/api deployment/types deployment/ui
+
+          echo "Listing apps/web contents"
+          ls -al apps/web || true
+
+          echo "Listing apps/api contents"
+          ls -al apps/api || true
+
+          echo "Listing packages/types contents"
+          ls -al packages/types || true
+
+          echo "Listing packages/ui contents"
+          ls -al packages/ui || true
+
+          if [ ! -d "apps/web/.next" ]; then
+            echo "Next.js build output not found at apps/web/.next"
+            exit 1
+          fi
+
+          if [ ! -d "apps/api/dist" ]; then
+            echo "API build output not found at apps/api/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/types/dist" ]; then
+            echo "Types build output not found at packages/types/dist"
+            exit 1
+          fi
+
+          if [ ! -d "packages/ui/dist" ]; then
+            echo "UI build output not found at packages/ui/dist"
+            exit 1
+          fi
+
+          cp -r apps/web/.next deployment/web/
+          cp -r apps/api/dist deployment/api/
+          cp -r packages/types/dist deployment/types/
+          cp -r packages/ui/dist deployment/ui/
+          cp -r config deployment/
+          cp package.json deployment/
+          cp pnpm-lock.yaml deployment/
+          cp pnpm-workspace.yaml deployment/
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-deployment-bundle
+          path: deployment/
+          retention-days: 7
+
+  deploy-dev:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    name: Deploy to Development
+    environment: development
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dev-deployment-bundle
+          path: deployment
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install Vercel CLI
+        run: |
+          npm install -g vercel@latest
+          echo "vercel -> $(which vercel)"
+          vercel --version
+
+      - name: Pull Vercel project settings
+        run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }} --cwd ./apps/web
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.node-linker=hoisted
+
+      - name: Install web node modules
+        working-directory: apps/web
+        run: npm install --no-save --package-lock=false
+
+      - name: Build Next app
+        run: pnpm run build:web
+
+      - name: Generate Vercel prebuilt output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build --prod --cwd ./apps/web --token $VERCEL_TOKEN
+
+      - name: Verify prebuilt output
+        run: |
+          ls -al apps/web/.vercel || true
+          test -d apps/web/node_modules/styled-jsx || (echo 'styled-jsx missing after install' && exit 1)
+          test -d apps/web/.vercel/output || (echo 'prebuilt output missing after vercel build' && exit 1)
+
+      - name: Deploy web app to Vercel
+        id: deploy-web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --yes --cwd ./apps/web --token $VERCEL_TOKEN)
+          echo "Deployed to: $DEPLOY_URL"
+          echo "web_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+
+      - name: Deploy API to Cloudflare
+        id: deploy-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID != '' && vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Deploy and capture output
+          OUTPUT=$(pnpm --filter api exec wrangler deploy --env development)
+          echo "$OUTPUT"
+
+          # Extract URL from output (assuming standard wrangler output format)
+          # Example output: "https://api-dev.concept-stock-screener.workers.dev"
+          API_URL=$(echo "$OUTPUT" | grep -o 'https://[^ ]*\.workers\.dev' | head -n 1)
+
+          # Fallback if not found (e.g. custom domain)
+          if [ -z "$API_URL" ]; then
+             API_URL="https://dev-api.concept-stock-screener.com"
+          fi
+
+          echo "Deployed API to: $API_URL"
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+
+      - name: Deployment summary
+        run: |
+          echo "Development deployment complete"
+          echo "Web URL: ${{ steps.deploy-web.outputs.web_url }}"
+          echo "API URL: ${{ steps.deploy-api.outputs.api_url }}"
+          echo "Completed at: $(date)"
+          cat > deployment/deployment-status.json <<'EOF'
+          {
+            "status": "success",
+            "environment": "${{ env.ENVIRONMENT }}",
+            "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "git_commit": "${{ github.sha }}",
+            "git_branch": "${{ github.ref_name }}",
+            "triggered_by": "${{ github.actor }}",
+            "workflow": "${{ github.workflow }}",
+            "web_url": "${{ steps.deploy-web.outputs.web_url }}",
+            "api_url": "${{ steps.deploy-api.outputs.api_url }}"
+          }
+          EOF
+
+    outputs:
+      web_url: ${{ steps.deploy-web.outputs.web_url }}
+      api_url: ${{ steps.deploy-api.outputs.api_url }}
+
+  post-deploy-verification:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    name: Post-deploy Verification
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for services to stabilize
+        run: |
+          echo "Waiting for services"
+          sleep 30
+
+      - name: Make verification script executable
+        run: chmod +x scripts/deployment/verify-deployment.sh
+
+      - name: Run verification script
+        run: ./scripts/deployment/verify-deployment.sh "${{ needs.deploy-dev.outputs.web_url }}" "${{ needs.deploy-dev.outputs.api_url }}"
+
+  deployment-notification:
+    needs: [deploy-dev, post-deploy-verification]
+    runs-on: ubuntu-latest
+    name: Deployment Summary
+    if: always()
+
+    steps:
+      - name: Deployment result
+        run: |
+          echo "Deployment summary"
+          echo "Environment: ${{ env.ENVIRONMENT }}"
+          echo "Deployment job: ${{ needs.deploy-dev.result || 'skipped' }}"
+          echo "Verification job: ${{ needs.post-deploy-verification.result || 'skipped' }}"
+          echo "Overall status: ${{ job.status }}"

@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm run build:web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install --frozen-lockfile --config.node-linker=hoisted",
+  "framework": "nextjs",
+  "env": {
+    "NODE_ENV": "production",
+    "VERCEL_ENV": "production"
+  },
+  "ignoreCommand": "echo 'Skipping build for non-web apps'",
+  "regions": ["iad1"]
+}

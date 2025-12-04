@@ -1,0 +1,45 @@
+name: 測試 pnpm 安裝 (使用 npm)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-pnpm-npm:
+    runs-on: ubuntu-latest
+    name: 測試 pnpm 安裝 (使用 npm)
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 檢查 Node.js 和 npm
+        run: |
+          echo "Node.js 版本:"
+          node --version
+          echo "npm 版本:"
+          npm --version
+          echo "npm 路徑:"
+          which npm
+
+      - name: 使用 npm 安裝 pnpm
+        run: npm install -g pnpm@10
+
+      - name: 檢查 pnpm 安裝
+        run: |
+          echo "pnpm 版本:"
+          pnpm --version
+          echo "pnpm 路徑:"
+          which pnpm
+          echo "PATH 環境變數:"
+          echo $PATH
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 測試構建
+        run: pnpm build:types

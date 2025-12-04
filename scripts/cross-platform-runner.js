@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
 const { spawn, execSync } = require('child_process');
-const path = require('path');
-const fs = require('fs');
 const os = require('os');
 
 class CrossPlatformRunner {
@@ -18,7 +16,9 @@ class CrossPlatformRunner {
     console.log(`🖥️  作業系統: ${this.platform}`);
     console.log(`📦 Node.js 版本: ${process.version}`);
     console.log(`🔧 架構: ${os.arch()}`);
-    console.log(`💾 記憶體: ${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB`);
+    console.log(
+      `💾 記憶體: ${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB`
+    );
   }
 
   // 檢查必要工具
@@ -28,7 +28,9 @@ class CrossPlatformRunner {
 
     tools.forEach(tool => {
       try {
-        const version = execSync(`${tool} --version`, { encoding: 'utf8' }).trim();
+        const version = execSync(`${tool} --version`, {
+          encoding: 'utf8',
+        }).trim();
         console.log(`✅ ${tool}: ${version}`);
       } catch (error) {
         console.log(`❌ ${tool}: 未安裝`);
@@ -73,10 +75,10 @@ class CrossPlatformRunner {
       const child = spawn(command, args, {
         stdio: 'inherit',
         shell: this.isWindows,
-        ...options
+        ...options,
       });
 
-      child.on('close', (code) => {
+      child.on('close', code => {
         if (code === 0) {
           resolve(code);
         } else {
@@ -84,7 +86,7 @@ class CrossPlatformRunner {
         }
       });
 
-      child.on('error', (error) => {
+      child.on('error', error => {
         reject(error);
       });
     });
@@ -109,7 +111,7 @@ class CrossPlatformRunner {
       const apiProcess = spawn('pnpm', ['api:dev'], {
         cwd: process.cwd(),
         stdio: 'inherit',
-        shell: this.isWindows
+        shell: this.isWindows,
       });
 
       // 等待一下再啟動 web
@@ -121,10 +123,9 @@ class CrossPlatformRunner {
         }
       }, 3000);
 
-      apiProcess.on('close', (code) => {
+      apiProcess.on('close', code => {
         console.log(`API 服務已停止，退出碼: ${code}`);
       });
-
     } catch (error) {
       console.log('❌ 開發環境啟動失敗:', error.message);
     }
@@ -211,10 +212,11 @@ async function main() {
       case 'dev':
         await runner.runDev();
         break;
-      case 'test':
+      case 'test': {
         const testType = process.argv[3] || 'all';
         await runner.runTests(testType);
         break;
+      }
       case 'build':
         await runner.build();
         break;
