@@ -25,7 +25,7 @@
 
 ### 2.2 技術實現
 
-#### **Gemini 2.5 Pro 整合**
+#### **Gemini 1.5-flash 整合**
 
 ```typescript
 // packages/types/src/ai/index.ts

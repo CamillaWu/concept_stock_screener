@@ -97,8 +97,8 @@ concept_stock_screener/
 
 - **Python 3.11+** - 數據處理
 - **FastAPI** - Web 框架
-- **LangChain** - AI 整合
-- **RAG** - 檢索增強生成
+- **Google Gemini API** - AI 整合
+- **Pinecone** - 向量數據庫
 
 ## 📊 項目狀態
 
@@ -115,7 +115,7 @@ concept_stock_screener/
 ### 代碼質量指標
 
 - **ESLint 狀態**: ✅ 通過 (0 錯誤，0 警告)
-- **測試覆蓋率**: 69.62% (目標: 70%+)
+- **測試覆蓋率**: 88.3% (目標: 70%+)
 - **類型檢查**: ✅ 通過
 - **代碼格式化**: ✅ 通過
 

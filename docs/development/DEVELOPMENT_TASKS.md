@@ -1,6 +1,6 @@
 # Development Task Tracker
 
-_Last updated: 2025-09-24_
+_Last updated: 2025-12-22_
 _Project_: Concept Stock Screener\_
 _Owner_: Development Team\_
 
@@ -17,12 +17,12 @@ _Owner_: Development Team\_
 
 | ID      | Task                                                                                          | Owner         | Status      | Target     | References                           |
 | ------- | --------------------------------------------------------------------------------------------- | ------------- | ----------- | ---------- | ------------------------------------ |
-| P-01    | Theme-to-stock search flow: search bar UX, query handling, results list, tri-pane integration | Web + API     | In progress | 2025-10-02 | PRD 1.3, 7; Feature&Flow 3.1         |
-| P-02    | Stock-to-theme reverse lookup: mode toggle, API handler, explanations panel                   | Web + API     | In progress | 2025-10-02 | PRD 1.3; Feature&Flow 3.2            |
+| P-01    | Theme-to-stock search flow: search bar UX, query handling, results list, tri-pane integration | Web + API     | Planned     | 2025-10-02 | PRD 1.3, 7; Feature&Flow 3.1         |
+| P-02    | Stock-to-theme reverse lookup: mode toggle, API handler, explanations panel                   | Web + API     | Planned     | 2025-10-02 | PRD 1.3; Feature&Flow 3.2            |
 | P-03    | Trending concepts module with heat bar visualization and quick filter                         | Web           | Planned     | 2025-10-09 | PRD 7; Feature&Flow 3.1.3            |
-| API-01  | `/search` Worker handler wired to Gemini service, structured errors, rate limiting            | API           | In progress | 2025-10-02 | PRD 6.3; RAG 3                       |
+| API-01  | `/search` Worker handler wired to Gemini service, structured errors, rate limiting            | API           | Planned     | 2025-10-02 | PRD 6.3; RAG 3                       |
 | API-02  | Concept detail endpoint (description, heat, top stocks, citations) for detail panel           | API           | Planned     | 2025-10-09 | Feature&Flow 3.1.2                   |
-| DATA-01 | Ingest TWSE filings/news into Pinecone namespace (chunking + metadata)                        | Data          | In progress | 2025-10-15 | PRD 6.5; RAG 2                       |
+| DATA-01 | Ingest TWSE filings/news into Pinecone namespace (chunking + metadata)                        | Data          | Planned     | 2025-10-15 | PRD 6.5; RAG 2                       |
 | DATA-02 | Persist RAG source trails for the citation drawer                                             | Data          | Planned     | 2025-10-15 | Feature&Flow 3.1.2                   |
 | OPS-01  | Cloudflare token rotation SOP + dashboard                                                     | DevOps        | In progress | 2025-09-30 | Progress tracker; CI docs            |
 | OPS-02  | Deployment notifications (Slack / email) wired into Actions workflows                         | DevOps + PM   | Complete    | 2025-09-25 | CI docs                              |

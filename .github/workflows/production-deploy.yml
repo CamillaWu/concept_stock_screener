@@ -120,17 +120,28 @@ jobs:
 
           echo "Deployment bundle ready"
 
+      - name: Install Vercel CLI
+        run: |
+          npm install -g vercel@latest
+          echo "vercel -> $(which vercel)"
+          vercel --version
+
+      - name: Pull Vercel project settings
+        run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }} --cwd ./apps/web
+
+      - name: Generate Vercel prebuilt output
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel build --prod --cwd ./apps/web --token $VERCEL_TOKEN
+
       - name: Deploy web app to Vercel
-        if: env.VERCEL_TOKEN != ''
         id: deploy-web
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ env.VERCEL_TOKEN }}
-          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
-          # Deploy with production flag when on main
-          vercel-args: ${{ env.VERCEL_ARGS }}
-          working-directory: ./deployment/web
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --yes --cwd ./apps/web --token $VERCEL_TOKEN)
+          echo "Deployed to: $DEPLOY_URL"
+          echo "preview-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
 
       - name: Deploy API to Cloudflare Workers
         id: deploy-api

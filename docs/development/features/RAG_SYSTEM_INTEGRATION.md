@@ -29,7 +29,7 @@
     ↓
 上下文組裝
     ↓
-Gemini 2.5 Pro 生成
+Gemini 1.5-flash 生成
     ↓
 答案後處理
     ↓
@@ -56,7 +56,7 @@ RAG System
 │   └── Reranking (重新排序)
 │
 ├── Generation Layer (生成層)
-│   ├── Gemini 2.5 Pro (AI 模型)
+│   ├── Gemini 1.5-flash (AI 模型)
 │   ├── Prompt Engineering (提示工程)
 │   └── Response Generator (響應生成器)
 │
@@ -66,7 +66,7 @@ RAG System
     └── Performance Monitor (性能監控器)
 ```
 
-## 3. Gemini 2.5 Pro 整合
+## 3. Gemini 1.5-flash 整合
 
 ### 3.1 模型配置
 
@@ -75,6 +75,7 @@ RAG System
 interface GeminiConfig {
   apiKey: string;
   model: 'gemini-2.0-flash-exp' | 'gemini-1.5-pro' | 'gemini-1.5-flash';
+  defaultModel: 'gemini-1.5-flash'; // 使用最新的免費模型
   temperature: number;
   maxOutputTokens: number;
   topP: number;
