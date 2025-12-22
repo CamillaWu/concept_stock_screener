@@ -17,11 +17,16 @@ interface UseApiOptions<T> {
   onError?: (error: string) => void;
 }
 
+// ... interface update needs to be done too, but assuming replace_file_content replaces chunk
+interface ExecuteOptions {
+  params?: Record<string, string>;
+}
+
 interface UseApiReturn<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
-  execute: () => Promise<void>;
+  execute: (options?: ExecuteOptions) => Promise<void>; // Updated signature
   reset: () => void;
 }
 
@@ -39,49 +44,59 @@ export function useApi<T>({
   const [error, setError] = useState<string | null>(null);
   const immediateRef = useRef(immediate);
 
-  const execute = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const execute = useCallback(
+    async (options?: ExecuteOptions) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const requestOptions: {
-        method: string;
-        headers: Record<string, string>;
-        body?: string;
-      } = {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers,
-        },
-      };
+      try {
+        let requestUrl = url;
+        if (options?.params) {
+          const separator = requestUrl.includes('?') ? '&' : '?';
+          const queryString = new URLSearchParams(options.params).toString();
+          requestUrl = `${requestUrl}${separator}${queryString}`;
+        }
 
-      if (body && method !== 'GET') {
-        requestOptions.body = JSON.stringify(body);
+        const requestOptions: {
+          method: string;
+          headers: Record<string, string>;
+          body?: string;
+        } = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers,
+          },
+        };
+
+        if (body && method !== 'GET') {
+          requestOptions.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(requestUrl, requestOptions);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result: ApiResponse<T> = await response.json();
+
+        if (result.success) {
+          setData(result.data || null);
+          onSuccess?.(result.data as T);
+        } else {
+          throw new Error(result.error || 'API 請求失敗');
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : '未知錯誤';
+        setError(errorMessage);
+        onError?.(errorMessage);
+      } finally {
+        setLoading(false);
       }
-
-      const response = await fetch(url, requestOptions);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result: ApiResponse<T> = await response.json();
-
-      if (result.success) {
-        setData(result.data || null);
-        onSuccess?.(result.data as T);
-      } else {
-        throw new Error(result.error || 'API 請求失敗');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '未知錯誤';
-      setError(errorMessage);
-      onError?.(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [url, method, body, headers, onSuccess, onError]);
+    },
+    [url, method, body, headers, onSuccess, onError]
+  );
 
   const reset = useCallback(() => {
     setData(null);

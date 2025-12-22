@@ -10,8 +10,8 @@ export default function HomePage() {
     method: 'GET',
   });
 
-  const handleSearch = async () => {
-    await execute();
+  const handleSearch = async (query: string) => {
+    await execute({ params: { q: query } });
   };
 
   return (

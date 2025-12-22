@@ -9,9 +9,8 @@ import { corsMiddleware } from './middleware/cors';
 const router = Router();
 
 // 中間件
-router.all('*', corsMiddleware);
-
 // 路由 - 類型檢查已禁用
+router.options('*', corsMiddleware); // 僅處理預檢請求
 router.get('/api/health', () => new Response('OK', { status: 200 }));
 router.get('/api/stocks', stockHandler.getStocks);
 router.get('/api/stocks/:symbol', stockHandler.getStock);
@@ -29,6 +28,23 @@ export default {
     env: Record<string, unknown>,
     ctx: { waitUntil: (promise: Promise<unknown>) => void }
   ): Promise<Response> {
-    return router.handle(request, env, ctx);
+    // 處理請求
+    const response = await router.handle(request, env, ctx);
+
+    // 複製回應以添加 CORS 標頭 (Response 對象可能是不可變的)
+    const newResponse = new Response(response.body, response);
+
+    // 添加 CORS 標頭
+    newResponse.headers.set('Access-Control-Allow-Origin', '*');
+    newResponse.headers.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS'
+    );
+    newResponse.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization'
+    );
+
+    return newResponse;
   },
 };
