@@ -11,9 +11,9 @@ _Owner_: Platform & CI working group\_
 - `pnpm lint:check` and `pnpm type-check` are green.
 - Latest Jest coverage snapshot (2025-09-25) sits at ~88%.
 - Feature delivery:
-  - **Web UI**: ~40% (Home page, Search UI, Concept display implemented)
-  - **API**: ~50% (Search API, CORS fix, Mock handlers)
-  - **AI**: 10% (RAG pipeline sync script ready, simple integration started)
+  - **Web UI**: ~40% (Homescreen & Search UI implemented. **Missing**: Stocks list, Concept details, Screener, User Auth pages).
+  - **API**: ~50% (Real Semantic Search API fully implemented with Gemini + Pinecone).
+  - **AI**: 20% (Embedding service integrated into API).
 
 ## Phase Status Overview
 
@@ -42,6 +42,25 @@ _Owner_: Platform & CI working group\_
 
 - Added cross-platform helper scripts (`scripts/setup/configure-pnpm-linker.*`) to enforce the hoisted pnpm node-linker across environments.
 - Wired Slack webhook notifications into CI and deploy workflows (gated by new `SLACK_WEBHOOK_URL_*` secrets).
+
+## ⚠️ Pending Implementation Details (The "Gap")
+
+The following items are critical for a functional "Beta" and are currently **NOT** implemented:
+
+### 1. Web Application (Frontend)
+- [ ] **Secondary Pages**: `/stocks/[symbol]` & `/concepts/[id]` are **DONE**. `/screener` still 404.
+- [x] **Data Integration**: Search results for Stocks are now clickable and lead to the Detail Page.
+- [ ] **Responsive Fixes**: "Concept" card layout has known breakages on mobile/narrow screens.
+
+### 2. API & Backend
+- [x] **Real Search Logic**: `apps/api/src/handlers/search.ts` now uses Gemini embeddings and Pinecone vector search.
+- [x] **Embedding Service**: API successfully calls Gemini to generate embeddings.
+- [ ] **Authentication**: No user login/session management logic exists.
+- [ ] **User Data**: No database schema/storage for 'User Collections' or 'Watchlists'.
+
+### 3. Data Pipeline & AI
+- [ ] **Pipeline Automation**: `apps/data-pipeline` exists but runs manually. No scheduled triggers.
+
 
 ## Active Workstreams
 

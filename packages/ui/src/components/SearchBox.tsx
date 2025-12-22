@@ -18,7 +18,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   const handleSearch = () => {
     if (query.trim()) {
       onSearch(query.trim());
-      setQuery(''); // 清空輸入框
+      // setQuery(''); // 保留輸入內容以便使用者修改
     }
   };
 

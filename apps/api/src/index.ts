@@ -1,4 +1,7 @@
 // @ts-nocheck - 禁用整個文件的類型檢查以解決 itty-router 兼容性問題
+// Polyfill for libraries expecting 'global' (like Pinecone SDK) in Cloudflare Workers
+Object.assign(globalThis, { global: globalThis });
+
 import { Router } from 'itty-router';
 import { conceptHandler } from './handlers/concept';
 import { searchHandler } from './handlers/search';
@@ -11,6 +14,7 @@ const router = Router();
 // 中間件
 // 路由 - 類型檢查已禁用
 router.options('*', corsMiddleware); // 僅處理預檢請求
+router.get('/health', () => new Response('OK', { status: 200 }));
 router.get('/api/health', () => new Response('OK', { status: 200 }));
 router.get('/api/stocks', stockHandler.getStocks);
 router.get('/api/stocks/:symbol', stockHandler.getStock);
