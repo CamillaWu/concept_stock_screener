@@ -96,18 +96,36 @@ choco install docker-desktop
 git clone https://github.com/your-username/concept_stock_screener.git
 cd concept_stock_screener
 
-# 安裝依賴
+# 安裝依賴 (使用 pnpm)
 pnpm install
 
-> **注意**：安裝依賴後請執行 scripts/setup/configure-pnpm-linker.sh (macOS/Linux) 或 scripts/setup/configure-pnpm-linker.ps1 (Windows) 以啟用 hoisted node-linker，避免 React 類型解析問題。
+# --- CRITICAL SETUP STEP ---
+# 必須執行以下腳本以配置 pnpm node-linker，否則 React 專案會出現類型錯誤
+# macOS/Linux:
+bash ./scripts/setup/configure-pnpm-linker.sh
+# Windows (PowerShell):
+./scripts/setup/configure-pnpm-linker.ps1
 
 # 設置環境變數
-cp env.example .env.local
-# 編輯 .env.local 文件，填入必要的 API 密鑰
+cp env.example .env
+# 編輯 .env 文件，填入必要的 API 密鑰 (如 CLOUDFLARE_API_TOKEN, GEMINI_API_KEY 等)
 
 # 驗證安裝
-pnpm run verify:setup
+pnpm run coordination:check
 ```
+
+### 2.4 常見問題排除 (Troubleshooting)
+
+#### 搜尋功能錯誤 / API 400 Bad Request
+
+- **症狀**: 搜尋時出現 "Unexpected end of JSON input" 或 400 錯誤。
+- **原因**: 前端未正確傳遞參數，或 API CORS 阻擋。
+- **解法**: 確保 `apps/api/src/index.ts` 含正確 CORS 設定，且前端使用最新的 `useApi` hook。
+
+#### 類型錯誤 (Type Errors)
+
+- **症狀**: `Cannot find module 'react'` 或其他 workspace 關聯錯誤。
+- **解法**: 重新執行 `configure-pnpm-linker` 腳本並重啟 VS Code。
 
 ## 3. 快速上手教程
 

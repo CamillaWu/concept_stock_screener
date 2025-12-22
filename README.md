@@ -108,9 +108,9 @@ concept_stock_screener/
 - ✅ **跨平台腳本**: Windows 和 macOS 支持完成
 - ✅ **測試流程**: 70 個測試用例全部通過
 - ✅ **開發環境**: ESLint、Prettier、Husky 配置完成
-- ✅ **代碼質量**: ESLint 問題全部解決 (0 錯誤，0 警告)
-- ⏳ **CI/CD 流程**: 準備開始建立
-- ⏳ **部署配置**: 準備開始建立
+- ✅ **CI/CD 流程**: GitHub Actions 自動化部署 (Web + API)
+- ✅ **基礎功能**: 首頁 UI、搜尋 API、MCP 基礎工具
+- ⏳ **進階功能**: RAG 深度整合、用戶收藏功能
 
 ### 代碼質量指標
 
