@@ -4,6 +4,8 @@ on:
   workflow_run:
     workflows:
       - CI/CD Pipeline
+      - Production Deploy
+      - Dev Deploy
     types:
       - completed
 
