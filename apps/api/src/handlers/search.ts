@@ -27,7 +27,7 @@ export const searchHandler = {
 
       // Check environment variables
       if (!env.GEMINI_API_KEY || !env.PINECONE_API_KEY) {
-         throw new Error('Missing API Keys');
+        throw new Error('Missing API Keys');
       }
 
       // 1. Generate Embedding
@@ -66,19 +66,23 @@ export const searchHandler = {
               volume: 0,
               marketCap: 0,
               sector: 'N/A',
-              industry: 'N/A'
+              industry: 'N/A',
             });
           }
 
           // Map Concept
-          if (m.theme_id && m.theme_name && !conceptsMap.has(m.theme_id as string)) {
+          if (
+            m.theme_id &&
+            m.theme_name &&
+            !conceptsMap.has(m.theme_id as string)
+          ) {
             conceptsMap.set(m.theme_id as string, {
               id: m.theme_id,
               name: m.theme_name,
               description: `與 ${m.theme_name} 相關的投資概念`,
               stocks: [],
               keywords: (m.tags as string[]) || [], // Use tags if available
-              category: 'General'
+              category: 'General',
             });
           }
         }
@@ -89,7 +93,7 @@ export const searchHandler = {
       const allConcepts = Array.from(conceptsMap.values());
       const total = allStocks.length + allConcepts.length;
 
-      const paginatedStocks = allStocks.slice(0, limit); 
+      const paginatedStocks = allStocks.slice(0, limit);
       const paginatedConcepts = allConcepts.slice(0, limit);
 
       const response: ApiResponse<SearchResponse> = {
@@ -98,7 +102,7 @@ export const searchHandler = {
           stocks: paginatedStocks,
           concepts: paginatedConcepts,
           total,
-          suggestions: [], 
+          suggestions: [],
         },
         message: `找到 ${total} 個相關結果`,
       };

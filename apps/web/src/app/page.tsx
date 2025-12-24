@@ -129,13 +129,25 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2 border-b pb-2 border-gray-200">
                 <span className="bg-blue-100 text-blue-700 p-1.5 rounded-md">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
                   </svg>
                 </span>
-                <h3 className="text-xl font-semibold text-gray-800">相關個股 ({data.stocks.length})</h3>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  相關個股 ({data.stocks.length})
+                </h3>
               </div>
-              
+
               <div className="grid gap-3">
                 {data.stocks.length > 0 ? (
                   data.stocks.map((stock, index) => (
@@ -145,7 +157,9 @@ export default function HomePage() {
                     >
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 flex flex-col items-center justify-center bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">
-                          <span className="text-sm font-bold text-gray-900">{stock.symbol}</span>
+                          <span className="text-sm font-bold text-gray-900">
+                            {stock.symbol}
+                          </span>
                           <span className="text-[10px] text-gray-500">TW</span>
                         </div>
                         <div>
@@ -153,19 +167,23 @@ export default function HomePage() {
                             {stock.name}
                           </h4>
                           <span className="text-xs text-gray-400">
-                            {stock.industry !== 'N/A' ? stock.industry : '台灣股市'}
+                            {stock.industry !== 'N/A'
+                              ? stock.industry
+                              : '台灣股市'}
                           </span>
                         </div>
                       </div>
                       <div className="text-right">
-                         <button className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors">
-                           查看分析
-                         </button>
+                        <button className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors">
+                          查看分析
+                        </button>
                       </div>
                     </div>
                   ))
                 ) : (
-                   <p className="text-gray-400 text-center py-8">沒有找到相關個股</p>
+                  <p className="text-gray-400 text-center py-8">
+                    沒有找到相關個股
+                  </p>
                 )}
               </div>
             </div>
@@ -173,12 +191,24 @@ export default function HomePage() {
             {/* Concepts Section */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2 border-b pb-2 border-gray-200">
-                 <span className="bg-green-100 text-green-700 p-1.5 rounded-md">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                <span className="bg-green-100 text-green-700 p-1.5 rounded-md">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
                   </svg>
                 </span>
-                <h3 className="text-xl font-semibold text-gray-800">相關概念 ({data.concepts.length})</h3>
+                <h3 className="text-xl font-semibold text-gray-800">
+                  相關概念 ({data.concepts.length})
+                </h3>
               </div>
 
               <div className="grid gap-4">
@@ -191,7 +221,9 @@ export default function HomePage() {
                       <h4 className="text-lg font-bold text-gray-800 mb-2 flex items-center">
                         {concept.name}
                         {index === 0 && (
-                           <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] rounded-full uppercase tracking-wider">Top Match</span>
+                          <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] rounded-full uppercase tracking-wider">
+                            Top Match
+                          </span>
                         )}
                       </h4>
                       <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">
@@ -210,7 +242,9 @@ export default function HomePage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-400 text-center py-8">沒有找到相關概念</p>
+                  <p className="text-gray-400 text-center py-8">
+                    沒有找到相關概念
+                  </p>
                 )}
               </div>
             </div>

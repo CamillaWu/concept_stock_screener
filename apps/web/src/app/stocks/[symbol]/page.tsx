@@ -63,7 +63,9 @@ export default function StockDetailPage({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
       {/* Breadcrumb */}
       <nav className="mb-8 text-gray-500 text-sm">
-        <Link href="/" className="hover:text-blue-600">首頁</Link>
+        <Link href="/" className="hover:text-blue-600">
+          首頁
+        </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900 font-medium">{data.symbol}</span>
       </nav>
@@ -76,26 +78,35 @@ export default function StockDetailPage({
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                   <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
-                   <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
-                     {data.symbol}
-                   </span>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {data.name}
+                  </h1>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                    {data.symbol}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-500 text-sm">
-                   <span>{data.sector !== 'Unknown' ? data.sector : '台股市場'}</span>
-                   <span>•</span>
-                   <span>{data.industry !== 'Unknown' ? data.industry : '一般產業'}</span>
+                  <span>
+                    {data.sector !== 'Unknown' ? data.sector : '台股市場'}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {data.industry !== 'Unknown' ? data.industry : '一般產業'}
+                  </span>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-4xl font-bold text-gray-900 font-mono">
                   ${data.price.toLocaleString()}
                 </div>
-                <div className={`text-lg font-medium mt-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                  {isPositive ? '▲' : '▼'} {Math.abs(data.change)} ({Math.abs(data.changePercent * 100).toFixed(2)}%)
+                <div
+                  className={`text-lg font-medium mt-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}
+                >
+                  {isPositive ? '▲' : '▼'} {Math.abs(data.change)} (
+                  {Math.abs(data.changePercent * 100).toFixed(2)}%)
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
-                   成交量: {(data.volume / 1000).toFixed(0)}K
+                  成交量: {(data.volume / 1000).toFixed(0)}K
                 </div>
               </div>
             </div>
@@ -104,27 +115,42 @@ export default function StockDetailPage({
           {/* AI Analysis Card */}
           <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-sm border border-indigo-100 p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-               <svg className="w-24 h-24 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/>
-               </svg>
+              <svg
+                className="w-24 h-24 text-indigo-600"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                <path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z" />
+              </svg>
             </div>
             <h2 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
               AI 投資快評
             </h2>
             <div className="prose prose-indigo max-w-none">
-               {data.aiAnalysis ? (
-                 <div className="whitespace-pre-line text-gray-700 leading-relaxed font-medium">
-                   {data.aiAnalysis}
-                 </div>
-               ) : (
-                 <div className="flex items-center gap-2 text-gray-500 italic">
-                   <div className="animate-pulse w-4 h-4 bg-gray-300 rounded-full"></div>
-                   正在生成 AI 分析...
-                 </div>
-               )}
+              {data.aiAnalysis ? (
+                <div className="whitespace-pre-line text-gray-700 leading-relaxed font-medium">
+                  {data.aiAnalysis}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-gray-500 italic">
+                  <div className="animate-pulse w-4 h-4 bg-gray-300 rounded-full"></div>
+                  正在生成 AI 分析...
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -133,16 +159,26 @@ export default function StockDetailPage({
         <div className="space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                />
               </svg>
               關聯概念主題
             </h3>
-            
+
             {data.relatedConcepts && data.relatedConcepts.length > 0 ? (
               <div className="space-y-3">
-                {data.relatedConcepts.map((concept) => (
-                  <Link 
+                {data.relatedConcepts.map(concept => (
+                  <Link
                     key={concept.id}
                     href={`/concepts/${concept.id}`}
                     className="block group"
@@ -152,8 +188,18 @@ export default function StockDetailPage({
                         <span className="font-medium text-gray-700 group-hover:text-blue-700">
                           {concept.name}
                         </span>
-                        <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-transform"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -161,9 +207,9 @@ export default function StockDetailPage({
                 ))}
               </div>
             ) : (
-               <p className="text-gray-400 text-sm text-center py-4">
-                 暫無相關概念數據
-               </p>
+              <p className="text-gray-400 text-sm text-center py-4">
+                暫無相關概念數據
+              </p>
             )}
           </div>
         </div>

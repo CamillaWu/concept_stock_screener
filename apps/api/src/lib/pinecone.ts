@@ -1,7 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 
 // Helper to get Pinecone client
-// We create a new client per request or rely on lightweight instantiation as connection pooling 
+// We create a new client per request or rely on lightweight instantiation as connection pooling
 // isn't the same in serverless workers as in Node.js long-running processes.
 
 export const getPineconeClient = (apiKey: string) => {
@@ -25,7 +25,7 @@ export const searchVectors = async (
 ): Promise<SearchResult[]> => {
   const pinecone = getPineconeClient(apiKey);
   const index = pinecone.index(indexName);
-  
+
   // Use namespace if provided
   const queryTarget = namespace ? index.namespace(namespace) : index;
 

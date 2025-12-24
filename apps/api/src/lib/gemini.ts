@@ -23,8 +23,8 @@ export const generateEmbedding = async (text: string, apiKey: string) => {
 };
 
 export const generateAnalysis = async (
-  symbolOrId: string, 
-  name: string, 
+  symbolOrId: string,
+  name: string,
   apiKey: string,
   type: 'stock' | 'concept' = 'stock'
 ) => {
@@ -33,7 +33,7 @@ export const generateAnalysis = async (
   const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   let prompt = '';
-  
+
   if (type === 'stock') {
     prompt = `As an investment analyst, generate a concise 3-bullet point analysis for ${name} (${symbolOrId}).
     Focus on:
@@ -60,7 +60,10 @@ export const generateAnalysis = async (
   }
 };
 
-export const generateStockCandidates = async (criteria: string, apiKey: string): Promise<string[]> => {
+export const generateStockCandidates = async (
+  criteria: string,
+  apiKey: string
+): Promise<string[]> => {
   const client = getGeminiClient(apiKey);
   const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -80,15 +83,29 @@ export const generateStockCandidates = async (criteria: string, apiKey: string):
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
+
     // Clean code block if present
-    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+    const cleanedText = text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     return JSON.parse(cleanedText);
   } catch (error) {
     console.error('Gemini Candidate generation failed:', error);
     // Fallback for demo/dev when API Key is invalid or quota exceeded
     console.warn('Using Fallback Candidate List');
-    return ['2330', '2317', '2454', '2308', '2303', '2603', '2382', '3231', '6669', '3008'];
+    return [
+      '2330',
+      '2317',
+      '2454',
+      '2308',
+      '2303',
+      '2603',
+      '2382',
+      '3231',
+      '6669',
+      '3008',
+    ];
   }
 };

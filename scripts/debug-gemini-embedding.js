@@ -1,4 +1,3 @@
-
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Key from .dev.vars
@@ -10,8 +9,11 @@ async function testEmbedding() {
   const model = client.getGenerativeModel({ model: 'text-embedding-004' });
 
   try {
-    const result = await model.embedContent("Hello world");
-    console.log('Embedding Success! Vector length:', result.embedding.values.length);
+    const result = await model.embedContent('Hello world');
+    console.log(
+      'Embedding Success! Vector length:',
+      result.embedding.values.length
+    );
   } catch (error) {
     console.error('Embedding Error:', error);
   }

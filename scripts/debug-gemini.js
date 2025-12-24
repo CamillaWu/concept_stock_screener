@@ -1,4 +1,3 @@
-
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Key from .dev.vars
@@ -27,9 +26,12 @@ async function testGemini() {
     const response = await result.response;
     const text = response.text();
     console.log('Raw Response:', text);
-    
+
     // Clean code block if present
-    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const cleanedText = text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
     console.log('Parsed:', JSON.parse(cleanedText));
   } catch (error) {
     console.error('Gemini Error:', error);

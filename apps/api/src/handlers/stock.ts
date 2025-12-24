@@ -54,9 +54,10 @@ const mockStocks: StockData[] = [
   },
 ];
 
-
 // Helper to fetch real stock price from Yahoo Finance
-async function fetchYahooFinance(symbol: string): Promise<Partial<StockData> | null> {
+async function fetchYahooFinance(
+  symbol: string
+): Promise<Partial<StockData> | null> {
   try {
     // Append .TW for Taiwan stocks if not present
     const yahooSymbol = symbol.endsWith('.TW') ? symbol : `${symbol}.TW`;
@@ -64,33 +65,33 @@ async function fetchYahooFinance(symbol: string): Promise<Partial<StockData> | n
       `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=1d`,
       {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        },
       }
     );
-    
+
     if (!response.ok) throw new Error(`Yahoo API error: ${response.status}`);
-    
+
     const data: any = await response.json();
     const result = data.chart?.result?.[0];
-    
+
     if (!result) return null;
-    
+
     const meta = result.meta;
     const price = meta.regularMarketPrice;
     const prevClose = meta.chartPreviousClose;
     const change = price - prevClose;
     const changePercent = change / prevClose;
-    
+
     return {
       price,
       change: parseFloat(change.toFixed(2)),
       changePercent,
       volume: meta.regularMarketVolume || 0,
       marketCap: 0, // Yahoo chart API doesn't always return market cap in this endpoint
-      name: symbol // We might not get the localized Chinese name here easily, keeping symbol or existing mock name
+      name: symbol, // We might not get the localized Chinese name here easily, keeping symbol or existing mock name
     };
-    
   } catch (e) {
     console.error('Yahoo Finance Fetch Error:', e);
     return null;
@@ -128,18 +129,16 @@ export const stockHandler = {
     }
   },
 
-
-
   // 獲取單一股票
   async getStock(request: Request, env: any): Promise<Response> {
     try {
       const url = new URL(request.url);
-      
+
       // Fallback logic for symbol
       let symbol = (request as any).params?.symbol;
       if (!symbol) {
-         const pathParts = url.pathname.split('/');
-         symbol = pathParts[pathParts.length - 1];
+        const pathParts = url.pathname.split('/');
+        symbol = pathParts[pathParts.length - 1];
       }
 
       if (!symbol) {
@@ -147,106 +146,116 @@ export const stockHandler = {
       }
 
       // 1. Get Basic Data: Try Yahoo First, then Fallback to Mock
-      let stock: StockData | undefined = mockStocks.find(s => s.symbol === symbol);
-      
+      let stock: StockData | undefined = mockStocks.find(
+        s => s.symbol === symbol
+      );
+
       // Try fetching real price
       const realData = await fetchYahooFinance(symbol);
-      
+
       if (realData) {
         // If we found the stock in mock list, merge real price
         if (stock) {
-           stock = { ...stock, ...realData };
+          stock = { ...stock, ...realData };
         } else {
-           // Create new stock object from real data
-           stock = {
-             symbol,
-             name: symbol, // Only have symbol for now if not in mock
-             price: realData.price!,
-             change: realData.change!,
-             changePercent: realData.changePercent!,
-             volume: realData.volume!,
-             marketCap: 0,
-             sector: 'Unknown',
-             industry: 'Unknown',
-             ...realData
-           } as StockData;
+          // Create new stock object from real data
+          stock = {
+            symbol,
+            name: symbol, // Only have symbol for now if not in mock
+            price: realData.price!,
+            change: realData.change!,
+            changePercent: realData.changePercent!,
+            volume: realData.volume!,
+            marketCap: 0,
+            sector: 'Unknown',
+            industry: 'Unknown',
+            ...realData,
+          } as StockData;
         }
       } else if (!stock) {
         // Fallback to purely random mock if Yahoo fails AND not in seed list
         console.warn('Using random mock data for', symbol);
         stock = {
-           symbol,
-           name: symbol, 
-           price: Math.floor(Math.random() * 1000) + 10,
-           change: Math.floor(Math.random() * 20) - 10,
-           changePercent: (Math.random() * 0.1) - 0.05,
-           volume: Math.floor(Math.random() * 5000000),
-           marketCap: 0,
-           sector: 'Unknown',
-           industry: 'Unknown'
+          symbol,
+          name: symbol,
+          price: Math.floor(Math.random() * 1000) + 10,
+          change: Math.floor(Math.random() * 20) - 10,
+          changePercent: Math.random() * 0.1 - 0.05,
+          volume: Math.floor(Math.random() * 5000000),
+          marketCap: 0,
+          sector: 'Unknown',
+          industry: 'Unknown',
         };
       }
 
       // 2. Fetch Real Data: AI Analysis & Concepts
       try {
         if (env.GEMINI_API_KEY && env.PINECONE_API_KEY) {
-           const targetIndex = env.PINECONE_INDEX || 'concept-stock-seed';
+          const targetIndex = env.PINECONE_INDEX || 'concept-stock-seed';
 
-           // A. AI Analysis
-           // A. AI Analysis
-           console.log('DEBUG: Generating analysis for', stock.symbol);
-           // type 'stock' is default, but being explicit helps
-           const analysisPromise = generateAnalysis(stock.symbol, stock.name, env.GEMINI_API_KEY, 'stock');
-           
-           // B. Related Concepts (Vector Search)
-           // Search by "Symbol + Name" to find associated concept vectors
-           const queryText = `${stock.symbol} ${stock.name}`;
-           const vector = await generateEmbedding(queryText, env.GEMINI_API_KEY);
-           
-           const vectorMatches = await searchVectors(
-             vector,
-             50, // Fetch enough candidate matches
-             env.PINECONE_API_KEY,
-             targetIndex,
-             env.PINECONE_NAMESPACE || 'seed'
-           );
+          // A. AI Analysis
+          // A. AI Analysis
+          console.log('DEBUG: Generating analysis for', stock.symbol);
+          // type 'stock' is default, but being explicit helps
+          const analysisPromise = generateAnalysis(
+            stock.symbol,
+            stock.name,
+            env.GEMINI_API_KEY,
+            'stock'
+          );
 
-           // Filter for 'theme_to_stock' documents where ticker matches, 
-           // OR standard concept documents that are highly relevant.
-           // Since we are doing a reverse lookup "What concepts contain this stock?", 
-           // ideally we find 'theme_to_stock' edges.
-           
-           const relatedConceptsMap = new Map<string, {id: string, name: string}>();
-           
-           vectorMatches.forEach(match => {
-             const m = match.metadata;
-             if (!m) return;
-             
-             // If we matched a 'theme_to_stock' record for THIS stock
-             if (m.doc_type === 'theme_to_stock' && m.ticker === stock?.symbol) {
-                if (m.theme_id && m.theme_name) {
-                  relatedConceptsMap.set(m.theme_id as string, {
-                    id: m.theme_id as string,
-                    name: m.theme_name as string
-                  });
-                }
-             }
-             // Also include if we matched a Concept directly and it's highly relevant to the stock text query
-             else if (m.doc_type === 'theme' && match.score > 0.82) {
+          // B. Related Concepts (Vector Search)
+          // Search by "Symbol + Name" to find associated concept vectors
+          const queryText = `${stock.symbol} ${stock.name}`;
+          const vector = await generateEmbedding(queryText, env.GEMINI_API_KEY);
+
+          const vectorMatches = await searchVectors(
+            vector,
+            50, // Fetch enough candidate matches
+            env.PINECONE_API_KEY,
+            targetIndex,
+            env.PINECONE_NAMESPACE || 'seed'
+          );
+
+          // Filter for 'theme_to_stock' documents where ticker matches,
+          // OR standard concept documents that are highly relevant.
+          // Since we are doing a reverse lookup "What concepts contain this stock?",
+          // ideally we find 'theme_to_stock' edges.
+
+          const relatedConceptsMap = new Map<
+            string,
+            { id: string; name: string }
+          >();
+
+          vectorMatches.forEach(match => {
+            const m = match.metadata;
+            if (!m) return;
+
+            // If we matched a 'theme_to_stock' record for THIS stock
+            if (m.doc_type === 'theme_to_stock' && m.ticker === stock?.symbol) {
+              if (m.theme_id && m.theme_name) {
                 relatedConceptsMap.set(m.theme_id as string, {
-                   id: m.theme_id as string,
-                   name: m.theme_name as string
+                  id: m.theme_id as string,
+                  name: m.theme_name as string,
                 });
-             }
-           });
+              }
+            }
+            // Also include if we matched a Concept directly and it's highly relevant to the stock text query
+            else if (m.doc_type === 'theme' && match.score > 0.82) {
+              relatedConceptsMap.set(m.theme_id as string, {
+                id: m.theme_id as string,
+                name: m.theme_name as string,
+              });
+            }
+          });
 
-           const [analysisResult] = await Promise.all([analysisPromise]);
-           
-           stock = {
-             ...stock,
-             aiAnalysis: analysisResult,
-             relatedConcepts: Array.from(relatedConceptsMap.values())
-           };
+          const [analysisResult] = await Promise.all([analysisPromise]);
+
+          stock = {
+            ...stock,
+            aiAnalysis: analysisResult,
+            relatedConcepts: Array.from(relatedConceptsMap.values()),
+          };
         }
       } catch (err) {
         console.error('Error fetching AI/Vector data:', err);
