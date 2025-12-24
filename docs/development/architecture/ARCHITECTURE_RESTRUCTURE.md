@@ -150,11 +150,14 @@
 - **狀態管理**: React Hooks
 - **測試**: Jest + Testing Library
 
-### 後端技術棧
+### Backend技術棧
 
 - **運行時**: Cloudflare Workers
 - **語言**: TypeScript
 - **路由**: itty-router
+- **向量資料庫**: Pinecone
+- **AI 模型**: Google Gemini (Embeddings + Generative)
+- **實時數據**: Yahoo Finance API
 - **測試**: Jest
 
 ### 開發工具

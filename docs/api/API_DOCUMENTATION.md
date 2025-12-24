@@ -5,7 +5,7 @@
 ### 1.1 基本信息
 
 - **基礎 URL**：`https://api.concept-stock-screener.com`
-- **API 版本**：v1
+- **API 版本**：Current
 - **認證方式**：Bearer Token
 - **數據格式**：JSON
 - **字符編碼**：UTF-8
@@ -60,7 +60,7 @@ Authorization: Bearer YOUR_API_KEY
 ### 3.1 股票搜索
 
 ```http
-GET /api/v1/stocks/search
+GET /api/stocks/search
 ```
 
 #### 請求參數
@@ -120,7 +120,7 @@ curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/search?q=AI&pa
 ### 3.2 股票詳情
 
 ```http
-GET /api/v1/stocks/{stock_id}
+GET /api/stocks/{stock_id}
 ```
 
 #### 路徑參數
@@ -182,7 +182,7 @@ curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/2330" \
 ### 3.3 股票概念分析
 
 ```http
-GET /api/v1/stocks/{stock_id}/concepts
+GET /api/stocks/{stock_id}/concepts
 ```
 
 #### 請求示例
@@ -223,12 +223,46 @@ curl -X GET "https://api.concept-stock-screener.com/api/v1/stocks/2330/concepts"
 }
 ```
 
+### 3.4 股票篩選 (AI-First Screener)
+
+```http
+GET /api/screener
+```
+
+#### 請求參數
+
+| 參數       | 類型   | 必填 | 描述                                       |
+| ---------- | ------ | ---- | ------------------------------------------ |
+| `keyword`  | string | 是   | 篩選關鍵字 (如 "AI server", "High Yield") |
+| `minPrice` | number | 否   | 最低價格 (TWD)                             |
+| `maxPrice` | number | 否   | 最高價格 (TWD)                             |
+
+#### 響應示例
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "2330",
+      "name": "台積電",
+      "price": 580.0,
+      "change": 12.0,
+      "changePercent": 2.1,
+      "volume": 25000000,
+      "sector": "Semiconductor"
+    }
+  ],
+  "message": "Found 10 stocks"
+}
+```
+
 ## 4. 概念相關 API
 
 ### 4.1 概念搜索
 
 ```http
-GET /api/v1/concepts/search
+GET /api/concepts/search
 ```
 
 #### 請求參數
@@ -273,7 +307,7 @@ GET /api/v1/concepts/search
 ### 4.2 概念詳情
 
 ```http
-GET /api/v1/concepts/{concept_id}
+GET /api/concepts/{concept_id}
 ```
 
 #### 響應示例
@@ -306,7 +340,7 @@ GET /api/v1/concepts/{concept_id}
 ### 4.3 概念趨勢分析
 
 ```http
-GET /api/v1/concepts/{concept_id}/trends
+GET /api/concepts/{concept_id}/trends
 ```
 
 #### 請求參數
@@ -362,7 +396,7 @@ GET /api/v1/concepts/{concept_id}/trends
 ### 5.1 本地收藏管理
 
 ```http
-POST /api/v1/favorites
+POST /api/favorites
 ```
 
 #### 請求體
@@ -392,7 +426,7 @@ POST /api/v1/favorites
 ### 5.2 獲取本地收藏
 
 ```http
-GET /api/v1/favorites
+GET /api/favorites
 ```
 
 #### 響應示例
@@ -421,7 +455,7 @@ GET /api/v1/favorites
 ### 5.3 刪除收藏
 
 ```http
-DELETE /api/v1/favorites/{favorite_id}
+DELETE /api/favorites/{favorite_id}
 ```
 
 ## 6. AI 分析 API
@@ -429,7 +463,7 @@ DELETE /api/v1/favorites/{favorite_id}
 ### 6.1 智能股票分析
 
 ```http
-POST /api/v1/ai/analyze
+POST /api/ai/analyze
 ```
 
 #### 請求體
@@ -467,7 +501,7 @@ POST /api/v1/ai/analyze
 ### 6.2 概念趨勢預測
 
 ```http
-POST /api/v1/ai/predict
+POST /api/ai/predict
 ```
 
 #### 請求體
