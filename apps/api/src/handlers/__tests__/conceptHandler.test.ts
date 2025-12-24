@@ -26,7 +26,8 @@ describe('conceptHandler', () => {
 
   it('requires an id when fetching a single concept', async () => {
     const response = await conceptHandler.getConcept(
-      createRequest('https://example.com/api/concept')
+      createRequest('https://example.com/api/concept'),
+      {}
     );
     const body = await parseJson(response);
 
@@ -36,7 +37,8 @@ describe('conceptHandler', () => {
 
   it('returns 404 when the concept is not found', async () => {
     const response = await conceptHandler.getConcept(
-      createRequest('https://example.com/api/concept?id=unknown')
+      createRequest('https://example.com/api/concept?id=unknown'),
+      {}
     );
     const body = await parseJson(response);
 
@@ -46,7 +48,8 @@ describe('conceptHandler', () => {
 
   it('returns concept details when the id exists', async () => {
     const response = await conceptHandler.getConcept(
-      createRequest('https://example.com/api/concept?id=ai-chips')
+      createRequest('https://example.com/api/concept?id=ai-chips'),
+      {}
     );
     const body = await parseJson<ConceptData>(response);
 

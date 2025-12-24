@@ -18,6 +18,7 @@ export interface ConceptData {
   stocks: StockData[];
   keywords: string[];
   category: string;
+  aiAnalysis?: string;
 }
 
 export interface SearchParams {

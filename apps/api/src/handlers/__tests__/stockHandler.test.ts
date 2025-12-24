@@ -26,7 +26,8 @@ describe('stockHandler', () => {
 
   it('requires a symbol when fetching a single stock', async () => {
     const response = await stockHandler.getStock(
-      createRequest('https://example.com/api/stock')
+      createRequest('https://example.com/api/stock'),
+      {}
     );
     const body = await parseJson(response);
 
@@ -36,7 +37,8 @@ describe('stockHandler', () => {
 
   it('returns 404 when the stock is not found', async () => {
     const response = await stockHandler.getStock(
-      createRequest('https://example.com/api/stock?symbol=9999')
+      createRequest('https://example.com/api/stock?symbol=9999'),
+      {}
     );
     const body = await parseJson(response);
 
@@ -46,7 +48,8 @@ describe('stockHandler', () => {
 
   it('returns stock details when the symbol exists', async () => {
     const response = await stockHandler.getStock(
-      createRequest('https://example.com/api/stock?symbol=2330')
+      createRequest('https://example.com/api/stock?symbol=2330'),
+      {}
     );
     const body = await parseJson<StockData>(response);
 

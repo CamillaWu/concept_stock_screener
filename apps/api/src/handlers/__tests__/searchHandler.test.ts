@@ -12,7 +12,7 @@ describe('searchHandler.search', () => {
   it('returns 400 when query is empty', async () => {
     const request = createRequest('https://example.com/api/search');
 
-    const response = await searchHandler.search(request);
+    const response = await searchHandler.search(request, {});
     const body = await parseJson(response);
 
     expect(response.status).toBe(400);
@@ -28,7 +28,7 @@ describe('searchHandler.search', () => {
       'https://example.com/api/search?q=ai&page=1&limit=1'
     );
 
-    const response = await searchHandler.search(request);
+    const response = await searchHandler.search(request, {});
     const body = await parseJson<SearchResponse>(response);
 
     expect(response.status).toBe(200);
