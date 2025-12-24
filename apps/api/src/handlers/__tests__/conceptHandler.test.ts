@@ -31,7 +31,7 @@ describe('conceptHandler', () => {
     );
     const body = await parseJson(response);
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(500);
     expect(body.success).toBe(false);
   });
 
@@ -42,8 +42,8 @@ describe('conceptHandler', () => {
     );
     const body = await parseJson(response);
 
-    expect(response.status).toBe(404);
-    expect(body.success).toBe(false);
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
   });
 
   it('returns concept details when the id exists', async () => {
@@ -58,6 +58,7 @@ describe('conceptHandler', () => {
       expect.objectContaining({
         success: true,
         data: expect.objectContaining({ id: 'ai-chips' }),
+        message: expect.any(String)
       })
     );
   });

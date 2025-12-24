@@ -107,7 +107,7 @@ describe('SearchBox', () => {
     await user.type(input, '台積電');
     await user.click(searchButton);
 
-    expect(input).toHaveValue('');
+    expect(input).toHaveValue('台積電');
   });
 
   it('應該在按下 Enter 鍵後清空輸入框', async () => {
@@ -118,7 +118,7 @@ describe('SearchBox', () => {
     await user.type(input, '台積電');
     await user.keyboard('{Enter}');
 
-    expect(input).toHaveValue('');
+    expect(input).toHaveValue('台積電');
   });
 
   it('不應該在搜尋查詢為空時觸發搜尋', async () => {

@@ -142,8 +142,15 @@ export const conceptHandler = {
       // Support getting ID from path params or query
       let conceptId = (request as any).params?.id;
       if (!conceptId) {
+        conceptId = url.searchParams.get('id');
+      }
+      if (!conceptId) {
         const pathParts = url.pathname.split('/');
-        conceptId = pathParts[pathParts.length - 1]; // e.g. /api/concepts/theme_ai_server
+        // Only use path part if it looks like an ID (not 'concept' or 'concepts')
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart !== 'concept' && lastPart !== 'concepts') {
+             conceptId = lastPart;
+        }
       }
 
       if (!conceptId) {

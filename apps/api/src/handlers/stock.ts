@@ -137,8 +137,14 @@ export const stockHandler = {
       // Fallback logic for symbol
       let symbol = (request as any).params?.symbol;
       if (!symbol) {
+        symbol = url.searchParams.get('symbol');
+      }
+      if (!symbol) {
         const pathParts = url.pathname.split('/');
-        symbol = pathParts[pathParts.length - 1];
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart !== 'stock' && lastPart !== 'stocks') {
+             symbol = lastPart;
+        }
       }
 
       if (!symbol) {
