@@ -143,7 +143,7 @@ export const stockHandler = {
         const pathParts = url.pathname.split('/');
         const lastPart = pathParts[pathParts.length - 1];
         if (lastPart !== 'stock' && lastPart !== 'stocks') {
-             symbol = lastPart;
+          symbol = lastPart;
         }
       }
 

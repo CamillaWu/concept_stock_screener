@@ -58,7 +58,7 @@ describe('stockHandler', () => {
       expect.objectContaining({
         success: true,
         data: expect.objectContaining({ symbol: '2330' }),
-        message: expect.any(String)
+        message: expect.any(String),
       })
     );
   });

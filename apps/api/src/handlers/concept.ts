@@ -149,7 +149,7 @@ export const conceptHandler = {
         // Only use path part if it looks like an ID (not 'concept' or 'concepts')
         const lastPart = pathParts[pathParts.length - 1];
         if (lastPart !== 'concept' && lastPart !== 'concepts') {
-             conceptId = lastPart;
+          conceptId = lastPart;
         }
       }
 

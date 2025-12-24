@@ -4,30 +4,34 @@ import { searchHandler } from '../search';
 
 // Mock dependencies
 jest.mock('../../lib/gemini', () => ({
-  generateEmbedding: jest.fn().mockReturnValue(Promise.resolve([0.1, 0.2, 0.3]))
+  generateEmbedding: jest
+    .fn()
+    .mockReturnValue(Promise.resolve([0.1, 0.2, 0.3])),
 }));
 
 jest.mock('../../lib/pinecone', () => ({
-  searchVectors: jest.fn().mockReturnValue(Promise.resolve([
-    {
-      score: 0.9,
-      metadata: { 
-        doc_type: 'theme_to_stock',
-        ticker: '2330',
-        stock_name: '台積電',
-        theme_id: 'ai',
-        theme_name: 'AI',
-        tags: ['tech']
-      }
-    }
-  ]))
+  searchVectors: jest.fn().mockReturnValue(
+    Promise.resolve([
+      {
+        score: 0.9,
+        metadata: {
+          doc_type: 'theme_to_stock',
+          ticker: '2330',
+          stock_name: '台積電',
+          theme_id: 'ai',
+          theme_name: 'AI',
+          tags: ['tech'],
+        },
+      },
+    ])
+  ),
 }));
 
 const createRequest = (url: string) => ({ url }) as Request;
 const mockEnv = {
-    GEMINI_API_KEY: 'test-key',
-    PINECONE_API_KEY: 'test-key',
-    PINECONE_INDEX: 'test-index'
+  GEMINI_API_KEY: 'test-key',
+  PINECONE_API_KEY: 'test-key',
+  PINECONE_INDEX: 'test-index',
 };
 
 const parseJson = async <T>(response: Response): Promise<ApiResponse<T>> => {

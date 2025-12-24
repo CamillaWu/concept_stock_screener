@@ -58,7 +58,7 @@ describe('conceptHandler', () => {
       expect.objectContaining({
         success: true,
         data: expect.objectContaining({ id: 'ai-chips' }),
-        message: expect.any(String)
+        message: expect.any(String),
       })
     );
   });

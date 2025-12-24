@@ -102,9 +102,16 @@ describe('HomePage', () => {
 
     render(<HomePage />);
 
-    expect(screen.getByText((content, element) => {
-      return element?.tagName.toLowerCase() === 'span' && content.includes('找到') && content.includes('2') && content.includes('筆結果');
-    })).toBeInTheDocument();
+    expect(
+      screen.getByText((content, element) => {
+        return (
+          element?.tagName.toLowerCase() === 'span' &&
+          content.includes('找到') &&
+          content.includes('2') &&
+          content.includes('筆結果')
+        );
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText('Taiwan Semiconductor')).toBeInTheDocument();
     expect(screen.getByText('AI Chips')).toBeInTheDocument();
   });
