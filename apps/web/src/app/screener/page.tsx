@@ -1,15 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useApi } from '@ui/hooks';
 import type { StockData } from '@concept-stock-screener/types';
-
-interface ScreenerResponse {
-  success: boolean;
-  data: StockData[];
-  message: string;
-}
 
 export default function ScreenerPage() {
   const [keyword, setKeyword] = useState('');

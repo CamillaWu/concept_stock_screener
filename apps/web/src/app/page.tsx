@@ -2,7 +2,7 @@
 
 import { SearchBox } from '@ui/components';
 import { useApi } from '@ui/hooks';
-import type { SearchResponse, StockData, ConceptData } from '@concept-stock-screener/types';
+import type { SearchResponse } from '@concept-stock-screener/types';
 
 export default function HomePage() {
   const { data, loading, error, execute } = useApi<SearchResponse>({

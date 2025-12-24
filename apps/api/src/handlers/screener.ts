@@ -1,10 +1,10 @@
 
 import { ApiResponse, StockData } from '@concept-stock-screener/types';
 import { generateStockCandidates } from '../lib/gemini';
-import { fetchYahooFinance, YahooStockData } from '../lib/yahoo';
+import { fetchYahooFinance } from '../lib/yahoo';
 
 export const screenerHandler = {
-  async filter(request: Request, env: any): Promise<Response> {
+  async filter(request: Request, env: Record<string, string>): Promise<Response> {
     try {
       const url = new URL(request.url);
       const searchParams = url.searchParams;
