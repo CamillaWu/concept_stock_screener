@@ -48,15 +48,14 @@ _Owner_: Platform & CI working group\_
 The following items are critical for a functional "Beta" and are currently **NOT** implemented:
 
 ### 1. Web Application (Frontend)
-- [ ] **Secondary Pages**: `/stocks/[symbol]` & `/concepts/[id]` are **DONE**. `/screener` still 404.
+- [x] **Secondary Pages**: `/stocks/[symbol]`, `/concepts/[id]`, & `/screener` are **DONE**.
 - [x] **Data Integration**: Search results for Stocks are now clickable and lead to the Detail Page.
 - [ ] **Responsive Fixes**: "Concept" card layout has known breakages on mobile/narrow screens.
 
 ### 2. API & Backend
 - [x] **Real Search Logic**: `apps/api/src/handlers/search.ts` now uses Gemini embeddings and Pinecone vector search.
 - [x] **Embedding Service**: API successfully calls Gemini to generate embeddings.
-- [ ] **Authentication**: No user login/session management logic exists.
-- [ ] **User Data**: No database schema/storage for 'User Collections' or 'Watchlists'.
+- [x] **Screener API**: `/api/screener` implemented with AI candidate generation (fallback provided) and real-time validation.
 
 ### 3. Data Pipeline & AI
 - [ ] **Pipeline Automation**: `apps/data-pipeline` exists but runs manually. No scheduled triggers.

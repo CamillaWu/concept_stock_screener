@@ -2,7 +2,7 @@
 
 import { SearchBox } from '@ui/components';
 import { useApi } from '@ui/hooks';
-import type { SearchResponse } from './types/search';
+import type { SearchResponse, StockData, ConceptData } from '@concept-stock-screener/types';
 
 export default function HomePage() {
   const { data, loading, error, execute } = useApi<SearchResponse>({
@@ -120,7 +120,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-800">搜尋結果</h2>
             <span className="text-gray-500 bg-gray-100 px-3 py-1 rounded-full text-sm">
-              {data.message}
+              找到 {data.stocks.length + data.concepts.length} 筆結果
             </span>
           </div>
 

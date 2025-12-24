@@ -1,0 +1,41 @@
+
+> concept-stock-screener@1.0.0 lint C:\Users\camilla\Documents\concept_stock_screener
+> pnpm run lint:check
+
+
+> concept-stock-screener@1.0.0 lint:check C:\Users\camilla\Documents\concept_stock_screener
+> eslint . --ext .ts,.tsx,.js,.jsx
+
+
+C:\Users\camilla\Documents\concept_stock_screener\apps\api\src\handlers\concept.ts
+   93:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  206:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\camilla\Documents\concept_stock_screener\apps\api\src\handlers\search.ts
+   2:10  error    'generateEmbedding' is defined but never used  @typescript-eslint/no-unused-vars
+   2:10  error    'generateEmbedding' is defined but never used  no-unused-vars
+   7:39  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  11:13  error    'page' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  11:13  error    'page' is assigned a value but never used      no-unused-vars
+  34:9   error    'vector' is not defined                        no-undef
+  42:41  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  43:43  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+C:\Users\camilla\Documents\concept_stock_screener\apps\api\src\handlers\stock.ts
+   74:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\camilla\Documents\concept_stock_screener\apps\api\src\lib\pinecone.ts
+  16:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\camilla\Documents\concept_stock_screener\apps\web\src\app\stocks\[symbol]\page.tsx
+  3:21  error  'useState' is defined but never used  @typescript-eslint/no-unused-vars
+  3:21  error  'useState' is defined but never used  no-unused-vars
+
+✖ 18 problems (7 errors, 11 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.

@@ -59,3 +59,36 @@ export const generateAnalysis = async (
     return '暫時無法生成 AI 分析。';
   }
 };
+
+export const generateStockCandidates = async (criteria: string, apiKey: string): Promise<string[]> => {
+  const client = getGeminiClient(apiKey);
+  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+  const prompt = `
+  As a database expert for the Taiwan Stock Market (TWSE/TPEX), 
+  list the top 30 stock tickers that match the following criteria: "${criteria}".
+  
+  Strict Rules:
+  1. Return ONLY a valid JSON array of strings. No markdown, no explanations.
+  2. Format: ["2330", "2454", "2317", ...] (Remove .TW suffix)
+  3. Ensure the stocks are real, listed Taiwan stocks.
+  4. If the criteria mentions a sector (e.g. "Semiconductor"), include the leaders.
+  5. If the criteria implies fundamental data (e.g. "High Yield"), interpret broadly to potential candidates (we will verify data later).
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Clean code block if present
+    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.error('Gemini Candidate generation failed:', error);
+    // Fallback for demo/dev when API Key is invalid or quota exceeded
+    console.warn('Using Fallback Candidate List');
+    return ['2330', '2317', '2454', '2308', '2303', '2603', '2382', '3231', '6669', '3008'];
+  }
+};

@@ -8,7 +8,7 @@ export const searchHandler = {
     try {
       const url = new URL(request.url);
       const query = url.searchParams.get('q') || '';
-      const page = parseInt(url.searchParams.get('page') || '1');
+      // const page = parseInt(url.searchParams.get('page') || '1'); // Unused
       const limit = parseInt(url.searchParams.get('limit') || '10');
 
       if (!query.trim()) {
@@ -26,6 +26,13 @@ export const searchHandler = {
       }
 
       // Check environment variables
+      if (!env.GEMINI_API_KEY || !env.PINECONE_API_KEY) {
+         throw new Error('Missing API Keys');
+      }
+
+      // 1. Generate Embedding
+      const vector = await generateEmbedding(query, env.GEMINI_API_KEY);
+
       // 2. Query Pinecone
       // Use configured index or default to seed index
       const targetIndex = env.PINECONE_INDEX || 'concept-stock-seed';

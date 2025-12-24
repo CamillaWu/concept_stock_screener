@@ -5,6 +5,7 @@ Object.assign(globalThis, { global: globalThis });
 import { Router } from 'itty-router';
 import { conceptHandler } from './handlers/concept';
 import { searchHandler } from './handlers/search';
+import { screenerHandler } from './handlers/screener';
 import { stockHandler } from './handlers/stock';
 import { corsMiddleware } from './middleware/cors';
 
@@ -21,6 +22,7 @@ router.get('/api/stocks/:symbol', stockHandler.getStock);
 router.get('/api/concepts', conceptHandler.getConcepts);
 router.get('/api/concepts/:id', conceptHandler.getConcept);
 router.get('/api/search', searchHandler.search);
+router.get('/api/screener', screenerHandler.filter);
 
 // 404 處理
 router.all('*', () => new Response('Not Found', { status: 404 }));
