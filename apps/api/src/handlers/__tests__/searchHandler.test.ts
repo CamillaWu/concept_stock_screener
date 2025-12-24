@@ -4,11 +4,11 @@ import { searchHandler } from '../search';
 
 // Mock dependencies
 jest.mock('../../lib/gemini', () => ({
-  generateEmbedding: jest.fn().mockResolvedValue([0.1, 0.2, 0.3])
+  generateEmbedding: jest.fn().mockReturnValue(Promise.resolve([0.1, 0.2, 0.3]))
 }));
 
 jest.mock('../../lib/pinecone', () => ({
-  searchVectors: jest.fn().mockResolvedValue([
+  searchVectors: jest.fn().mockReturnValue(Promise.resolve([
     {
       score: 0.9,
       metadata: { 
@@ -20,7 +20,7 @@ jest.mock('../../lib/pinecone', () => ({
         tags: ['tech']
       }
     }
-  ])
+  ]))
 }));
 
 const createRequest = (url: string) => ({ url }) as Request;
