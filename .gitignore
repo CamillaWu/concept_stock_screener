@@ -150,3 +150,4 @@ apps/web/.next/
 packages/ui/dist/
 packages/types/dist/
 apps/web/public/rag/
+apps/api/dist/

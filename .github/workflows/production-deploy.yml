@@ -61,6 +61,10 @@ jobs:
           # Install dependencies
           pnpm install --frozen-lockfile
 
+          # Verify code quality (Lint, Types, Tests)
+          echo "Running quality gate checks..."
+          pnpm run quality:gate
+
           # Build shared packages
           pnpm build:types
           pnpm build:ui
